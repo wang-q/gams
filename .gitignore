@@ -102,4 +102,4 @@ Cargo.lock
 *.tex
 *.pdf
 
-garr.conf
+garr.env

@@ -21,7 +21,7 @@ cargo install --force --offline --path .
 $ garr help
 garr 0.0.1
 wang-q <wang-q@outlook.com>
-`garr` is a command line tool - Genome Analyst with Rust and Redis
+Genome Analyst with Rust and Redis
 
 USAGE:
     garr [SUBCOMMAND]
@@ -31,8 +31,33 @@ FLAGS:
     -V, --version    Prints version information
 
 SUBCOMMANDS:
-    conf    Create a config file
-    help    Prints this message or the help of the given subcommand(s)
+    env       Create a .env file
+    help      Prints this message or the help of the given subcommand(s)
+    status    Test Redis config and connection
+
+```
+
+## RUNTIME DEPENDENCIES
+
+* Command line tools managed by `Linuxbrew`
+
+```shell script
+brew install parallel wget pigz
+brew install datamash mlr
+
+brew tap wang-q/tap
+brew install wang-q/tap/tsv-utils wang-q/tap/intspan
+
+```
+
+## EXAMPLES
+
+```shell script
+REDIS_TLS=true REDIS_PASSWORD='mYpa$$' garr env -o stdout
+
+garr env
+
+garr status test
 
 ```
 
