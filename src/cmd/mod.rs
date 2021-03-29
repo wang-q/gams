@@ -1,3 +1,3 @@
 //! Subcommand modules for the `garr` binary.
 
-pub mod conf;
+pub mod env;

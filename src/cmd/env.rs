@@ -28,8 +28,8 @@ fn default_redis_tls() -> bool {
 
 // Create clap subcommand arguments
 pub fn make_subcommand<'a, 'b>() -> App<'a, 'b> {
-    SubCommand::with_name("conf")
-        .about("Create a config file")
+    SubCommand::with_name("env")
+        .about("Create a .env file")
         .after_help(
             r#"
 Default values:
@@ -46,7 +46,7 @@ Default values:
                 .short("o")
                 .long("outfile")
                 .takes_value(true)
-                .default_value("garr.conf")
+                .default_value("garr.env")
                 .empty_values(false)
                 .help("Output filename. [stdout] for screen"),
         )
@@ -67,7 +67,7 @@ pub fn execute(args: &ArgMatches) -> std::result::Result<(), std::io::Error> {
     }
 
     let mut tera = Tera::default();
-    tera.add_raw_templates(vec![("t", include_str!("../../templates/garr.tera.conf"))])
+    tera.add_raw_templates(vec![("t", include_str!("../../templates/garr.tera.env"))])
         .unwrap();
     let rendered = tera.render("t", &context).unwrap();
     intspan::write_lines(args.value_of("outfile").unwrap(), &vec![rendered.as_str()])?;
