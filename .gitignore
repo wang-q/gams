@@ -101,3 +101,5 @@ Cargo.lock
 *.tar.gz
 *.tex
 *.pdf
+
+garr.conf

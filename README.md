@@ -19,6 +19,20 @@ cargo install --force --offline --path .
 
 ```
 $ garr help
+garr 0.0.1
+wang-q <wang-q@outlook.com>
+`garr` is a command line tool - Genome Analyst with Rust and Redis
+
+USAGE:
+    garr [SUBCOMMAND]
+
+FLAGS:
+    -h, --help       Prints help information
+    -V, --version    Prints version information
+
+SUBCOMMANDS:
+    conf    Create a config file
+    help    Prints this message or the help of the given subcommand(s)
 
 ```
 
