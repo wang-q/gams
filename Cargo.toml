@@ -25,8 +25,10 @@ tera = "1"
 intspan = "0.4.14"
 itertools = "0.9.0"
 redis = { version = "0.20.0", features = ["tls"] }
+rand = "0.8.1"
 serde = "1.0"
 envy = "0.4"
+dotenv = "0.15.0"
 
 [build-dependencies]
 
