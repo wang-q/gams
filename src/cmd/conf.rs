@@ -5,18 +5,25 @@ use tera::{Context, Tera};
 
 #[derive(Deserialize, Debug)]
 struct Config {
-    #[serde(default = "default_host")]
+    #[serde(default = "default_redis_host")]
     redis_host: String,
-    #[serde(default = "default_port")]
+    #[serde(default = "default_redis_port")]
     redis_port: u32,
+    redis_password: Option<String>,
+    #[serde(default = "default_redis_tls")]
+    redis_tls: bool,
 }
 
-fn default_host() -> String {
+fn default_redis_host() -> String {
     "localhost".to_string()
 }
 
-fn default_port() -> u32 {
+fn default_redis_port() -> u32 {
     6379
+}
+
+fn default_redis_tls() -> bool {
+    false
 }
 
 // Create clap subcommand arguments
@@ -29,6 +36,8 @@ Default values:
 
 * REDIS_HOST - localhost
 * REDIS_PORT - 6379
+* REDIS_PASSWORD -
+* REDIS_TLS - false
 
 "#,
         )
@@ -51,6 +60,8 @@ pub fn execute(args: &ArgMatches) -> std::result::Result<(), std::io::Error> {
         Ok(config) => {
             context.insert("host", &config.redis_host);
             context.insert("port", &config.redis_port);
+            context.insert("password", &config.redis_password);
+            context.insert("tls", &config.redis_tls);
         }
         Err(error) => panic!("{:#?}", error),
     }
