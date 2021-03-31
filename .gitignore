@@ -103,3 +103,4 @@ Cargo.lock
 *.pdf
 
 garr.env
+dump.rdb
