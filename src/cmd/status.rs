@@ -99,16 +99,18 @@ fn cli() {
 
 fn drop() {
     let mut conn = connect();
-    let _: () = redis::cmd("FLUSHDB")
+    let output: String = redis::cmd("FLUSHDB")
         .query(&mut conn)
         .expect("Failed to execute FLUSHDB");
+    println!("{}", output);
 }
 
 fn dump() {
     let mut conn = connect();
-    let _: () = redis::cmd("SAVE")
+    let output: String = redis::cmd("SAVE")
         .query(&mut conn)
         .expect("Failed to execute SAVE");
+    println!("{}", output);
 }
 
 fn basics() {
