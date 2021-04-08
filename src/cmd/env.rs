@@ -1,30 +1,7 @@
 use clap::*;
 use envy;
-use serde::Deserialize;
+use garr::*;
 use tera::{Context, Tera};
-
-#[derive(Deserialize, Debug)]
-struct Config {
-    #[serde(default = "default_redis_host")]
-    redis_host: String,
-    #[serde(default = "default_redis_port")]
-    redis_port: u32,
-    redis_password: Option<String>,
-    #[serde(default = "default_redis_tls")]
-    redis_tls: bool,
-}
-
-fn default_redis_host() -> String {
-    "localhost".to_string()
-}
-
-fn default_redis_port() -> u32 {
-    6379
-}
-
-fn default_redis_tls() -> bool {
-    false
-}
 
 // Create clap subcommand arguments
 pub fn make_subcommand<'a, 'b>() -> App<'a, 'b> {
