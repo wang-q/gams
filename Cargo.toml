@@ -29,6 +29,7 @@ rand = "0.8.1"
 serde = "1.0"
 envy = "0.4"
 dotenv = "0.15.0"
+bio = "0.30.0"
 
 [build-dependencies]
 

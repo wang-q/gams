@@ -32,6 +32,7 @@ FLAGS:
 
 SUBCOMMANDS:
     env       Create a .env file
+    gen       Generate the database from (gzipped) fasta files
     help      Prints this message or the help of the given subcommand(s)
     status    Test Redis config and connection
 

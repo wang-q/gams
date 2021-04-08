@@ -1,6 +1,6 @@
 # From cli
 
-## `gen`
+## `redis-cli`
 
 ```shell script
 # start redis-server
@@ -19,8 +19,7 @@ garr env
 garr status test
 
 # drop DB
-#redis-cli FLUSHDB
-garr status drop
+redis-cli FLUSHDB
 
 # chr.sizes
 faops size tests/S288c/genome.fa.gz > tests/S288c/chr.sizes
@@ -63,6 +62,48 @@ faops filter -l 0 tests/S288c/genome.fa.gz stdout |
     parallel -k -r --col-sep '\t' '
         redis-cli HSET ctg:{1}:1 seq {2}
     '
+#redis-cli --raw HSTRLEN ctg:I:1 seq
+#redis-cli --raw scan 0 match ctg:I:* type hash
+
+# dump DB to redis-server start dir as dump.rdb
+redis-cli SAVE
+
+ps -e | grep redis-server
+
+```
+
+## `gen`
+
+```shell script
+# start redis-server
+redis-server --appendonly no --dir tests/S288c/
+
+# create garr.env
+garr env
+
+# check DB
+garr status test
+
+# drop DB
+garr status drop
+
+# generate DB
+garr gen tests/S288c/genome.fa.gz
+
+# find a contig contains 1000-1100
+redis-cli --raw ZRANGEBYSCORE ctg-s:I 0 1000
+redis-cli --raw ZRANGEBYSCORE ctg-e:I 1100 +inf
+
+redis-cli --raw <<EOF
+MULTI
+ZRANGESTORE tmp:s:I ctg-s:I 0 1000 BYSCORE
+ZRANGESTORE tmp:e:I ctg-e:I 1100 +inf BYSCORE
+SET comment "ZINTERSTORE tmp:ctg:I 2 tmp:s:I tmp:e:I AGGREGATE MIN"
+ZINTER 2 tmp:s:I tmp:e:I AGGREGATE MIN
+DEL tmp:s:I tmp:e:I
+EXEC
+EOF
+
 #redis-cli --raw HSTRLEN ctg:I:1 seq
 #redis-cli --raw scan 0 match ctg:I:* type hash
 
