@@ -3,6 +3,8 @@ use clap::*;
 use garr::*;
 use intspan::*;
 use redis::Commands;
+use std::collections::VecDeque;
+use std::iter::FromIterator;
 
 // Create clap subcommand arguments
 pub fn make_subcommand<'a, 'b>() -> App<'a, 'b> {
@@ -24,10 +26,50 @@ pub fn make_subcommand<'a, 'b>() -> App<'a, 'b> {
                 .empty_values(false)
                 .help("The common name, e.g. S288c"),
         )
+        .arg(
+            Arg::with_name("piece")
+                .long("piece")
+                .takes_value(true)
+                .default_value("500000")
+                .empty_values(false)
+                .help("Break genome into pieces"),
+        )
+        .arg(
+            Arg::with_name("fill")
+                .long("fill")
+                .takes_value(true)
+                .default_value("50")
+                .empty_values(false)
+                .help("Fill gaps smaller than this"),
+        )
+        .arg(
+            Arg::with_name("min")
+                .long("min")
+                .takes_value(true)
+                .default_value("5000")
+                .empty_values(false)
+                .help("Skip pieces smaller than this"),
+        )
 }
 
 // command implementation
 pub fn execute(args: &ArgMatches) -> std::result::Result<(), std::io::Error> {
+    // opts
+    let piece: i32 = value_t!(args.value_of("piece"), i32).unwrap_or_else(|e| {
+        eprintln!("Need a integer for --piece\n{}", e);
+        std::process::exit(1)
+    });
+
+    let fill: i32 = value_t!(args.value_of("fill"), i32).unwrap_or_else(|e| {
+        eprintln!("Need a integer for --fill\n{}", e);
+        std::process::exit(1)
+    });
+
+    let min: i32 = value_t!(args.value_of("min"), i32).unwrap_or_else(|e| {
+        eprintln!("Need a integer for --min\n{}", e);
+        std::process::exit(1)
+    });
+
     // redis connection
     let mut conn = connect();
 
@@ -50,20 +92,84 @@ pub fn execute(args: &ArgMatches) -> std::result::Result<(), std::io::Error> {
             // hash chr
             let _: () = conn.hset("chr", chr_id, chr_seq.len()).unwrap();
 
-            // contigs in each chr
-            let ctg_id = format!("ctg:{}:1", chr_id);
-            let _: () = conn.hset(&ctg_id, "chr_name", chr_id).unwrap();
-            let _: () = conn.hset(&ctg_id, "chr_start", 1).unwrap();
-            let _: () = conn.hset(&ctg_id, "chr_end", chr_seq.len()).unwrap();
-            let _: () = conn.hset(&ctg_id, "chr_strand", "+").unwrap();
-            let _: () = conn.hset(&ctg_id, "length", chr_seq.len()).unwrap();
-            let _: () = conn.hset(&ctg_id, "seq", chr_seq).unwrap();
+            // Ambiguous region
+            let mut ambiguous_set = IntSpan::new();
 
-            // indexing ctg
-            let _: () = conn.zadd(format!("ctg-s:{}", chr_id), &ctg_id, 1).unwrap();
-            let _: () = conn
-                .zadd(format!("ctg-e:{}", chr_id), &ctg_id, chr_seq.len())
-                .unwrap();
+            for i in 0..chr_seq.len() {
+                match chr_seq[i] as char {
+                    'A' | 'C' | 'G' | 'T' | 'a' | 'c' | 'g' | 't' => {}
+                    _ => {
+                        ambiguous_set.add_n(i as i32 + 1);
+                    }
+                }
+            }
+            println!(
+                "Ambiguous region for {}:\n    {}\n",
+                chr_id,
+                ambiguous_set.runlist()
+            );
+
+            let mut valid_set = IntSpan::new();
+            valid_set.add_pair(1, chr_seq.len() as i32);
+            valid_set.subtract(&ambiguous_set);
+            valid_set.fill(fill - 1);
+            valid_set.excise(min);
+            println!(
+                "Valid region for {}:\n    {}\n",
+                chr_id,
+                valid_set.runlist()
+            );
+
+            // ([start, end], [start, end], ...)
+            let mut regions = vec![];
+            let valid_ranges = valid_set.ranges();
+            for i in 0..valid_set.span_size() {
+                let mut cur_regions = vec![];
+                let mut pos = *valid_ranges.get(i * 2).unwrap();
+                let max = *valid_ranges.get(i * 2 + 1).unwrap();
+                while max - pos + 1 > piece {
+                    cur_regions.push(pos);
+                    cur_regions.push(pos + piece - 1);
+                    pos += piece;
+                }
+
+                if cur_regions.is_empty() {
+                    cur_regions.push(pos);
+                    cur_regions.push(max);
+                } else {
+                    if let Some(last) = cur_regions.last_mut() {
+                        *last = max;
+                    }
+                }
+
+                regions.extend(cur_regions);
+            }
+            let mut regions = VecDeque::from_iter(regions);
+
+            // contigs in each chr
+            let mut ctg_serial = 1;
+            while !regions.is_empty() {
+                let ctg_id = format!("ctg:{}:{}", chr_id, ctg_serial);
+                let start = regions.pop_front().unwrap() as usize;
+                let end = regions.pop_front().unwrap() as usize;
+
+                let _: () = conn.hset(&ctg_id, "chr_name", chr_id).unwrap();
+                let _: () = conn.hset(&ctg_id, "chr_start", start).unwrap();
+                let _: () = conn.hset(&ctg_id, "chr_end", end).unwrap();
+                let _: () = conn.hset(&ctg_id, "chr_strand", "+").unwrap();
+                let _: () = conn.hset(&ctg_id, "length", end - start + 1).unwrap();
+                let _: () = conn.hset(&ctg_id, "seq", &chr_seq[start - 1..end]).unwrap();
+
+                // indexing ctg
+                let _: () = conn
+                    .zadd(format!("ctg-s:{}", chr_id), &ctg_id, start)
+                    .unwrap();
+                let _: () = conn
+                    .zadd(format!("ctg-e:{}", chr_id), &ctg_id, end)
+                    .unwrap();
+
+                ctg_serial += 1;
+            }
         }
     }
 
