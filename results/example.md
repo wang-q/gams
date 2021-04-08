@@ -19,7 +19,8 @@ garr env
 garr status test
 
 # drop DB
-redis-cli FLUSHDB
+#redis-cli FLUSHDB
+garr status drop
 
 # chr.sizes
 faops size tests/S288c/genome.fa.gz > tests/S288c/chr.sizes
@@ -66,7 +67,8 @@ faops filter -l 0 tests/S288c/genome.fa.gz stdout |
 #redis-cli --raw scan 0 match ctg:I:* type hash
 
 # dump DB to redis-server start dir as dump.rdb
-redis-cli SAVE
+#redis-cli SAVE
+garr status dump
 
 ps -e | grep redis-server
 

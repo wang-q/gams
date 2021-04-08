@@ -1,5 +1,5 @@
-use serde::Deserialize;
 use dotenv;
+use serde::Deserialize;
 
 #[derive(Deserialize, Debug)]
 pub struct Config {

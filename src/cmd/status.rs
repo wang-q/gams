@@ -1,6 +1,7 @@
 use clap::*;
 use garr::*;
 use redis::Commands;
+use std::process::Command;
 
 use rand::Rng;
 use std::collections::BTreeMap;
@@ -9,9 +10,21 @@ use std::collections::BTreeMap;
 pub fn make_subcommand<'a, 'b>() -> App<'a, 'b> {
     SubCommand::with_name("status")
         .about("Test Redis config and connection")
+        .after_help(
+            r#"
+List of actions:
+
+* cli:  find `redis-cli` in $PATH
+* test: redis.rs functionality
+* info: Command INFO - memory usage of the database
+* drop: Command FLUSHDB - drop the database for accepting new data
+* dump: Command SAVE - export of the contents of the database
+
+"#,
+        )
         .arg(
             Arg::with_name("action")
-                .help("What to do: test, or info")
+                .help("What to do")
                 .required(true)
                 .default_value("test")
                 .index(1),
@@ -30,6 +43,9 @@ pub fn make_subcommand<'a, 'b>() -> App<'a, 'b> {
 // command implementation
 pub fn execute(args: &ArgMatches) -> std::result::Result<(), std::io::Error> {
     match args.value_of("action").unwrap() {
+        "cli" => {
+            cli();
+        }
         "test" => {
             basics();
             hash();
@@ -39,6 +55,12 @@ pub fn execute(args: &ArgMatches) -> std::result::Result<(), std::io::Error> {
         }
         "info" => {
             info();
+        }
+        "drop" => {
+            drop();
+        }
+        "dump" => {
+            dump();
         }
         _ => unreachable!(),
     };
@@ -50,7 +72,7 @@ fn info() {
     let mut conn = connect();
     let info: redis::InfoDict = redis::cmd("INFO")
         .query(&mut conn)
-        .expect("failed to execute INFO");
+        .expect("Failed to execute INFO");
 
     let mut output: BTreeMap<&str, String> = BTreeMap::new();
     for key in vec![
@@ -68,6 +90,27 @@ fn info() {
     eprintln!("output = {:#?}", output);
 }
 
+fn cli() {
+    match Command::new("redis-cli").arg("--version").output() {
+        Ok(o) => println!("Find `{:#?}` in $PATH", String::from_utf8(o.stdout)),
+        Err(_) => println!("`redis-cli` was not found! Check your $PATH!"),
+    }
+}
+
+fn drop() {
+    let mut conn = connect();
+    let _: () = redis::cmd("FLUSHDB")
+        .query(&mut conn)
+        .expect("Failed to execute FLUSHDB");
+}
+
+fn dump() {
+    let mut conn = connect();
+    let _: () = redis::cmd("SAVE")
+        .query(&mut conn)
+        .expect("Failed to execute SAVE");
+}
+
 fn basics() {
     let mut conn = connect();
     println!("******* Running SET, GET, INCR commands *******");
@@ -76,22 +119,22 @@ fn basics() {
         .arg("foo")
         .arg("bar")
         .query(&mut conn)
-        .expect("failed to execute SET for 'foo'");
+        .expect("Failed to execute SET for 'foo'");
 
     let bar: String = redis::cmd("GET")
         .arg("foo")
         .query(&mut conn)
-        .expect("failed to execute GET for 'foo'");
+        .expect("Failed to execute GET for 'foo'");
     println!("value for 'foo' = {}", bar);
 
     //INCR and GET using high-level commands
     let _: () = conn
         .incr("counter", 2)
-        .expect("failed to execute INCR for 'counter'");
+        .expect("Failed to execute INCR for 'counter'");
 
     let val: i32 = conn
         .get("counter")
-        .expect("failed to execute GET for 'counter'");
+        .expect("Failed to execute GET for 'counter'");
 
     println!("counter = {}", val);
 }
@@ -115,12 +158,12 @@ fn hash() {
         .arg(format!("{}:{}", prefix, "rust"))
         .arg(driver)
         .query(&mut conn)
-        .expect("failed to execute HSET");
+        .expect("Failed to execute HSET");
 
     let info: BTreeMap<String, String> = redis::cmd("HGETALL")
         .arg(format!("{}:{}", prefix, "rust"))
         .query(&mut conn)
-        .expect("failed to execute HGETALL");
+        .expect("Failed to execute HGETALL");
 
     println!("info for rust redis driver: {:?}", info);
 
@@ -133,11 +176,11 @@ fn hash() {
                 ("repo", "https://github.com/go-redis/redis"),
             ],
         )
-        .expect("failed to execute HSET");
+        .expect("Failed to execute HSET");
 
     let repo_name: String = conn
         .hget(format!("{}:{}", prefix, "go"), "repo")
-        .expect("failed to execute HGET");
+        .expect("Failed to execute HGET");
 
     println!("go redis driver repo name: {:?}", repo_name);
 }
@@ -152,11 +195,11 @@ fn list() {
         .arg(list_name)
         .arg("item-1")
         .query(&mut conn)
-        .expect("failed to execute LPUSH for 'items'");
+        .expect("Failed to execute LPUSH for 'items'");
 
     let item: String = conn
         .lpop(list_name)
-        .expect("failed to execute LPOP for 'items'");
+        .expect("Failed to execute LPOP for 'items'");
     println!("first item: {}", item);
 
     let _: () = conn.rpush(list_name, "item-2").expect("RPUSH failed");
@@ -164,12 +207,12 @@ fn list() {
 
     let len: isize = conn
         .llen(list_name)
-        .expect("failed to execute LLEN for 'items'");
+        .expect("Failed to execute LLEN for 'items'");
     println!("no. of items in list = {}", len);
 
     let items: Vec<String> = conn
         .lrange(list_name, 0, len - 1)
-        .expect("failed to execute LRANGE for 'items'");
+        .expect("Failed to execute LRANGE for 'items'");
     println!("listing items in list");
 
     for item in items {
@@ -185,19 +228,19 @@ fn set() {
 
     let _: () = conn
         .sadd(set_name, "user1")
-        .expect("failed to execute SADD for 'users'");
+        .expect("Failed to execute SADD for 'users'");
     let _: () = conn
         .sadd(set_name, "user2")
-        .expect("failed to execute SADD for 'users'");
+        .expect("Failed to execute SADD for 'users'");
 
     let ismember: bool = redis::cmd("SISMEMBER")
         .arg(set_name)
         .arg("user1")
         .query(&mut conn)
-        .expect("failed to execute SISMEMBER for 'users'");
+        .expect("Failed to execute SISMEMBER for 'users'");
     println!("does user1 exist in the set? {}", ismember); //true
 
-    let users: Vec<String> = conn.smembers(set_name).expect("failed to execute SMEMBERS");
+    let users: Vec<String> = conn.smembers(set_name).expect("Failed to execute SMEMBERS");
     println!("listing users in set"); //true
 
     for user in users {
@@ -216,7 +259,7 @@ fn sorted_set() {
         .arg(rand::thread_rng().gen_range(1..10))
         .arg("player-1")
         .query(&mut conn)
-        .expect("failed to execute ZADD for 'leaderboard'");
+        .expect("Failed to execute ZADD for 'leaderboard'");
 
     //add many players
     for num in 2..=5 {
@@ -226,12 +269,12 @@ fn sorted_set() {
                 String::from("player-") + &num.to_string(),
                 rand::thread_rng().gen_range(1..10),
             )
-            .expect("failed to execute ZADD for 'leaderboard'");
+            .expect("Failed to execute ZADD for 'leaderboard'");
     }
 
     let count: isize = conn
         .zcard(sorted_set)
-        .expect("failed to execute ZCARD for 'leaderboard'");
+        .expect("Failed to execute ZCARD for 'leaderboard'");
 
     let leaderboard: Vec<(String, isize)> = conn
         .zrange_withscores(sorted_set, 0, count - 1)
