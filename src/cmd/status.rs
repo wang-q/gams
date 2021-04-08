@@ -1,5 +1,5 @@
 use clap::*;
-use dotenv;
+use garr::*;
 use redis::Commands;
 
 use rand::Rng;
@@ -44,33 +44,6 @@ pub fn execute(args: &ArgMatches) -> std::result::Result<(), std::io::Error> {
     };
 
     Ok(())
-}
-
-fn connect() -> redis::Connection {
-    dotenv::from_filename("garr.env").expect("Failed to read garr.env file");
-
-    let redis_host = dotenv::var("REDIS_HOST").unwrap();
-    let redis_port = dotenv::var("REDIS_PORT").unwrap();
-    let redis_password = dotenv::var("REDIS_PASSWORD").unwrap_or_default();
-    let redis_tls = dotenv::var("REDIS_TLS").unwrap();
-
-    // if Redis server needs secure connection
-    let uri_scheme = match redis_tls.as_ref() {
-        "true" => "rediss",
-        "false" => "redis",
-        _ => "redis",
-    };
-
-    let redis_conn_url = format!(
-        "{}://:{}@{}:{}",
-        uri_scheme, redis_password, redis_host, redis_port
-    );
-    //println!("{}", redis_conn_url);
-
-    redis::Client::open(redis_conn_url)
-        .expect("Invalid connection URL")
-        .get_connection()
-        .expect("Failed to connect to Redis")
 }
 
 fn info() {
