@@ -75,7 +75,7 @@ fn info() {
         .expect("Failed to execute INFO");
 
     let mut output: BTreeMap<&str, String> = BTreeMap::new();
-    for key in vec![
+    for key in &[
         "redis_version",
         "os",
         "used_memory_human",

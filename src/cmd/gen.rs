@@ -95,8 +95,8 @@ pub fn execute(args: &ArgMatches) -> std::result::Result<(), std::io::Error> {
             // Ambiguous region
             let mut ambiguous_set = IntSpan::new();
 
-            for i in 0..chr_seq.len() {
-                match chr_seq[i] as char {
+            for (i, item) in chr_seq.iter().enumerate() {
+                match *item as char {
                     'A' | 'C' | 'G' | 'T' | 'a' | 'c' | 'g' | 't' => {}
                     _ => {
                         ambiguous_set.add_n(i as i32 + 1);
@@ -136,10 +136,8 @@ pub fn execute(args: &ArgMatches) -> std::result::Result<(), std::io::Error> {
                 if cur_regions.is_empty() {
                     cur_regions.push(pos);
                     cur_regions.push(max);
-                } else {
-                    if let Some(last) = cur_regions.last_mut() {
+                } else if let Some(last) = cur_regions.last_mut() {
                         *last = max;
-                    }
                 }
 
                 regions.extend(cur_regions);
@@ -176,6 +174,15 @@ pub fn execute(args: &ArgMatches) -> std::result::Result<(), std::io::Error> {
     // number of chr
     let n_chr: i32 = conn.hlen("chr").unwrap();
     println!("There are {} chromosomes", n_chr);
+
+    // number of ctg
+    let mut ctgs: Vec<String> = Vec::new();
+    let iter: redis::Iter<'_, String> = conn.scan_match("ctg:*").unwrap();
+    for x in iter {
+        // do something with the item
+        ctgs.push(x);
+    }
+    println!("There are {} contigs", ctgs.len());
 
     Ok(())
 }

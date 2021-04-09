@@ -1,5 +1,4 @@
 use clap::*;
-use envy;
 use garr::*;
 use tera::{Context, Tera};
 

@@ -1,4 +1,3 @@
-use dotenv;
 use serde::Deserialize;
 
 #[derive(Deserialize, Debug)]

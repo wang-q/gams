@@ -88,7 +88,7 @@ garr status test
 garr status drop
 
 # generate DB
-garr gen tests/S288c/genome.fa.gz
+garr gen tests/S288c/genome.fa.gz --piece 100000
 
 # find a contig contains 1000-1100
 redis-cli --raw ZRANGEBYSCORE ctg-s:I 0 1000
@@ -105,10 +105,9 @@ EXEC
 EOF
 
 #redis-cli --raw HSTRLEN ctg:I:1 seq
-#redis-cli --raw scan 0 match ctg:I:* type hash
+#redis-cli --raw SCAN 0 MATCH ctg:* TYPE HASH
 
 # dump DB to redis-server start dir as dump.rdb
-#redis-cli SAVE
 garr status dump
 
 ps -e | grep redis-server
