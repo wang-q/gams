@@ -96,11 +96,11 @@ redis-cli --raw ZRANGEBYSCORE ctg-e:I 1100 +inf
 
 redis-cli --raw <<EOF
 MULTI
-ZRANGESTORE tmp:s:I ctg-s:I 0 1000 BYSCORE
-ZRANGESTORE tmp:e:I ctg-e:I 1100 +inf BYSCORE
-SET comment "ZINTERSTORE tmp:ctg:I 2 tmp:s:I tmp:e:I AGGREGATE MIN"
-ZINTER 2 tmp:s:I tmp:e:I AGGREGATE MIN
-DEL tmp:s:I tmp:e:I
+ZRANGESTORE tmp-s:I ctg-s:I 0 1000 BYSCORE
+ZRANGESTORE tmp-e:I ctg-e:I 1100 +inf BYSCORE
+SET comment "ZINTERSTORE tmp-ctg:I 2 tmp-s:I tmp-e:I AGGREGATE MIN"
+ZINTER 2 tmp-s:I tmp-e:I AGGREGATE MIN
+DEL tmp-s:I tmp-e:I
 EXEC
 EOF
 
