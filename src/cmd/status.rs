@@ -52,6 +52,7 @@ pub fn execute(args: &ArgMatches) -> std::result::Result<(), std::io::Error> {
             list();
             set();
             sorted_set();
+            pipe_atomic();
         }
         "info" => {
             info();
@@ -286,4 +287,73 @@ fn sorted_set() {
     for item in leaderboard {
         println!("{} = {}", item.0, item.1)
     }
+}
+
+fn pipe_atomic() {
+    let mut conn = connect();
+    println!("******* Running MULTI EXEC commands *******");
+
+    redis::pipe()
+        .cmd("ZADD")
+        .arg("ctg-s:I")
+        .arg(1)
+        .arg("ctg:I:1")
+        .ignore()
+        .cmd("ZADD")
+        .arg("ctg-s:I")
+        .arg(100001)
+        .arg("ctg:I:2")
+        .ignore()
+        .cmd("ZADD")
+        .arg("ctg-e:I")
+        .arg(100000)
+        .arg("ctg:I:1")
+        .ignore()
+        .cmd("ZADD")
+        .arg("ctg-e:I")
+        .arg(230218)
+        .arg("ctg:I:2")
+        .ignore()
+        .execute(&mut conn);
+
+    let res: Vec<String> = conn.zrangebyscore("ctg-s:I", 0, 1000).unwrap();
+    eprintln!("res = {:#?}", res);
+
+    let res: Vec<String> = conn.zrangebyscore("ctg-e:I", 1100, "+inf").unwrap();
+    eprintln!("res = {:#?}", res);
+
+    // MULTI
+    // ZRANGESTORE tmp-s:I ctg-s:I 0 1000 BYSCORE
+    // ZRANGESTORE tmp-e:I ctg-e:I 1100 +inf BYSCORE
+    // ZINTERSTORE tmp-ctg:I 2 tmp-s:I tmp-e:I AGGREGATE MIN
+    // DEL tmp-s:I tmp-e:I
+    // ZPOPMIN tmp-ctg:I
+    // EXEC
+
+    let res: Vec<BTreeMap<String, isize>> = redis::pipe()
+        .atomic()
+        .cmd("ZRANGESTORE")
+        .arg("tmp-s:I")
+        .arg("ctg-s:I")
+        .arg(0)
+        .arg(1000)
+        .arg("BYSCORE")
+        .ignore()
+        .cmd("ZRANGESTORE")
+        .arg("tmp-e:I")
+        .arg("ctg-e:I")
+        .arg(1100)
+        .arg("+inf")
+        .arg("BYSCORE")
+        .ignore()
+        .zinterstore_min("tmp-ctg:I", &["tmp-s:I", "tmp-e:I"])
+        .ignore()
+        .del("tmp-s:I")
+        .ignore()
+        .del("tmp-e:I")
+        .ignore()
+        .cmd("ZPOPMIN").arg("tmp-ctg:I").arg(1)
+        .query(&mut conn)
+        .unwrap();
+    eprintln!("res = {:#?}", res);
 }
