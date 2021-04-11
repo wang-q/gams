@@ -137,7 +137,7 @@ pub fn execute(args: &ArgMatches) -> std::result::Result<(), std::io::Error> {
                     cur_regions.push(pos);
                     cur_regions.push(max);
                 } else if let Some(last) = cur_regions.last_mut() {
-                        *last = max;
+                    *last = max;
                 }
 
                 regions.extend(cur_regions);

@@ -99,8 +99,8 @@ MULTI
 ZRANGESTORE tmp-s:I ctg-s:I 0 1000 BYSCORE
 ZRANGESTORE tmp-e:I ctg-e:I 1100 +inf BYSCORE
 ZINTERSTORE tmp-ctg:I 2 tmp-s:I tmp-e:I AGGREGATE MIN
+DEL tmp-s:I tmp-e:I
 ZPOPMIN tmp-ctg:I
-DEL tmp-s:I tmp-e:I tmp-ctg:I
 EXEC
 EOF
 
