@@ -4,7 +4,7 @@ use redis::Commands;
 use std::process::Command;
 
 use rand::Rng;
-use std::collections::BTreeMap;
+use std::collections::{BTreeMap, BTreeSet};
 
 // Create clap subcommand arguments
 pub fn make_subcommand<'a, 'b>() -> App<'a, 'b> {
@@ -316,10 +316,13 @@ fn pipe_atomic() {
         .ignore()
         .execute(&mut conn);
 
-    let res: Vec<String> = conn.zrangebyscore("ctg-s:I", 0, 1000).unwrap();
-    eprintln!("res = {:#?}", res);
+    let res_s: BTreeSet<String> = conn.zrangebyscore("ctg-s:I", 0, 1000).unwrap();
+    eprintln!("res = {:#?}", res_s);
 
-    let res: Vec<String> = conn.zrangebyscore("ctg-e:I", 1100, "+inf").unwrap();
+    let res_e: BTreeSet<String> = conn.zrangebyscore("ctg-e:I", 1100, "+inf").unwrap();
+    eprintln!("res = {:#?}", res_e);
+
+    let res: Vec<_> = res_s.intersection(&res_e).collect();
     eprintln!("res = {:#?}", res);
 
     // MULTI
@@ -352,8 +355,12 @@ fn pipe_atomic() {
         .ignore()
         .del("tmp-e:I")
         .ignore()
-        .cmd("ZPOPMIN").arg("tmp-ctg:I").arg(1)
+        .cmd("ZPOPMIN")
+        .arg("tmp-ctg:I")
+        .arg(1)
         .query(&mut conn)
         .unwrap();
+    let (key, _) = res.first().unwrap().iter().next().unwrap();
     eprintln!("res = {:#?}", res);
+    eprintln!("key = {:#?}", key);
 }
