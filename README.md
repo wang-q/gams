@@ -43,6 +43,8 @@ SUBCOMMANDS:
 * Command line tools managed by `Linuxbrew`
 
 ```shell script
+brew install redis
+# scoop install redis5          # for redis-cli
 brew install parallel wget pigz
 brew install datamash mlr
 

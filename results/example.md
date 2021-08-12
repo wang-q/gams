@@ -3,6 +3,9 @@
 ## `redis-cli`
 
 ```shell script
+# Inside WSL
+# cd /mnt/c/Users/wangq/Scripts/garr
+
 # start redis-server
 redis-server --appendonly no --dir tests/S288c/
 
