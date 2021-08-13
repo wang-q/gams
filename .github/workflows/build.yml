@@ -47,6 +47,8 @@ jobs:
     - uses: Swatinem/rust-cache@v1
     - uses: actions/checkout@v2
 
+    - name: redis
+      run: redis-server --appendonly no --dir tests/S288c/ &
     - name: Build
       run: cargo build --verbose
     - name: Run tests
