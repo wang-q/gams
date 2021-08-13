@@ -106,17 +106,3 @@ pub fn find_one(name: &str, start: i32, end: i32) -> String {
 
     return key.to_string();
 }
-
-#[test]
-fn test_find_one() {
-    let tests = vec![
-        ("I", 1000, 1100, "ctg:I:1"),
-        ("Mito", 1000, 1100, "ctg:Mito:1"),
-        ("I", -1000, 1100, ""),
-        ("II", 1000, 1100, ""),
-    ];
-    for (name, start, end, expected) in tests {
-        let ctg = find_one(name, start, end);
-        assert_eq!(ctg, expected.to_string());
-    }
-}
