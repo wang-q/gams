@@ -1,4 +1,5 @@
 use serde::Deserialize;
+use std::collections::BTreeMap;
 
 #[derive(Deserialize, Debug)]
 pub struct Config {
@@ -48,4 +49,74 @@ pub fn connect() -> redis::Connection {
         .expect("Invalid connection URL")
         .get_connection()
         .expect("Failed to connect to Redis")
+}
+
+pub fn find_one(name: &str, start: i32, end: i32) -> String {
+    let mut conn = connect();
+
+    // MULTI
+    // ZRANGESTORE tmp-s:I ctg-s:I 0 1000 BYSCORE
+    // ZRANGESTORE tmp-e:I ctg-e:I 1100 +inf BYSCORE
+    // ZINTERSTORE tmp-ctg:I 2 tmp-s:I tmp-e:I AGGREGATE MIN
+    // DEL tmp-s:I tmp-e:I
+    // ZPOPMIN tmp-ctg:I
+    // EXEC
+
+    let res: Vec<BTreeMap<String, isize>> = redis::pipe()
+        .atomic()
+        .cmd("ZRANGESTORE")
+        .arg(format!("tmp-s:{}", name))
+        .arg(format!("ctg-s:{}", name))
+        .arg(0)
+        .arg(start)
+        .arg("BYSCORE")
+        .ignore()
+        .cmd("ZRANGESTORE")
+        .arg(format!("tmp-e:{}", name))
+        .arg(format!("ctg-e:{}", name))
+        .arg(end)
+        .arg("+inf")
+        .arg("BYSCORE")
+        .ignore()
+        .zinterstore_min(
+            format!("tmp-ctg:{}", name),
+            &[format!("tmp-s:{}", name), format!("tmp-e:{}", name)],
+        )
+        .ignore()
+        .del(format!("tmp-s:{}", name))
+        .ignore()
+        .del(format!("tmp-e:{}", name))
+        .ignore()
+        .cmd("ZPOPMIN")
+        .arg(format!("tmp-ctg:{}", name))
+        .arg(1)
+        .query(&mut conn)
+        .unwrap();
+
+    // res = [
+    //     {
+    //         "ctg:I:1": 1,
+    //     },
+    // ]
+    let first = res.first().unwrap();
+    let key = match first.iter().next() {
+        Some(i) => i.0,
+        _ => "",
+    };
+
+    return key.to_string();
+}
+
+#[test]
+fn test_find_one() {
+    let tests = vec![
+        ("I", 1000, 1100, "ctg:I:1"),
+        ("Mito", 1000, 1100, "ctg:Mito:1"),
+        ("I", -1000, 1100, ""),
+        ("II", 1000, 1100, ""),
+    ];
+    for (name, start, end, expected) in tests {
+        let ctg = find_one(name, start, end);
+        assert_eq!(ctg, expected.to_string());
+    }
 }
