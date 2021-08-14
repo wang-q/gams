@@ -104,5 +104,5 @@ pub fn find_one(name: &str, start: i32, end: i32) -> String {
         _ => "",
     };
 
-    return key.to_string();
+    key.to_string()
 }

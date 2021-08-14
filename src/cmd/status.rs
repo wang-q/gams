@@ -1,6 +1,6 @@
 use clap::*;
 use garr::*;
-use redis::Commands;
+use redis::{Commands, RedisResult};
 use std::process::Command;
 
 use rand::Rng;
@@ -53,6 +53,7 @@ pub fn execute(args: &ArgMatches) -> std::result::Result<(), std::io::Error> {
             set();
             sorted_set();
             pipe_atomic();
+            script();
         }
         "info" => {
             info();
@@ -363,4 +364,31 @@ fn pipe_atomic() {
     let (key, _) = res.first().unwrap().iter().next().unwrap();
     eprintln!("res = {:#?}", res);
     eprintln!("key = {:#?}", key);
+}
+
+fn script() {
+    let mut conn = connect();
+    println!("******* Running Lua Scripts *******");
+
+    let script = redis::Script::new(
+        r#"
+return tonumber(ARGV[1]) + tonumber(ARGV[2]);
+
+"#,
+    );
+    let res: RedisResult<i32> = script.arg(1).arg(2).invoke(&mut conn);
+    eprintln!("res = {:#?}", res);
+
+    // https://github.com/redis/redis/issues/7#issuecomment-596464166
+    let script = redis::Script::new(
+        r#"
+local result = redis.call('SCAN', ARGV[1], 'MATCH', ARGV[2], 'COUNT', ARGV[3])
+result[2] = #result[2]
+return result
+
+"#,
+    );
+    let res : RedisResult<()> = script.arg("0").arg("ctg*").arg(1000).invoke(&mut conn);
+    eprintln!("res = {:#?}", res);
+
 }
