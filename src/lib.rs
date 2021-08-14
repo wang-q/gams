@@ -52,17 +52,6 @@ pub fn connect() -> redis::Connection {
         .expect("Failed to connect to Redis")
 }
 
-pub fn get_ctgs(conn: &mut redis::Connection) -> Vec<String> {
-    // number of ctg
-    let mut ctgs: Vec<String> = Vec::new();
-    let iter: redis::Iter<'_, String> = conn.scan_match("ctg:*").unwrap();
-    for x in iter {
-        ctgs.push(x);
-    }
-
-    ctgs
-}
-
 pub fn get_scan_count(conn: &mut redis::Connection, scan: String) -> i32 {
     // number of matches
     let mut count = 0;
@@ -72,6 +61,17 @@ pub fn get_scan_count(conn: &mut redis::Connection, scan: String) -> i32 {
     }
 
     count
+}
+
+pub fn get_scan_vec(conn: &mut redis::Connection, scan: String) -> Vec<String> {
+    // number of matches
+    let mut keys: Vec<String> = Vec::new();
+    let iter: redis::Iter<'_, String> = conn.scan_match(scan).unwrap();
+    for x in iter {
+        keys.push(x);
+    }
+
+    keys
 }
 
 pub fn find_one(conn: &mut redis::Connection, chr: &str, start: i32, end: i32) -> String {
