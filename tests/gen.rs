@@ -19,6 +19,7 @@ fn command_gen() -> Result<(), Box<dyn std::error::Error>> {
     assert!(stdout.contains("There are 3 contigs"));
 
     // find_one
+    let mut conn = garr::connect();
     let tests = vec![
         ("I", 1000, 1100, "ctg:I:1"),
         ("Mito", 1000, 1100, "ctg:Mito:1"),
@@ -26,7 +27,7 @@ fn command_gen() -> Result<(), Box<dyn std::error::Error>> {
         ("II", 1000, 1100, ""),
     ];
     for (name, start, end, expected) in tests {
-        let ctg = garr::find_one(name, start, end);
+        let ctg = garr::find_one(&mut conn, name, start, end);
         assert_eq!(ctg, expected.to_string());
     }
 

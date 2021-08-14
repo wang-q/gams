@@ -380,15 +380,5 @@ return tonumber(ARGV[1]) + tonumber(ARGV[2]);
     eprintln!("res = {:#?}", res);
 
     // https://github.com/redis/redis/issues/7#issuecomment-596464166
-    let script = redis::Script::new(
-        r#"
-local result = redis.call('SCAN', ARGV[1], 'MATCH', ARGV[2], 'COUNT', ARGV[3])
-result[2] = #result[2]
-return result
-
-"#,
-    );
-    let res : RedisResult<()> = script.arg("0").arg("ctg*").arg(1000).invoke(&mut conn);
-    eprintln!("res = {:#?}", res);
 
 }

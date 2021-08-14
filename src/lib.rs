@@ -51,9 +51,7 @@ pub fn connect() -> redis::Connection {
         .expect("Failed to connect to Redis")
 }
 
-pub fn find_one(name: &str, start: i32, end: i32) -> String {
-    let mut conn = connect();
-
+pub fn find_one(conn: &mut redis::Connection, name: &str, start: i32, end: i32) -> String {
     // MULTI
     // ZRANGESTORE tmp-s:I ctg-s:I 0 1000 BYSCORE
     // ZRANGESTORE tmp-e:I ctg-e:I 1100 +inf BYSCORE
@@ -90,7 +88,7 @@ pub fn find_one(name: &str, start: i32, end: i32) -> String {
         .cmd("ZPOPMIN")
         .arg(format!("tmp-ctg:{}", name))
         .arg(1)
-        .query(&mut conn)
+        .query(conn)
         .unwrap();
 
     // res = [
