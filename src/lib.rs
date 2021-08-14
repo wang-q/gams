@@ -63,6 +63,17 @@ pub fn get_ctgs(conn: &mut redis::Connection) -> Vec<String> {
     ctgs
 }
 
+pub fn get_scan_count(conn: &mut redis::Connection, scan: String) -> i32 {
+    // number of matches
+    let mut count = 0;
+    let iter: redis::Iter<'_, String> = conn.scan_match(scan).unwrap();
+    for _ in iter {
+        count += 1;
+    }
+
+    count
+}
+
 pub fn find_one(conn: &mut redis::Connection, chr: &str, start: i32, end: i32) -> String {
     // MULTI
     // ZRANGESTORE tmp-s:I ctg-s:I 0 1000 BYSCORE
@@ -136,6 +147,7 @@ pub fn get_seq(conn: &mut redis::Connection, chr: &str, start: i32, end: i32) ->
     seq
 }
 
+// TODO: caches of gc_content
 pub fn get_gc_content(conn: &mut redis::Connection, chr: &str, start: i32, end: i32) -> f32 {
     let seq = get_seq(conn, chr, start, end);
 

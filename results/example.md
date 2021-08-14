@@ -96,23 +96,6 @@ garr gen tests/S288c/genome.fa.gz --piece 100000
 # add positions
 garr pos tests/S288c/spo11_hot.pos.txt
 
-# find a contig contains 1000-1100
-redis-cli --raw ZRANGEBYSCORE ctg-s:I 0 1000
-redis-cli --raw ZRANGEBYSCORE ctg-e:I 1100 +inf
-
-redis-cli --raw <<EOF
-MULTI
-ZRANGESTORE tmp-s:I ctg-s:I 0 1000 BYSCORE
-ZRANGESTORE tmp-e:I ctg-e:I 1100 +inf BYSCORE
-ZINTERSTORE tmp-ctg:I 2 tmp-s:I tmp-e:I AGGREGATE MIN
-DEL tmp-s:I tmp-e:I
-ZPOPMIN tmp-ctg:I
-EXEC
-EOF
-
-#redis-cli --raw HSTRLEN ctg:I:1 seq
-#redis-cli --raw SCAN 0 MATCH ctg:* TYPE HASH
-
 # dump DB to redis-server start dir as dump.rdb
 garr status dump
 

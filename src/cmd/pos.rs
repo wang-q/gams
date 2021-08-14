@@ -67,12 +67,25 @@ pub fn execute(args: &ArgMatches) -> std::result::Result<(), std::io::Error> {
         let length = range.end() - range.start() + 1;
         let _: () = conn.hset(&pos_id, "length", length).unwrap();
 
+        let _: () = conn.hset(&pos_id, "chr_name", range.chr()).unwrap();
+        let _: () = conn.hset(&pos_id, "chr_start", *range.start()).unwrap();
+        let _: () = conn.hset(&pos_id, "chr_end", *range.end()).unwrap();
+
+        let gc_content = garr::get_gc_content(&mut conn, range.chr(), *range.start(), *range.end());
+        let _: () = conn.hset(&pos_id, "gc", gc_content).unwrap();
+
+        let _: () = conn.hset(&pos_id, "tag", tag).unwrap();
+
         // let start = regions.pop_front().unwrap() as usize;
         // let end = regions.pop_front().unwrap() as usize;
         //
         // set.entry(chr.to_string())
         //     .and_modify(|e| e.add_pair(range.start().clone(), range.end().clone()));
     }
+
+    // number of pos
+    let pos_count = garr::get_scan_count(&mut conn, "pos:*".to_string());
+    println!("There are {} positions", pos_count);
 
     Ok(())
 }

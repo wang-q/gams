@@ -48,7 +48,7 @@ fn command_gen() -> Result<(), Box<dyn std::error::Error>> {
     // get_gc_content
     let mut conn = garr::connect();
     let tests = vec![
-        ("I", 1000, 1002, 0.0), // ATA
+        ("I", 1000, 1002, 0.0),      // ATA
         ("I", 1000, 1010, 1. / 11.), // ATACAATTATA
         ("I", -1000, 1100, 0.0),
         ("II", 1000, 1100, 0.0),
