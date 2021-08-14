@@ -156,7 +156,9 @@ pub fn execute(args: &ArgMatches) -> std::result::Result<(), std::io::Error> {
                 let _: () = conn.hset(&ctg_id, "chr_end", end).unwrap();
                 let _: () = conn.hset(&ctg_id, "chr_strand", "+").unwrap();
                 let _: () = conn.hset(&ctg_id, "length", end - start + 1).unwrap();
-                let _: () = conn.hset(&ctg_id, "seq", &chr_seq[start - 1..end]).unwrap();
+                let _: () = conn
+                    .set(format!("seq:{}", ctg_id), &chr_seq[start - 1..end])
+                    .unwrap();
 
                 // indexing ctg
                 let _: () = conn

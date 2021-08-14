@@ -31,5 +31,18 @@ fn command_gen() -> Result<(), Box<dyn std::error::Error>> {
         assert_eq!(ctg, expected.to_string());
     }
 
+    // get_seq
+    let mut conn = garr::connect();
+    let tests = vec![
+        ("I", 1000, 1002, "ATA"),
+        ("I", 1000, 1010, "ATACAATTATA"),
+        ("I", -1000, 1100, ""),
+        ("II", 1000, 1100, ""),
+    ];
+    for (name, start, end, expected) in tests {
+        let ctg = garr::get_seq(&mut conn, name, start, end);
+        assert_eq!(ctg, expected.to_string());
+    }
+
     Ok(())
 }

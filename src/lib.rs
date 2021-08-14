@@ -1,3 +1,4 @@
+use redis::Commands;
 use serde::Deserialize;
 use std::collections::BTreeMap;
 
@@ -103,4 +104,23 @@ pub fn find_one(conn: &mut redis::Connection, name: &str, start: i32, end: i32) 
     };
 
     key.to_string()
+}
+
+pub fn get_seq(conn: &mut redis::Connection, name: &str, start: i32, end: i32) -> String {
+    let ctg = find_one(conn, name, start, end);
+
+    if ctg == "" {
+        return "".to_string();
+    }
+
+    let chr_start: i32 = conn.hget(&ctg, "chr_start").unwrap();
+
+    let ctg_start = (start - chr_start + 1) as isize;
+    let ctg_end = (end - chr_start + 1) as isize;
+
+    let seq: String = conn
+        .getrange(format!("seq:{}", ctg), ctg_start - 1, ctg_end - 1)
+        .unwrap();
+
+    seq
 }

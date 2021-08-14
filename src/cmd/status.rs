@@ -380,5 +380,4 @@ return tonumber(ARGV[1]) + tonumber(ARGV[2]);
     eprintln!("res = {:#?}", res);
 
     // https://github.com/redis/redis/issues/7#issuecomment-596464166
-
 }
