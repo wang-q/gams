@@ -24,6 +24,7 @@ pub fn execute(args: &ArgMatches) -> std::result::Result<(), std::io::Error> {
     let mut conn = connect();
 
     // pos in each contig
+    // TODO: change to redis serial
     let mut pos_serial: HashMap<String, i32> = HashMap::new();
 
     // processing each file
@@ -41,6 +42,7 @@ pub fn execute(args: &ArgMatches) -> std::result::Result<(), std::io::Error> {
                 continue;
             }
 
+            // TODO: change to atomic pipe
             let serial = pos_serial.entry(ctg_id.clone()).or_insert(0);
             *serial += 1;
 
