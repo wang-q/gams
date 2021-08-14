@@ -96,6 +96,9 @@ garr gen tests/S288c/genome.fa.gz --piece 100000
 # add ranges
 garr range tests/S288c/spo11_hot.pos.txt
 
+# add pos
+garr pos tests/S288c/spo11_hot.pos.txt tests/S288c/spo11_hot.pos.txt
+
 # dump DB to redis-server start dir as dump.rdb
 garr status dump
 

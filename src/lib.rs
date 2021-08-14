@@ -131,7 +131,7 @@ pub fn find_one(conn: &mut redis::Connection, chr: &str, start: i32, end: i32) -
 pub fn get_seq(conn: &mut redis::Connection, chr: &str, start: i32, end: i32) -> String {
     let ctg = find_one(conn, chr, start, end);
 
-    if ctg == "" {
+    if ctg.is_empty() {
         return "".to_string();
     }
 
@@ -151,7 +151,7 @@ pub fn get_seq(conn: &mut redis::Connection, chr: &str, start: i32, end: i32) ->
 pub fn get_gc_content(conn: &mut redis::Connection, chr: &str, start: i32, end: i32) -> f32 {
     let seq = get_seq(conn, chr, start, end);
 
-    if seq == "" {
+    if seq.is_empty() {
         return 0 as f32;
     }
 

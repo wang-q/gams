@@ -12,6 +12,7 @@ fn main() -> std::io::Result<()> {
         .subcommand(cmd::env::make_subcommand())
         .subcommand(cmd::status::make_subcommand())
         .subcommand(cmd::gen::make_subcommand())
+        .subcommand(cmd::pos::make_subcommand())
         .subcommand(cmd::range::make_subcommand());
 
     // Check which subcomamnd the user ran...
@@ -19,6 +20,7 @@ fn main() -> std::io::Result<()> {
         ("env", Some(sub_matches)) => cmd::env::execute(sub_matches),
         ("status", Some(sub_matches)) => cmd::status::execute(sub_matches),
         ("gen", Some(sub_matches)) => cmd::gen::execute(sub_matches),
+        ("pos", Some(sub_matches)) => cmd::pos::execute(sub_matches),
         ("range", Some(sub_matches)) => cmd::range::execute(sub_matches),
         (_, _) => unreachable!(),
     }?;

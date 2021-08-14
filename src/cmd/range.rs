@@ -8,7 +8,7 @@ use std::io::BufRead;
 // Create clap subcommand arguments
 pub fn make_subcommand<'a, 'b>() -> App<'a, 'b> {
     SubCommand::with_name("range")
-        .about("Add range files and generate sliding windows")
+        .about("Add ranges and generate sliding windows")
         .arg(
             Arg::with_name("infile")
                 .help("Sets the input file to use")
@@ -55,7 +55,7 @@ pub fn execute(args: &ArgMatches) -> std::result::Result<(), std::io::Error> {
         }
 
         let ctg_id = garr::find_one(&mut conn, range.chr(), *range.start(), *range.end());
-        if ctg_id == "" {
+        if ctg_id.is_empty() {
             continue;
         }
 
