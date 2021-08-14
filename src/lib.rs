@@ -63,7 +63,7 @@ pub fn get_ctgs(conn: &mut redis::Connection) -> Vec<String> {
     ctgs
 }
 
-pub fn find_one(conn: &mut redis::Connection, name: &str, start: i32, end: i32) -> String {
+pub fn find_one(conn: &mut redis::Connection, chr: &str, start: i32, end: i32) -> String {
     // MULTI
     // ZRANGESTORE tmp-s:I ctg-s:I 0 1000 BYSCORE
     // ZRANGESTORE tmp-e:I ctg-e:I 1100 +inf BYSCORE
@@ -75,30 +75,30 @@ pub fn find_one(conn: &mut redis::Connection, name: &str, start: i32, end: i32) 
     let res: Vec<BTreeMap<String, isize>> = redis::pipe()
         .atomic()
         .cmd("ZRANGESTORE")
-        .arg(format!("tmp-s:{}", name))
-        .arg(format!("ctg-s:{}", name))
+        .arg(format!("tmp-s:{}", chr))
+        .arg(format!("ctg-s:{}", chr))
         .arg(0)
         .arg(start)
         .arg("BYSCORE")
         .ignore()
         .cmd("ZRANGESTORE")
-        .arg(format!("tmp-e:{}", name))
-        .arg(format!("ctg-e:{}", name))
+        .arg(format!("tmp-e:{}", chr))
+        .arg(format!("ctg-e:{}", chr))
         .arg(end)
         .arg("+inf")
         .arg("BYSCORE")
         .ignore()
         .zinterstore_min(
-            format!("tmp-ctg:{}", name),
-            &[format!("tmp-s:{}", name), format!("tmp-e:{}", name)],
+            format!("tmp-ctg:{}", chr),
+            &[format!("tmp-s:{}", chr), format!("tmp-e:{}", chr)],
         )
         .ignore()
-        .del(format!("tmp-s:{}", name))
+        .del(format!("tmp-s:{}", chr))
         .ignore()
-        .del(format!("tmp-e:{}", name))
+        .del(format!("tmp-e:{}", chr))
         .ignore()
         .cmd("ZPOPMIN")
-        .arg(format!("tmp-ctg:{}", name))
+        .arg(format!("tmp-ctg:{}", chr))
         .arg(1)
         .query(conn)
         .unwrap();
@@ -117,8 +117,8 @@ pub fn find_one(conn: &mut redis::Connection, name: &str, start: i32, end: i32) 
     key.to_string()
 }
 
-pub fn get_seq(conn: &mut redis::Connection, name: &str, start: i32, end: i32) -> String {
-    let ctg = find_one(conn, name, start, end);
+pub fn get_seq(conn: &mut redis::Connection, chr: &str, start: i32, end: i32) -> String {
+    let ctg = find_one(conn, chr, start, end);
 
     if ctg == "" {
         return "".to_string();
@@ -134,4 +134,14 @@ pub fn get_seq(conn: &mut redis::Connection, name: &str, start: i32, end: i32) -
         .unwrap();
 
     seq
+}
+
+pub fn get_gc_content(conn: &mut redis::Connection, chr: &str, start: i32, end: i32) -> f32 {
+    let seq = get_seq(conn, chr, start, end);
+
+    if seq == "" {
+        return 0 as f32;
+    }
+
+    bio::seq_analysis::gc::gc_content(seq.bytes())
 }

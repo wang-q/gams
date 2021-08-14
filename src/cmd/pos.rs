@@ -64,7 +64,8 @@ pub fn execute(args: &ArgMatches) -> std::result::Result<(), std::io::Error> {
 
         let pos_id = format!("pos:{}:{}", ctg_id, serial);
 
-        let _: () = conn.hset(&pos_id, "length", range.end() - range.start() + 1).unwrap();
+        let length = range.end() - range.start() + 1;
+        let _: () = conn.hset(&pos_id, "length", length).unwrap();
 
         // let start = regions.pop_front().unwrap() as usize;
         // let end = regions.pop_front().unwrap() as usize;

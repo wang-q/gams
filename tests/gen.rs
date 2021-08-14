@@ -1,5 +1,6 @@
+use approx::assert_relative_eq;
 use assert_cmd::prelude::*; // Add methods on commands
-use std::process::Command; // Run programs
+use std::process::Command; // Run programs // f32
 
 #[test]
 fn command_gen() -> Result<(), Box<dyn std::error::Error>> {
@@ -42,6 +43,19 @@ fn command_gen() -> Result<(), Box<dyn std::error::Error>> {
     for (name, start, end, expected) in tests {
         let ctg = garr::get_seq(&mut conn, name, start, end);
         assert_eq!(ctg, expected.to_string());
+    }
+
+    // get_gc_content
+    let mut conn = garr::connect();
+    let tests = vec![
+        ("I", 1000, 1002, 0.0), // ATA
+        ("I", 1000, 1010, 1. / 11.), // ATACAATTATA
+        ("I", -1000, 1100, 0.0),
+        ("II", 1000, 1100, 0.0),
+    ];
+    for (name, start, end, expected) in tests {
+        let gc = garr::get_gc_content(&mut conn, name, start, end);
+        assert_relative_eq!(gc, expected);
     }
 
     Ok(())
