@@ -178,12 +178,7 @@ pub fn execute(args: &ArgMatches) -> std::result::Result<(), std::io::Error> {
     println!("There are {} chromosomes", n_chr);
 
     // number of ctg
-    let mut ctgs: Vec<String> = Vec::new();
-    let iter: redis::Iter<'_, String> = conn.scan_match("ctg:*").unwrap();
-    for x in iter {
-        // do something with the item
-        ctgs.push(x);
-    }
+    let ctgs: Vec<String> = garr::get_ctgs(&mut conn);
     println!("There are {} contigs", ctgs.len());
 
     Ok(())

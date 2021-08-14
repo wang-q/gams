@@ -52,6 +52,17 @@ pub fn connect() -> redis::Connection {
         .expect("Failed to connect to Redis")
 }
 
+pub fn get_ctgs(conn: &mut redis::Connection) -> Vec<String> {
+    // number of ctg
+    let mut ctgs: Vec<String> = Vec::new();
+    let iter: redis::Iter<'_, String> = conn.scan_match("ctg:*").unwrap();
+    for x in iter {
+        ctgs.push(x);
+    }
+
+    ctgs
+}
+
 pub fn find_one(conn: &mut redis::Connection, name: &str, start: i32, end: i32) -> String {
     // MULTI
     // ZRANGESTORE tmp-s:I ctg-s:I 0 1000 BYSCORE
