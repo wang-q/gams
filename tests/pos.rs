@@ -2,7 +2,7 @@ use assert_cmd::prelude::*; // Add methods on commands
 use std::process::Command; // Run programs // f32
 
 #[test]
-fn command_range() -> Result<(), Box<dyn std::error::Error>> {
+fn command_pos() -> Result<(), Box<dyn std::error::Error>> {
     // drop
     let mut cmd = Command::cargo_bin("garr")?;
     cmd.arg("status").arg("drop").unwrap();
