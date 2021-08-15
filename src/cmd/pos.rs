@@ -22,10 +22,6 @@ pub fn execute(args: &ArgMatches) -> std::result::Result<(), std::io::Error> {
     // redis connection
     let mut conn = connect();
 
-    // pos in each contig
-    // TODO: change to redis serial
-    // let mut pos_serial: HashMap<String, i32> = HashMap::new();
-
     // processing each file
     for infile in args.values_of("infiles").unwrap() {
         let reader = reader(infile);
@@ -41,7 +37,7 @@ pub fn execute(args: &ArgMatches) -> std::result::Result<(), std::io::Error> {
                 continue;
             }
 
-            // https://docs.rs/redis/0.21.0/redis/fn.transaction.html
+            // Redis counter
             let counter = format!("cnt:pos:{}", ctg_id);
             let serial: isize = conn.incr(counter.clone(), 1).unwrap();
             let pos_id = format!("pos:{}:{}", ctg_id, serial);
@@ -56,16 +52,6 @@ pub fn execute(args: &ArgMatches) -> std::result::Result<(), std::io::Error> {
                 .ignore()
                 .query(&mut conn)
                 .unwrap();
-
-            // // TODO: change to atomic pipe
-            // let serial = pos_serial.entry(ctg_id.clone()).or_insert(0);
-            // *serial += 1;
-            //
-            // let pos_id = format!("pos:{}:{}", ctg_id, serial);
-            //
-            // let _: () = conn.hset(&pos_id, "chr_name", range.chr()).unwrap();
-            // let _: () = conn.hset(&pos_id, "chr_start", *range.start()).unwrap();
-            // let _: () = conn.hset(&pos_id, "chr_end", *range.end()).unwrap();
         }
 
         // total number of pos
