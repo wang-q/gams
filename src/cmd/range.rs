@@ -64,7 +64,6 @@ pub fn execute(args: &ArgMatches) -> std::result::Result<(), std::io::Error> {
         let gc_content = garr::get_gc_content(&mut conn, range.chr(), *range.start(), *range.end());
 
         let _: () = redis::pipe()
-            .atomic()
             .hset(&range_id, "chr_name", range.chr())
             .ignore()
             .hset(&range_id, "chr_start", *range.start())

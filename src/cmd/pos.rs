@@ -43,7 +43,6 @@ pub fn execute(args: &ArgMatches) -> std::result::Result<(), std::io::Error> {
             let pos_id = format!("pos:{}:{}", ctg_id, serial);
 
             let _: () = redis::pipe()
-                .atomic()
                 .hset(&pos_id, "chr_name", range.chr())
                 .ignore()
                 .hset(&pos_id, "chr_start", *range.start())
