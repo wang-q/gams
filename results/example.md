@@ -106,13 +106,123 @@ ps -e | grep redis-server
 
 ```
 
-## `pos`
+## Atha
+
+* genome
 
 ```shell script
-cat tests/S288c/spo11_hot.pos.txt |
-    parallel -k -r --col-sep ':|\-' '
-        echo {1} {2} {3}
+mkdir -p ~/data/garr/Atha/
+cd ~/data/garr/Atha/
 
-    '
+# download
+aria2c -j 4 -x 4 -s 2 --file-allocation=none -c \
+    http://ftp.ensemblgenomes.org/pub/release-45/plants/fasta/arabidopsis_thaliana/dna/Arabidopsis_thaliana.TAIR10.dna_sm.toplevel.fa.gz
+
+# chromosomes
+gzip -d -c *dna_sm.toplevel* > toplevel.fa
+
+faops count toplevel.fa |
+    perl -nla -e '
+        next if $F[0] eq 'total';
+        print $F[0] if $F[1] > 50000;
+        print $F[0] if $F[1] > 5000  and $F[6]/$F[1] < 0.05;
+    ' |
+    uniq > listFile
+faops some toplevel.fa listFile stdout |
+    faops filter -N stdin stdout |
+    faops split-name stdin .
+rm toplevel.fa listFile
+
+mv Mt.fa Mt.fa.skip
+mv Pt.fa Pt.fa.skip
+
+# .fa.gz
+cat {1..5}.fa |
+    gzip -9 \
+    > genome.fa.gz
+faops size genome.fa.gz > chr.sizes
 
 ```
+
+* T-DNA
+
+```shell script
+mkdir -p ~/data/garr/TDNA/
+cd ~/data/garr/TDNA/
+
+for name in CSHL FLAG MX RATM; do
+    aria2c -j 4 -x 4 -s 2 --file-allocation=none -c \
+        http://natural.salk.edu/database/tdnaexpress/T-DNA.${name}
+done
+
+# Convert to positions
+for name in CSHL FLAG MX RATM; do
+    cat T-DNA.${name} |
+         perl -nla -e '
+            @F >= 2 or next;
+            next unless $F[1];
+
+            my ( $chr, $pos ) = split /:/, $F[1];
+            $chr =~ s/chr0?//i;
+            $pos =~ s/^0+//;
+            next unless $chr =~ /^\d+$/;
+
+            print "$chr:$pos";
+        ' \
+        > T-DNA.${name}.pos.txt;
+done
+
+```
+
+* `garr`
+
+```shell script
+# start redis-server
+redis-server --appendonly no --dir ~/data/garr/Atha/
+
+cd ~/data/garr/Atha/
+
+garr env
+
+garr status drop
+
+garr gen genome.fa.gz --piece 500000
+
+for name in CSHL FLAG MX RATM; do
+    garr pos ../TDNA/T-DNA.${name}.pos.txt
+done
+
+garr status dump
+
+hyperfine --warmup 1 --export-markdown garr.md.tmp \
+    'garr status drop;' \
+    'garr status drop; garr gen genome.fa.gz --piece 500000' \
+    'garr status drop; garr gen genome.fa.gz --piece 500000; garr pos ../TDNA/T-DNA.CSHL.pos.txt'
+
+
+```
+
+* benchmarks
+
+```shell script
+redis-server --appendonly no --dir ~/data/garr/Atha/
+
+cd ~/data/garr/Atha/
+
+garr env
+
+hyperfine --warmup 1 --export-markdown garr.md.tmp \
+    'garr status drop;' \
+    'garr status drop; garr gen genome.fa.gz --piece 500000' \
+    'garr status drop; garr gen genome.fa.gz --piece 500000; garr pos ../TDNA/T-DNA.CSHL.pos.txt'
+
+cat garr.md.tmp
+
+```
+
+| Command          |       Mean [ms] | Min [ms] | Max [ms] |         Relative |
+|:-----------------|----------------:|---------:|---------:|-----------------:|
+| `drop`           |       3.2 ± 0.5 |      2.4 |      5.9 |             1.00 |
+| `drop; gen`      |    953.9 ± 28.6 |    911.0 |    991.3 |   299.86 ± 44.06 |
+| `drop; gen; pos` | 11807.4 ± 374.4 |  11319.2 |  12244.1 | 3711.61 ± 546.68 |
+
