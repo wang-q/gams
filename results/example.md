@@ -99,6 +99,8 @@ garr range tests/S288c/spo11_hot.pos.txt
 # add pos
 garr pos tests/S288c/spo11_hot.pos.txt tests/S288c/spo11_hot.pos.txt
 
+# sliding
+
 # dump DB to redis-server start dir as dump.rdb
 garr status dump
 
@@ -194,12 +196,6 @@ done
 
 garr status dump
 
-hyperfine --warmup 1 --export-markdown garr.md.tmp \
-    'garr status drop;' \
-    'garr status drop; garr gen genome.fa.gz --piece 500000' \
-    'garr status drop; garr gen genome.fa.gz --piece 500000; garr pos ../TDNA/T-DNA.CSHL.pos.txt'
-
-
 ```
 
 * benchmarks
@@ -212,7 +208,6 @@ cd ~/data/garr/Atha/
 garr env
 
 hyperfine --warmup 1 --export-markdown garr.md.tmp \
-    'garr status drop;' \
     'garr status drop; garr gen genome.fa.gz --piece 500000' \
     'garr status drop; garr gen genome.fa.gz --piece 500000; garr pos ../TDNA/T-DNA.CSHL.pos.txt'
 
@@ -220,9 +215,8 @@ cat garr.md.tmp
 
 ```
 
-| Command          |       Mean [ms] | Min [ms] | Max [ms] |         Relative |
-|:-----------------|----------------:|---------:|---------:|-----------------:|
-| `drop`           |       3.2 ± 0.5 |      2.4 |      5.9 |             1.00 |
-| `drop; gen`      |    953.9 ± 28.6 |    911.0 |    991.3 |   299.86 ± 44.06 |
-| `drop; gen; pos` | 11807.4 ± 374.4 |  11319.2 |  12244.1 | 3711.61 ± 546.68 |
+| Command          |       Mean [ms] | Min [ms] | Max [ms] |     Relative |
+|:-----------------|----------------:|---------:|---------:|-------------:|
+| `drop; gen`      |    977.6 ± 63.8 |    935.1 |   1153.0 |         1.00 |
+| `drop; gen; pos` | 11483.9 ± 242.2 |  11126.4 |  11873.0 | 11.75 ± 0.81 |
 

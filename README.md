@@ -62,6 +62,8 @@ garr env
 
 garr status test
 
+garr sliding tests/S288c/genome.fa.gz
+
 ```
 
 ## AUTHOR
