@@ -51,6 +51,12 @@ pub fn execute(args: &ArgMatches) -> std::result::Result<(), std::io::Error> {
 
     let mut writer = writer(args.value_of("outfile").unwrap());
 
+    writer.write_fmt(format_args!(
+        "{}\t{}\n",
+        "#range",
+        "gc_content",
+    ))?;
+
     // load the first seq
     let infile = args.value_of("infile").unwrap();
     let reader = reader(infile);
@@ -68,7 +74,7 @@ pub fn execute(args: &ArgMatches) -> std::result::Result<(), std::io::Error> {
         let from = window.min() as usize;
         let to = window.max() as usize;
 
-        // from <= x < end, zero-based
+        // from <= x < to, zero-based
         let subseq = seq.get((from - 1)..(to)).unwrap();
         let gc_content = bio::seq_analysis::gc::gc_content(subseq);
 

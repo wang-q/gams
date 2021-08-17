@@ -100,7 +100,7 @@ fn command_sliding() -> Result<(), Box<dyn std::error::Error>> {
         .unwrap();
     let stdout = String::from_utf8(output.stdout).unwrap();
 
-    assert_eq!(stdout.lines().count(), 4603);
+    assert_eq!(stdout.lines().count(), 4604);
     assert!(stdout.contains("I:230101-230200\t0.57"));
 
     Ok(())

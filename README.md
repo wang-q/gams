@@ -53,6 +53,20 @@ brew install wang-q/tap/tsv-utils wang-q/tap/intspan
 
 ```
 
+
+* R (4.1) packages
+
+```shell script
+# R packages
+parallel -j 1 -k --line-buffer '
+    Rscript -e '\'' if (!requireNamespace("{}", quietly = TRUE)) { install.packages("{}", repos="https://mirrors.tuna.tsinghua.edu.cn/CRAN") } '\''
+    ' ::: \
+        getopt \
+        extrafont ggplot2 gridExtra \
+        tidyverse
+
+```
+
 ## EXAMPLES
 
 ```shell script
@@ -62,7 +76,9 @@ garr env
 
 garr status test
 
-garr sliding tests/S288c/genome.fa.gz
+garr sliding --size 100 --step 1 tests/S288c/genome.fa.gz -o tests/S288c/I.gc.tsv
+
+Rscript templates/peak.tera.R --infile tests/S288c/I.gc.tsv
 
 ```
 

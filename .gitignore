@@ -104,3 +104,4 @@ Cargo.lock
 
 garr.env
 dump.rdb
+*.tsv
