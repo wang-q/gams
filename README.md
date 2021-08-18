@@ -78,7 +78,15 @@ garr status test
 
 garr sliding --size 100 --step 1 tests/S288c/genome.fa.gz -o tests/S288c/I.gc.tsv
 
-Rscript templates/peak.tera.R --infile tests/S288c/I.gc.tsv
+Rscript templates/peak.tera.R \
+    --infile tests/S288c/I.gc.tsv \
+    --outfile tests/S288c/I.tsv
+tsv-summarize tests/S288c/I.tsv \
+    -H --group-by signal --count
+#signal  count
+#0       230017
+#-1      63
+#1       39
 
 ```
 

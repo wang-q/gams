@@ -63,10 +63,6 @@ if (is.null(opt$infile)) {
     q(status = 1)
 }
 
-if (!is.null(opt$outfile)) {
-    sink(opt$outfile)
-}
-
 if (is.null(opt$lag)) {
     opt$lag <- 1000
 }
@@ -110,13 +106,27 @@ ThresholdingAlgo <- function(y, lag, threshold, influence) {
 
 y <- tbl$gc_content
 result <- ThresholdingAlgo(y, opt$lag, opt$threshold, opt$influence)
+tbl$signal <- result$signal
 
-print(result)
+# outputs
+if (is.null(opt$outfile)) {
+    cat(format_tsv(tbl))
+} else {
+    write_tsv(tbl, file=opt$outfile)
+}
+figfile <- if (is.null(opt$outfile)) {
+    "stdout.pdf"
+} else {
+    str_c(opt$outfile, ".pdf")
+}
 
 # Plot result
+write(figfile, stderr())
+pdf(file=figfile, useDingbats=FALSE)
 par(mfrow = c(2, 1), oma = c(2, 2, 0, 0) + 0.1, mar = c(0, 0, 2, 1) + 0.2)
 plot(1:length(y), y, type = "l", ylab = "", xlab = "")
 lines(1:length(y), result$avgFilter, type = "l", col = "cyan", lwd = 2)
 lines(1:length(y), result$avgFilter + opt$threshold * result$stdFilter, type = "l", col = "green", lwd = 2)
 lines(1:length(y), result$avgFilter - opt$threshold * result$stdFilter, type = "l", col = "green", lwd = 2)
 plot(result$signals, type = "S", col = "red", ylab = "", xlab = "", ylim = c(-1.5, 1.5), lwd = 2)
+dev.off()
