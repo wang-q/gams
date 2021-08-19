@@ -51,11 +51,7 @@ pub fn execute(args: &ArgMatches) -> std::result::Result<(), std::io::Error> {
 
     let mut writer = writer(args.value_of("outfile").unwrap());
 
-    writer.write_fmt(format_args!(
-        "{}\t{}\n",
-        "#range",
-        "gc_content",
-    ))?;
+    writer.write_fmt(format_args!("{}\t{}\n", "#range", "gc_content",))?;
 
     // load the first seq
     let infile = args.value_of("infile").unwrap();
@@ -98,20 +94,11 @@ fn sliding(intspan: &IntSpan, size: i32, step: i32) -> Vec<IntSpan> {
         if end > intspan.size() {
             break;
         }
-        let window = slice(&intspan, start, end);
+        let window = intspan.slice(start, end);
         start += step;
 
         windows.push(window);
     }
 
     windows
-}
-
-// TODO: switch to intspan.slice()
-fn slice(intspan: &IntSpan, from: i32, to: i32) -> IntSpan {
-    let lower = intspan.at(from);
-    let upper = intspan.at(to);
-
-    let new = IntSpan::from_pair(lower, upper);
-    new.intersect(&intspan)
 }

@@ -68,7 +68,7 @@ if (is.null(opt$lag)) {
 }
 
 if (is.null(opt$influence)) {
-    opt$influence <- 200
+    opt$influence <- 20
 }
 
 if (is.null(opt$threshold)) {

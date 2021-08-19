@@ -79,14 +79,22 @@ garr status test
 garr sliding --size 100 --step 1 tests/S288c/genome.fa.gz -o tests/S288c/I.gc.tsv
 
 Rscript templates/peak.tera.R \
+    --lag 1000 \
+    --influence 20 \
+    --threshold 3 \
     --infile tests/S288c/I.gc.tsv \
     --outfile tests/S288c/I.tsv
+
 tsv-summarize tests/S288c/I.tsv \
     -H --group-by signal --count
 #signal  count
-#0       230017
-#-1      63
-#1       39
+#0       229884
+#-1      142
+#1       93
+
+tsv-filter tests/S288c/I.tsv -H --ne signal:0 |
+    cut -f 1 |
+    linkr merge -c 0.8 stdin | cut -f 2
 
 ```
 
