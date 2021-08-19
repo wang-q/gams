@@ -64,7 +64,7 @@ pub fn execute(args: &ArgMatches) -> std::result::Result<(), std::io::Error> {
     let length = seq.len();
     let intspan = IntSpan::from_pair(1, length as i32);
 
-    let windows = sliding(&intspan, size, step);
+    let windows = garr::sliding(&intspan, size, step);
 
     for window in windows {
         let from = window.min() as usize;
@@ -83,22 +83,4 @@ pub fn execute(args: &ArgMatches) -> std::result::Result<(), std::io::Error> {
     }
 
     Ok(())
-}
-
-fn sliding(intspan: &IntSpan, size: i32, step: i32) -> Vec<IntSpan> {
-    let mut windows = vec![];
-
-    let mut start = 1;
-    loop {
-        let end = start + size - 1;
-        if end > intspan.size() {
-            break;
-        }
-        let window = intspan.slice(start, end);
-        start += step;
-
-        windows.push(window);
-    }
-
-    windows
 }

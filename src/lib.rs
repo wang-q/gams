@@ -1,3 +1,5 @@
+use approx::assert_relative_eq;
+use intspan::{IntSpan, Range};
 use redis::Commands;
 use serde::Deserialize;
 use std::collections::BTreeMap;
@@ -156,4 +158,90 @@ pub fn get_gc_content(conn: &mut redis::Connection, chr: &str, start: i32, end: 
     }
 
     bio::seq_analysis::gc::gc_content(seq.bytes())
+}
+
+pub fn get_gc_stat(
+    conn: &mut redis::Connection,
+    r: &str,
+    size: i32,
+    step: i32,
+) -> (f32, f32, f32, f32) {
+    let range = Range::from_str(r);
+
+    let intspan = IntSpan::from_pair(*range.start(), *range.end());
+    let windows = sliding(&intspan, size, step);
+
+    let mut gcs = Vec::new();
+
+    for w in windows {
+        let gc_content = get_gc_content(conn, range.chr(), w.min(), w.max());
+        gcs.push(gc_content);
+    }
+
+    gc_stat(&gcs)
+}
+
+fn gc_stat(gcs: &Vec<f32>) -> (f32, f32, f32, f32) {
+    let len = gcs.len() as f32;
+    let sum = gcs.iter().sum::<f32>();
+
+    let mean = sum / len;
+    let sq_sum = gcs.iter().map(|x| (x - mean) * (x - mean)).sum::<f32>();
+    let stddev = (sq_sum / (len - 1.)).sqrt();
+
+    // coefficient of variation
+    let cv = if mean == 0. || mean == 1. {
+        0.
+    } else if mean <= 0.5 {
+        stddev / mean
+    } else {
+        stddev / (1. - mean)
+    };
+
+    // Signal-to-noise ratio
+    let snr = if stddev == 0. {
+        0.
+    } else if mean <= 0.5 {
+        mean / stddev
+    } else {
+        (1. - mean) / stddev
+    };
+
+    (mean, stddev, cv, snr)
+}
+
+#[test]
+fn t_gc_stat() {
+    let tests = vec![
+        (vec![0.5, 0.5], (0.5, 0., 0., 0.)),
+        (
+            vec![0.4, 0.5, 0.5, 0.6],
+            (0.5, 0.08164966, 0.16329932, 6.123724),
+        ),
+    ];
+    for (gcs, exp) in tests {
+        let (mean, stddev, cv, snr) = gc_stat(&gcs);
+        assert_relative_eq!(mean, exp.0);
+        assert_relative_eq!(stddev, exp.1);
+        assert_relative_eq!(cv, exp.2);
+        assert_relative_eq!(snr, exp.3);
+    }
+}
+
+pub fn sliding(intspan: &IntSpan, size: i32, step: i32) -> Vec<IntSpan> {
+    let mut windows = vec![];
+
+    let mut start = 1;
+    loop {
+        let end = start + size - 1;
+        if end > intspan.size() {
+            break;
+        }
+        let window = intspan.slice(start, end);
+        start += step;
+
+        windows.push(window);
+    }
+
+    windows
 }
