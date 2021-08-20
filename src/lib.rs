@@ -1,4 +1,3 @@
-use approx::assert_relative_eq;
 use intspan::{IntSpan, Range};
 use redis::Commands;
 use serde::Deserialize;
@@ -208,24 +207,6 @@ fn gc_stat(gcs: &Vec<f32>) -> (f32, f32, f32, f32) {
     };
 
     (mean, stddev, cv, snr)
-}
-
-#[test]
-fn t_gc_stat() {
-    let tests = vec![
-        (vec![0.5, 0.5], (0.5, 0., 0., 0.)),
-        (
-            vec![0.4, 0.5, 0.5, 0.6],
-            (0.5, 0.08164966, 0.16329932, 6.123724),
-        ),
-    ];
-    for (gcs, exp) in tests {
-        let (mean, stddev, cv, snr) = gc_stat(&gcs);
-        assert_relative_eq!(mean, exp.0);
-        assert_relative_eq!(stddev, exp.1);
-        assert_relative_eq!(cv, exp.2);
-        assert_relative_eq!(snr, exp.3);
-    }
 }
 
 pub fn sliding(intspan: &IntSpan, size: i32, step: i32) -> Vec<IntSpan> {

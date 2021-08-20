@@ -104,8 +104,7 @@ garr status dump
 
 ```
 
-## Sliding
-
+## GC-wave
 
 ```shell script
 redis-server --appendonly no --dir tests/S288c/
@@ -128,8 +127,20 @@ tsv-summarize tests/S288c/I.tsv \
 
 tsv-filter tests/S288c/I.tsv -H --ne signal:0 |
     cut -f 1 |
-    linkr merge -c 0.8 stdin | cut -f 2
+    linkr merge -c 0.8 stdin -o tests/S288c/I.replace.tsv
 
+tsv-filter tests/S288c/I.tsv -H --ne signal:0 |
+    ovlpr replace stdin tests/S288c/I.replace.tsv |
+    tsv-uniq -H -f 1 \
+    > tests/S288c/I.peaks.tsv
+
+tsv-summarize tests/S288c/I.peaks.tsv \
+    -H --group-by signal --count
+#signal  count
+#-1      69
+#1       48
+
+garr wave tests/S288c/I.peaks.tsv
 
 ```
 

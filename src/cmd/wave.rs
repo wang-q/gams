@@ -6,30 +6,13 @@ use std::io::BufRead;
 
 // Create clap subcommand arguments
 pub fn make_subcommand<'a, 'b>() -> App<'a, 'b> {
-    SubCommand::with_name("range")
-        .about("Add ranges")
+    SubCommand::with_name("wave")
+        .about("Add peaks of GC-waves")
         .arg(
             Arg::with_name("infile")
                 .help("Sets the input file to use")
                 .required(true)
                 .index(1),
-        )
-        .arg(
-            Arg::with_name("tag")
-                .long("tag")
-                .short("t")
-                .takes_value(true)
-                .default_value("range")
-                .empty_values(false)
-                .help("Range tags"),
-        )
-        .arg(
-            Arg::with_name("style")
-                .long("style")
-                .takes_value(true)
-                .default_value("intact")
-                .empty_values(false)
-                .help("Style of sliding windows, intact or center"),
         )
 }
 
@@ -37,7 +20,6 @@ pub fn make_subcommand<'a, 'b>() -> App<'a, 'b> {
 pub fn execute(args: &ArgMatches) -> std::result::Result<(), std::io::Error> {
     // opts
     let infile = args.value_of("infile").unwrap();
-    let tag = args.value_of("tag").unwrap();
 
     // redis connection
     let mut conn = connect();
@@ -45,10 +27,14 @@ pub fn execute(args: &ArgMatches) -> std::result::Result<(), std::io::Error> {
     // processing each line
     let reader = reader(infile);
     for line in reader.lines().filter_map(|r| r.ok()) {
-        let range = Range::from_str(&line);
+        let parts: Vec<&str> = line.split('\t').collect();
+
+        let range = Range::from_str(parts[0]);
         if !range.is_valid() {
             continue;
         }
+
+        let signal = parts[2];
 
         let ctg_id = garr::find_one(&mut conn, range.chr(), *range.start(), *range.end());
         if ctg_id.is_empty() {
@@ -56,33 +42,33 @@ pub fn execute(args: &ArgMatches) -> std::result::Result<(), std::io::Error> {
         }
 
         // Redis counter
-        let counter = format!("cnt:range:{}", ctg_id);
+        let counter = format!("cnt:peak:{}", ctg_id);
         let serial: isize = conn.incr(counter.clone(), 1).unwrap();
-        let range_id = format!("range:{}:{}", ctg_id, serial);
+        let peak_id = format!("peak:{}:{}", ctg_id, serial);
 
         let length = range.end() - range.start() + 1;
         let gc_content = garr::get_gc_content(&mut conn, range.chr(), *range.start(), *range.end());
 
         let _: () = redis::pipe()
-            .hset(&range_id, "chr_name", range.chr())
+            .hset(&peak_id, "chr_name", range.chr())
             .ignore()
-            .hset(&range_id, "chr_start", *range.start())
+            .hset(&peak_id, "chr_start", *range.start())
             .ignore()
-            .hset(&range_id, "chr_end", *range.end())
+            .hset(&peak_id, "chr_end", *range.end())
             .ignore()
-            .hset(&range_id, "length", length)
+            .hset(&peak_id, "length", length)
             .ignore()
-            .hset(&range_id, "gc", gc_content)
+            .hset(&peak_id, "gc", gc_content)
             .ignore()
-            .hset(&range_id, "tag", tag)
+            .hset(&peak_id, "signal", signal)
             .ignore()
             .query(&mut conn)
             .unwrap();
     }
 
-    // number of ranges
-    let range_count = garr::get_scan_count(&mut conn, "range:*".to_string());
-    println!("There are {} ranges", range_count);
+    // number of peaks
+    let peak_count = garr::get_scan_count(&mut conn, "peak:*".to_string());
+    println!("There are {} peaks", peak_count);
 
     Ok(())
 }

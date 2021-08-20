@@ -14,7 +14,8 @@ fn main() -> std::io::Result<()> {
         .subcommand(cmd::gen::make_subcommand())
         .subcommand(cmd::pos::make_subcommand())
         .subcommand(cmd::range::make_subcommand())
-        .subcommand(cmd::sliding::make_subcommand());
+        .subcommand(cmd::sliding::make_subcommand())
+        .subcommand(cmd::wave::make_subcommand());
 
     // Check which subcomamnd the user ran...
     match app.get_matches().subcommand() {
@@ -24,6 +25,7 @@ fn main() -> std::io::Result<()> {
         ("pos", Some(sub_matches)) => cmd::pos::execute(sub_matches),
         ("range", Some(sub_matches)) => cmd::range::execute(sub_matches),
         ("sliding", Some(sub_matches)) => cmd::sliding::execute(sub_matches),
+        ("wave", Some(sub_matches)) => cmd::wave::execute(sub_matches),
         (_, _) => unreachable!(),
     }?;
 
