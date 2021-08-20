@@ -71,7 +71,7 @@ fn t_gc_stat() {
         ),
     ];
     for (gcs, exp) in tests {
-        let (mean, stddev, cv, snr) = gc_stat(&gcs);
+        let (mean, stddev, cv, snr) = garr::gc_stat(&gcs);
         assert_relative_eq!(mean, exp.0);
         assert_relative_eq!(stddev, exp.1);
         assert_relative_eq!(cv, exp.2);

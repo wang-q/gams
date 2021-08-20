@@ -1,7 +1,7 @@
 use intspan::{IntSpan, Range};
 use redis::Commands;
 use serde::Deserialize;
-use std::collections::BTreeMap;
+use std::collections::{BTreeMap, HashMap};
 
 #[derive(Deserialize, Debug)]
 pub struct Config {
@@ -73,6 +73,40 @@ pub fn get_scan_vec(conn: &mut redis::Connection, scan: String) -> Vec<String> {
     }
 
     keys
+}
+
+pub fn get_scan_str(
+    conn: &mut redis::Connection,
+    scan: String,
+    field: String,
+) -> HashMap<String, String> {
+    // number of matches
+    let keys: Vec<String> = get_scan_vec(conn, scan);
+
+    let mut hash: HashMap<String, _> = HashMap::new();
+    for key in keys {
+        let val: String = conn.hget(&key, &field).unwrap();
+        hash.insert(key.clone(), val);
+    }
+
+    hash
+}
+
+pub fn get_scan_int(
+    conn: &mut redis::Connection,
+    scan: String,
+    field: String,
+) -> HashMap<String, i32> {
+    // number of matches
+    let keys: Vec<String> = get_scan_vec(conn, scan);
+
+    let mut hash: HashMap<String, _> = HashMap::new();
+    for key in keys {
+        let val: i32 = conn.hget(&key, &field).unwrap();
+        hash.insert(key.clone(), val);
+    }
+
+    hash
 }
 
 pub fn find_one(conn: &mut redis::Connection, chr: &str, start: i32, end: i32) -> String {
@@ -180,7 +214,7 @@ pub fn get_gc_stat(
     gc_stat(&gcs)
 }
 
-fn gc_stat(gcs: &Vec<f32>) -> (f32, f32, f32, f32) {
+pub fn gc_stat(gcs: &Vec<f32>) -> (f32, f32, f32, f32) {
     let len = gcs.len() as f32;
     let sum = gcs.iter().sum::<f32>();
 

@@ -140,6 +140,10 @@ tsv-summarize tests/S288c/I.peaks.tsv \
 #-1      69
 #1       48
 
+garr status drop
+
+garr gen tests/S288c/genome.fa.gz --piece 100000
+
 garr wave tests/S288c/I.peaks.tsv
 
 ```
