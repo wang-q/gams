@@ -55,6 +55,7 @@ pub fn make_subcommand<'a, 'b>() -> App<'a, 'b> {
 // command implementation
 pub fn execute(args: &ArgMatches) -> std::result::Result<(), std::io::Error> {
     // opts
+    let common_name = args.value_of("name").unwrap();
     let piece: i32 = value_t!(args.value_of("piece"), i32).unwrap_or_else(|e| {
         eprintln!("Need a integer for --piece\n{}", e);
         std::process::exit(1)
@@ -74,9 +75,7 @@ pub fn execute(args: &ArgMatches) -> std::result::Result<(), std::io::Error> {
     let mut conn = connect();
 
     // common_name
-    let _: () = conn
-        .set("common_name", args.value_of("name").unwrap())
-        .unwrap();
+    let _: () = conn.set("common_name", common_name).unwrap();
 
     for infile in args.values_of("infiles").unwrap() {
         let reader = reader(infile);
@@ -178,8 +177,14 @@ pub fn execute(args: &ArgMatches) -> std::result::Result<(), std::io::Error> {
     println!("There are {} chromosomes", n_chr);
 
     // number of ctg
-    let ctgs: Vec<String> = garr::get_scan_vec(&mut conn, "ctg:*".to_string());
+    let mut ctgs: Vec<String> = garr::get_scan_vec(&mut conn, "ctg:*".to_string());
+    ctgs.sort();
     println!("There are {} contigs", ctgs.len());
+
+    write_lines(
+        format!("{}.lst", common_name).as_str(),
+        &ctgs.iter().map(AsRef::as_ref).collect(),
+    )?;
 
     Ok(())
 }
