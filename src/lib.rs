@@ -53,6 +53,14 @@ pub fn connect() -> redis::Connection {
         .expect("Failed to connect to Redis")
 }
 
+pub fn get_key_pos(conn: &mut redis::Connection, key: &str) -> (String, i32, i32) {
+    let chr_name: String = conn.hget(key, "chr_name").unwrap();
+    let chr_start: i32 = conn.hget(key, "chr_start").unwrap();
+    let chr_end: i32 = conn.hget(key, "chr_end").unwrap();
+
+    (chr_name, chr_start, chr_end)
+}
+
 pub fn get_scan_count(conn: &mut redis::Connection, scan: String) -> i32 {
     // number of matches
     let mut count = 0;
