@@ -1,6 +1,7 @@
-use bio::io::fasta;
 use clap::*;
+use garr::*;
 use intspan::*;
+use redis::Commands;
 
 // Create clap subcommand arguments
 pub fn make_subcommand<'a, 'b>() -> App<'a, 'b> {
@@ -12,10 +13,12 @@ pub fn make_subcommand<'a, 'b>() -> App<'a, 'b> {
              ",
         )
         .arg(
-            Arg::with_name("infile")
-                .help("Sets the input file to use")
-                .required(true)
-                .index(1),
+            Arg::with_name("ctg")
+                .long("ctg")
+                .takes_value(true)
+                .default_value("ctg:*")
+                .empty_values(false)
+                .help("Sets full name or prefix of contigs, `ctg:I:*` or `ctg:I:2`"),
         )
         .arg(
             Arg::with_name("size")
@@ -90,46 +93,53 @@ pub fn execute(args: &ArgMatches) -> std::result::Result<(), std::io::Error> {
         std::process::exit(1)
     });
 
+    // redis connection
+    let mut conn = connect();
+
+    // headers
     let mut writer = writer(args.value_of("outfile").unwrap());
+    writer.write_fmt(format_args!(
+        "{}\t{}\t{}\n",
+        "#range", "gc_content", "signal"
+    ))?;
 
-    writer.write_fmt(format_args!("{}\t{}\t{}\n", "#range", "gc_content", "signal"))?;
+    // process each contig
+    let ctgs: Vec<String> =
+        garr::get_scan_vec(&mut conn, args.value_of("ctg").unwrap().to_string());
+    eprintln!("There are {} contigs", ctgs.len());
+    for ctg_id in ctgs {
+        let (chr_name, chr_start, chr_end) = garr::get_key_pos(&mut conn, &ctg_id);
+        eprintln!("Process {} {}:{}-{}", ctg_id, chr_name, chr_start, chr_end);
 
-    // load the first seq
-    let infile = args.value_of("infile").unwrap();
-    let reader = reader(infile);
-    let fa_in = fasta::Reader::new(reader);
-    let record = fa_in.records().next().unwrap().unwrap();
+        let intspan = IntSpan::from_pair(chr_start, chr_end);
+        let windows = garr::sliding(&intspan, size, step);
 
-    // intspan
-    let seq = record.seq();
-    let length = seq.len();
-    let intspan = IntSpan::from_pair(1, length as i32);
+        let seq: String = conn.get(format!("seq:{}", ctg_id)).unwrap();
 
-    let windows = garr::sliding(&intspan, size, step);
+        let mut gcs: Vec<f32> = Vec::with_capacity(windows.len());
+        for window in &windows {
+            // converted to ctg index
+            let from = intspan.index(window.min()) as usize;
+            let to = intspan.index(window.max()) as usize;
 
-    let mut gcs: Vec<f32> = Vec::with_capacity(windows.len());
-    for window in &windows {
-        let from = window.min() as usize;
-        let to = window.max() as usize;
+            // from <= x < to, zero-based
+            let subseq = seq.get((from - 1)..(to)).unwrap().bytes();
+            let gc_content = bio::seq_analysis::gc::gc_content(subseq);
+            gcs.push(gc_content);
+        }
 
-        // from <= x < to, zero-based
-        let subseq = seq.get((from - 1)..(to)).unwrap();
-        let gc_content = bio::seq_analysis::gc::gc_content(subseq);
+        let signals = garr::thresholding_algo(&gcs, lag, threshold, influence);
 
-        gcs.push(gc_content);
-    }
-
-    let signals = garr::thresholding_algo(&gcs, lag, threshold, influence);
-
-    // outputs
-    for i in 0..windows.len() {
-        writer.write_fmt(format_args!(
-            "{}:{}\t{}\t{}\n",
-            record.id(),
-            windows[i].runlist(),
-            gcs[i],
-            signals[i],
-        ))?;
+        // outputs
+        for i in 0..windows.len() {
+            writer.write_fmt(format_args!(
+                "{}:{}\t{}\t{}\n",
+                chr_name,
+                windows[i].runlist(),
+                gcs[i],
+                signals[i],
+            ))?;
+        }
     }
 
     Ok(())
