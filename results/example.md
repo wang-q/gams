@@ -107,27 +107,39 @@ garr status dump
 ## GC-wave
 
 ```shell script
-garr sliding --size 100 --step 1 tests/S288c/genome.fa.gz -o tests/S288c/I.gc.tsv
+garr sliding tests/S288c/genome.fa.gz \
+    --size 100 --step 1 \
+    --lag 1000 \
+    --threshold 3.0 \
+    --influence 1.0 \
+    -o tests/S288c/I.gc.tsv
 
 Rscript templates/peak.tera.R \
     --lag 1000 \
     --threshold 3.0 \
     --influence 1.0 \
     --infile tests/S288c/I.gc.tsv \
-    --outfile tests/S288c/I.signal.tsv
+    --outfile tests/S288c/I.R.tsv
 
-tsv-summarize tests/S288c/I.signal.tsv \
+tsv-summarize tests/S288c/I.gc.tsv \
+    -H --group-by signal --count
+#signal  count
+#0       227242
+#-1      2124
+#1       753
+
+tsv-summarize tests/S288c/I.R.tsv \
     -H --group-by signal --count
 #signal  count
 #0       227317
 #-1      2079
 #1       723
 
-tsv-filter tests/S288c/I.signal.tsv -H --ne signal:0 |
+tsv-filter tests/S288c/I.gc.tsv -H --ne signal:0 |
     cut -f 1 |
     linkr merge -c 0.8 stdin -o tests/S288c/I.replace.tsv
 
-tsv-filter tests/S288c/I.signal.tsv -H --ne signal:0 |
+tsv-filter tests/S288c/I.gc.tsv -H --ne signal:0 |
     ovlpr replace stdin tests/S288c/I.replace.tsv |
     tsv-uniq -H -f 1 \
     > tests/S288c/I.peaks.tsv
@@ -135,14 +147,14 @@ tsv-filter tests/S288c/I.signal.tsv -H --ne signal:0 |
 tsv-summarize tests/S288c/I.peaks.tsv \
     -H --group-by signal --count
 #signal  count
-#-1      91
-#1       58
+#-1      94
+#1       61
 
 redis-server --appendonly no --dir tests/S288c/
 
 garr status drop
 
-garr gen tests/S288c/genome.fa.gz --piece 100000
+garr gen tests/S288c/genome.fa.gz --piece 500000
 
 garr wave tests/S288c/I.peaks.tsv
 
@@ -243,35 +255,34 @@ garr status dump
 ```shell script
 find ~/data/garr/Atha/ -name "*.fa" |
     sort |
-    parallel -j 1 -k '
+    parallel -j 1 '
         echo {}
 
         echo {.}.gc.tsv
-        garr sliding --size 100 --step 1 {} -o {.}.gc.tsv
+        garr sliding {} \
+            --size 100 --step 5 \
+            --lag 200 \
+            --threshold 3.0 \
+            --influence 1.0 \
+            -o {.}.gc.tsv
 
-
-        Rscript /mnt/c/Users/wangq/Scripts/garr/templates/peak.tera.R \
-            --lag 1000 \
-            --influence 20 \
-            --threshold 3 \
-            --infile {.}.gc.tsv \
-            --outfile {.}.signal.tsv
-
-        tsv-summarize {.}.signal.tsv \
+        tsv-summarize {.}.gc.tsv \
             -H --group-by signal --count
 
+        echo {.}.peaks.tsv
+        tsv-filter {.}.gc.tsv -H --ne signal:0 |
+            cut -f 1 |
+            linkr merge -c 0.8 stdin -o {.}.replace.tsv
 
+        tsv-filter {.}.gc.tsv -H --ne signal:0 |
+            ovlpr replace stdin {.}.replace.tsv |
+            tsv-uniq -H -f 1 \
+            > {.}.peaks.tsv
 
+        tsv-summarize {.}.peaks.tsv \
+            -H --group-by signal --count
         '
 
-
-
-Rscript templates/peak.tera.R \
-    --lag 1000 \
-    --influence 20 \
-    --threshold 3 \
-    --infile tests/S288c/I.gc.tsv \
-    --outfile tests/S288c/I.tsv
 
 ```
 

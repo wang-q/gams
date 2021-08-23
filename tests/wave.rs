@@ -12,7 +12,7 @@ fn command_wave() -> Result<(), Box<dyn std::error::Error>> {
     cmd.arg("gen")
         .arg("tests/S288c/genome.fa.gz")
         .arg("--piece")
-        .arg("100000")
+        .arg("500000")
         .unwrap();
 
     // range
@@ -25,7 +25,7 @@ fn command_wave() -> Result<(), Box<dyn std::error::Error>> {
     let stdout = String::from_utf8(output.stdout).unwrap();
 
     assert_eq!(stdout.lines().count(), 1);
-    assert!(stdout.contains("There are 117 peaks"));
+    assert!(stdout.contains("There are 155 peaks"));
 
     Ok(())
 }
