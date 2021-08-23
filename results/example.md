@@ -107,7 +107,14 @@ garr status dump
 ## GC-wave
 
 ```shell script
-garr sliding tests/S288c/genome.fa.gz \
+redis-server --appendonly no --dir tests/S288c/
+
+garr status drop
+
+garr gen tests/S288c/genome.fa.gz --piece 500000
+
+garr sliding \
+    --ctg 'ctg:I:' \
     --size 100 --step 1 \
     --lag 1000 \
     --threshold 3.0 \
@@ -149,12 +156,6 @@ tsv-summarize tests/S288c/I.peaks.tsv \
 #signal  count
 #-1      94
 #1       61
-
-redis-server --appendonly no --dir tests/S288c/
-
-garr status drop
-
-garr gen tests/S288c/genome.fa.gz --piece 500000
 
 garr wave tests/S288c/I.peaks.tsv
 
@@ -253,36 +254,48 @@ garr status dump
 * GC-wave
 
 ```shell script
-find ~/data/garr/Atha/ -name "*.fa" |
+cat ctgs.lst |
     sort |
-    parallel -j 1 '
+    parallel -j 4 -k --line-buffer '
         echo {}
 
-        echo {.}.gc.tsv
-        garr sliding {} \
-            --size 100 --step 5 \
-            --lag 200 \
+        garr sliding \
+            --ctg {} \
+            --size 100 --step 1 \
+            --lag 1000 \
             --threshold 3.0 \
             --influence 1.0 \
-            -o {.}.gc.tsv
+            -o stdout |
+            tsv-filter -H --ne signal:0 \
+            > {.}.gc.tsv
 
-        tsv-summarize {.}.gc.tsv \
-            -H --group-by signal --count
-
-        echo {.}.peaks.tsv
-        tsv-filter {.}.gc.tsv -H --ne signal:0 |
+        cat {.}.gc.tsv |
             cut -f 1 |
             linkr merge -c 0.8 stdin -o {.}.replace.tsv
 
-        tsv-filter {.}.gc.tsv -H --ne signal:0 |
+        cat {.}.gc.tsv |
             ovlpr replace stdin {.}.replace.tsv |
             tsv-uniq -H -f 1 \
             > {.}.peaks.tsv
 
         tsv-summarize {.}.peaks.tsv \
             -H --group-by signal --count
+
+        rm {.}.gc.tsv {.}.replace.tsv
         '
 
+tsv-append *.peaks.tsv -H > Atha.wave.tsv
+cat Atha.wave.tsv | datamash check
+
+rm *.peaks.tsv
+
+tsv-summarize Atha.wave.tsv \
+    -H --group-by signal --count
+#signal  count
+#1       32211
+#-1      26821
+
+garr wave Atha.wave.tsv
 
 ```
 
