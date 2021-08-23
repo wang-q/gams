@@ -35,17 +35,17 @@ spec = matrix(
         "integer",
         "how much data will be smoothed",
 
-        "influence",
+        "threshold",
         "2",
         1,
-        "integer",
-        "the influence of signals on the algorithm's detection threshold",
+        "double",
+        "the number of standard deviations from the moving mean",
 
-        "threshold",
+        "influence",
         "3",
         1,
-        "integer",
-        "the number of standard deviations from the moving mean"
+        "double",
+        "the influence of signals on the algorithm's detection threshold"
     ),
     byrow = TRUE,
     ncol = 5
@@ -67,12 +67,12 @@ if (is.null(opt$lag)) {
     opt$lag <- 1000
 }
 
-if (is.null(opt$influence)) {
-    opt$influence <- 20
+if (is.null(opt$threshold)) {
+    opt$threshold <- 3.0
 }
 
-if (is.null(opt$threshold)) {
-    opt$threshold <- 3
+if (is.null(opt$influence)) {
+    opt$influence <- 0.0
 }
 
 # col_type = cols() suppress the output

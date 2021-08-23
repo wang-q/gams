@@ -107,29 +107,27 @@ garr status dump
 ## GC-wave
 
 ```shell script
-redis-server --appendonly no --dir tests/S288c/
-
 garr sliding --size 100 --step 1 tests/S288c/genome.fa.gz -o tests/S288c/I.gc.tsv
 
 Rscript templates/peak.tera.R \
     --lag 1000 \
-    --influence 20 \
-    --threshold 3 \
+    --threshold 3.0 \
+    --influence 1.0 \
     --infile tests/S288c/I.gc.tsv \
-    --outfile tests/S288c/I.tsv
+    --outfile tests/S288c/I.signal.tsv
 
-tsv-summarize tests/S288c/I.tsv \
+tsv-summarize tests/S288c/I.signal.tsv \
     -H --group-by signal --count
 #signal  count
-#0       229884
-#-1      142
-#1       93
+#0       227317
+#-1      2079
+#1       723
 
-tsv-filter tests/S288c/I.tsv -H --ne signal:0 |
+tsv-filter tests/S288c/I.signal.tsv -H --ne signal:0 |
     cut -f 1 |
     linkr merge -c 0.8 stdin -o tests/S288c/I.replace.tsv
 
-tsv-filter tests/S288c/I.tsv -H --ne signal:0 |
+tsv-filter tests/S288c/I.signal.tsv -H --ne signal:0 |
     ovlpr replace stdin tests/S288c/I.replace.tsv |
     tsv-uniq -H -f 1 \
     > tests/S288c/I.peaks.tsv
@@ -137,8 +135,10 @@ tsv-filter tests/S288c/I.tsv -H --ne signal:0 |
 tsv-summarize tests/S288c/I.peaks.tsv \
     -H --group-by signal --count
 #signal  count
-#-1      69
-#1       48
+#-1      91
+#1       58
+
+redis-server --appendonly no --dir tests/S288c/
 
 garr status drop
 
@@ -238,6 +238,43 @@ garr status dump
 
 ```
 
+* GC-wave
+
+```shell script
+find ~/data/garr/Atha/ -name "*.fa" |
+    sort |
+    parallel -j 1 -k '
+        echo {}
+
+        echo {.}.gc.tsv
+        garr sliding --size 100 --step 1 {} -o {.}.gc.tsv
+
+
+        Rscript /mnt/c/Users/wangq/Scripts/garr/templates/peak.tera.R \
+            --lag 1000 \
+            --influence 20 \
+            --threshold 3 \
+            --infile {.}.gc.tsv \
+            --outfile {.}.signal.tsv
+
+        tsv-summarize {.}.signal.tsv \
+            -H --group-by signal --count
+
+
+
+        '
+
+
+
+Rscript templates/peak.tera.R \
+    --lag 1000 \
+    --influence 20 \
+    --threshold 3 \
+    --infile tests/S288c/I.gc.tsv \
+    --outfile tests/S288c/I.tsv
+
+```
+
 * benchmarks
 
 ```shell script
@@ -255,7 +292,7 @@ cat garr.md.tmp
 
 ```
 
-| Command          |       Mean [ms] | Min [ms] | Max [ms] |     Relative |
+| Command          |       Mean (ms) | Min (ms) | Max (ms) |     Relative |
 |:-----------------|----------------:|---------:|---------:|-------------:|
 | `drop; gen`      |    977.6 ± 63.8 |    935.1 |   1153.0 |         1.00 |
 | `drop; gen; pos` | 11483.9 ± 242.2 |  11126.4 |  11873.0 | 11.75 ± 0.81 |
