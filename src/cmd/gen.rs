@@ -111,8 +111,8 @@ pub fn execute(args: &ArgMatches) -> std::result::Result<(), std::io::Error> {
             let mut valid_set = IntSpan::new();
             valid_set.add_pair(1, chr_seq.len() as i32);
             valid_set.subtract(&ambiguous_set);
-            valid_set.fill(fill - 1);
-            valid_set.excise(min);
+            valid_set = valid_set.fill(fill - 1);
+            valid_set = valid_set.excise(min);
             println!(
                 "Valid region for {}:\n    {}\n",
                 chr_id,
@@ -181,10 +181,7 @@ pub fn execute(args: &ArgMatches) -> std::result::Result<(), std::io::Error> {
     ctgs.sort();
     println!("There are {} contigs", ctgs.len());
 
-    write_lines(
-        format!("{}.lst", common_name).as_str(),
-        &ctgs.iter().map(AsRef::as_ref).collect(),
-    )?;
+    write_lines("ctgs.lst", &ctgs.iter().map(AsRef::as_ref).collect())?;
 
     Ok(())
 }
