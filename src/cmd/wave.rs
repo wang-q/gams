@@ -8,6 +8,11 @@ use std::io::BufRead;
 pub fn make_subcommand<'a, 'b>() -> App<'a, 'b> {
     SubCommand::with_name("wave")
         .about("Add peaks of GC-waves")
+        .after_help(
+            "\
+    left-/right- wave length may be negative \
+             ",
+        )
         .arg(
             Arg::with_name("infile")
                 .help("Sets the input file to use")

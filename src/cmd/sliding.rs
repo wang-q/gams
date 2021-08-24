@@ -6,10 +6,10 @@ use redis::Commands;
 // Create clap subcommand arguments
 pub fn make_subcommand<'a, 'b>() -> App<'a, 'b> {
     SubCommand::with_name("sliding")
-        .about("Sliding windows on a chromosome")
+        .about("Sliding windows along a chromosome")
         .after_help(
             "\
-             --step and --lag should be adjust simultaneously \
+    --step and --lag should be adjust simultaneously. \
              ",
         )
         .arg(

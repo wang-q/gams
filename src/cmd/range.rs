@@ -23,14 +23,6 @@ pub fn make_subcommand<'a, 'b>() -> App<'a, 'b> {
                 .empty_values(false)
                 .help("Range tags"),
         )
-        .arg(
-            Arg::with_name("style")
-                .long("style")
-                .takes_value(true)
-                .default_value("intact")
-                .empty_values(false)
-                .help("Style of sliding windows, intact or center"),
-        )
 }
 
 // command implementation
