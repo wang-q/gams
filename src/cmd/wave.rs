@@ -72,13 +72,18 @@ pub fn execute(args: &ArgMatches) -> std::result::Result<(), std::io::Error> {
 
     // each ctg
     let ctgs: Vec<String> = garr::get_scan_vec(&mut conn, "ctg:*".to_string());
+    eprintln!("{} contigs to be processed", ctgs.len());
     for ctg_id in ctgs {
+        let (chr_name, chr_start, chr_end) = garr::get_key_pos(&mut conn, &ctg_id);
+        eprintln!("Process {} {}:{}-{}", ctg_id, chr_name, chr_start, chr_end);
+
         let hash = garr::get_scan_int(
             &mut conn,
             format!("peak:{}:*", ctg_id),
             "chr_start".to_string(),
         );
         let mut peaks = hash.keys().cloned().collect::<Vec<String>>();
+        eprintln!("\tThere are {} peaks", peaks.len());
         peaks.sort_by_key(|k| hash.get(k).unwrap());
         // eprintln!("{}\t{:#?}", ctg_id, peaks);
 

@@ -106,7 +106,7 @@ pub fn execute(args: &ArgMatches) -> std::result::Result<(), std::io::Error> {
     // process each contig
     let ctgs: Vec<String> =
         garr::get_scan_vec(&mut conn, args.value_of("ctg").unwrap().to_string());
-    eprintln!("There are {} contigs", ctgs.len());
+    eprintln!("{} contigs to be processed", ctgs.len());
     for ctg_id in ctgs {
         let (chr_name, chr_start, chr_end) = garr::get_key_pos(&mut conn, &ctg_id);
         eprintln!("Process {} {}:{}-{}", ctg_id, chr_name, chr_start, chr_end);

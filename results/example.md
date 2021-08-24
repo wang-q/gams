@@ -249,6 +249,9 @@ done
 
 garr status dump
 
+garr tsv -s 'ctg:*'
+garr tsv -s 'ctg:*' -f length
+
 ```
 
 * GC-wave
@@ -284,18 +287,20 @@ cat ctgs.lst |
         rm {.}.gc.tsv {.}.replace.tsv
         '
 
-tsv-append *.peaks.tsv -H > Atha.wave.tsv
-cat Atha.wave.tsv | datamash check
-
-rm *.peaks.tsv
-
-tsv-summarize Atha.wave.tsv \
+tsv-append ctg:*.peaks.tsv -H > Atha.peaks.tsv
+tsv-summarize Atha.peaks.tsv \
     -H --group-by signal --count
 #signal  count
 #1       32211
 #-1      26821
 
-garr wave Atha.wave.tsv
+rm ctg:*.peaks.tsv
+
+garr wave Atha.peaks.tsv
+
+garr tsv -s "peak:*" |
+    keep-header -- tsv-sort -k2,2 -k3,3n -k4,4n \
+    > Atha.wave.tsv
 
 ```
 
