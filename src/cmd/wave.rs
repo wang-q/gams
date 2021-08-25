@@ -34,14 +34,14 @@ pub fn execute(args: &ArgMatches) -> std::result::Result<(), std::io::Error> {
     for line in reader.lines().filter_map(|r| r.ok()) {
         let parts: Vec<&str> = line.split('\t').collect();
 
-        let range = Range::from_str(parts[0]);
-        if !range.is_valid() {
+        let rg = Range::from_str(parts[0]);
+        if !rg.is_valid() {
             continue;
         }
 
         let signal = parts[2];
 
-        let ctg_id = garr::find_one(&mut conn, range.chr(), *range.start(), *range.end());
+        let ctg_id = garr::find_one(&mut conn, &rg);
         if ctg_id.is_empty() {
             continue;
         }
@@ -51,15 +51,15 @@ pub fn execute(args: &ArgMatches) -> std::result::Result<(), std::io::Error> {
         let serial: isize = conn.incr(counter.clone(), 1).unwrap();
         let peak_id = format!("peak:{}:{}", ctg_id, serial);
 
-        let length = range.end() - range.start() + 1;
-        let gc_content = garr::get_gc_content(&mut conn, range.chr(), *range.start(), *range.end());
+        let length = rg.end() - rg.start() + 1;
+        let gc_content = garr::get_gc_content(&mut conn, &rg);
 
         let _: () = redis::pipe()
-            .hset(&peak_id, "chr_name", range.chr())
+            .hset(&peak_id, "chr_name", rg.chr())
             .ignore()
-            .hset(&peak_id, "chr_start", *range.start())
+            .hset(&peak_id, "chr_start", *rg.start())
             .ignore()
-            .hset(&peak_id, "chr_end", *range.end())
+            .hset(&peak_id, "chr_end", *rg.end())
             .ignore()
             .hset(&peak_id, "length", length)
             .ignore()

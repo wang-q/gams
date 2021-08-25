@@ -37,12 +37,12 @@ pub fn execute(args: &ArgMatches) -> std::result::Result<(), std::io::Error> {
     // processing each line
     let reader = reader(infile);
     for line in reader.lines().filter_map(|r| r.ok()) {
-        let range = Range::from_str(&line);
-        if !range.is_valid() {
+        let rg = Range::from_str(&line);
+        if !rg.is_valid() {
             continue;
         }
 
-        let ctg_id = garr::find_one(&mut conn, range.chr(), *range.start(), *range.end());
+        let ctg_id = garr::find_one(&mut conn, &rg);
         if ctg_id.is_empty() {
             continue;
         }
@@ -52,15 +52,15 @@ pub fn execute(args: &ArgMatches) -> std::result::Result<(), std::io::Error> {
         let serial: isize = conn.incr(counter.clone(), 1).unwrap();
         let range_id = format!("range:{}:{}", ctg_id, serial);
 
-        let length = range.end() - range.start() + 1;
-        let gc_content = garr::get_gc_content(&mut conn, range.chr(), *range.start(), *range.end());
+        let length = rg.end() - rg.start() + 1;
+        let gc_content = garr::get_gc_content(&mut conn, &rg);
 
         let _: () = redis::pipe()
-            .hset(&range_id, "chr_name", range.chr())
+            .hset(&range_id, "chr_name", rg.chr())
             .ignore()
-            .hset(&range_id, "chr_start", *range.start())
+            .hset(&range_id, "chr_start", *rg.start())
             .ignore()
-            .hset(&range_id, "chr_end", *range.end())
+            .hset(&range_id, "chr_end", *rg.end())
             .ignore()
             .hset(&range_id, "length", length)
             .ignore()

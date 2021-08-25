@@ -117,7 +117,7 @@ pub fn get_scan_int(
     hash
 }
 
-pub fn find_one(conn: &mut redis::Connection, chr: &str, start: i32, end: i32) -> String {
+pub fn find_one(conn: &mut redis::Connection, rg: &Range) -> String {
     // MULTI
     // ZRANGESTORE tmp-s:I ctg-s:I 0 1000 BYSCORE
     // ZRANGESTORE tmp-e:I ctg-e:I 1100 +inf BYSCORE
@@ -129,30 +129,30 @@ pub fn find_one(conn: &mut redis::Connection, chr: &str, start: i32, end: i32) -
     let res: Vec<BTreeMap<String, isize>> = redis::pipe()
         .atomic()
         .cmd("ZRANGESTORE")
-        .arg(format!("tmp-s:{}", chr))
-        .arg(format!("ctg-s:{}", chr))
+        .arg(format!("tmp-s:{}", rg.chr()))
+        .arg(format!("ctg-s:{}", rg.chr()))
         .arg(0)
-        .arg(start)
+        .arg(*rg.start())
         .arg("BYSCORE")
         .ignore()
         .cmd("ZRANGESTORE")
-        .arg(format!("tmp-e:{}", chr))
-        .arg(format!("ctg-e:{}", chr))
-        .arg(end)
+        .arg(format!("tmp-e:{}", rg.chr()))
+        .arg(format!("ctg-e:{}", rg.chr()))
+        .arg(*rg.end())
         .arg("+inf")
         .arg("BYSCORE")
         .ignore()
         .zinterstore_min(
-            format!("tmp-ctg:{}", chr),
-            &[format!("tmp-s:{}", chr), format!("tmp-e:{}", chr)],
+            format!("tmp-ctg:{}", rg.chr()),
+            &[format!("tmp-s:{}", rg.chr()), format!("tmp-e:{}", rg.chr())],
         )
         .ignore()
-        .del(format!("tmp-s:{}", chr))
+        .del(format!("tmp-s:{}", rg.chr()))
         .ignore()
-        .del(format!("tmp-e:{}", chr))
+        .del(format!("tmp-e:{}", rg.chr()))
         .ignore()
         .cmd("ZPOPMIN")
-        .arg(format!("tmp-ctg:{}", chr))
+        .arg(format!("tmp-ctg:{}", rg.chr()))
         .arg(1)
         .query(conn)
         .unwrap();
@@ -171,28 +171,28 @@ pub fn find_one(conn: &mut redis::Connection, chr: &str, start: i32, end: i32) -
     key.to_string()
 }
 
-pub fn get_seq(conn: &mut redis::Connection, chr: &str, start: i32, end: i32) -> String {
-    let ctg = find_one(conn, chr, start, end);
+pub fn get_seq(conn: &mut redis::Connection, rg: &Range) -> String {
+    let ctg_id = find_one(conn, rg);
 
-    if ctg.is_empty() {
+    if ctg_id.is_empty() {
         return "".to_string();
     }
 
-    let chr_start: i32 = conn.hget(&ctg, "chr_start").unwrap();
+    let chr_start: i32 = conn.hget(&ctg_id, "chr_start").unwrap();
 
-    let ctg_start = (start - chr_start + 1) as isize;
-    let ctg_end = (end - chr_start + 1) as isize;
+    let ctg_start = (rg.start() - chr_start + 1) as isize;
+    let ctg_end = (rg.end() - chr_start + 1) as isize;
 
     let seq: String = conn
-        .getrange(format!("seq:{}", ctg), ctg_start - 1, ctg_end - 1)
+        .getrange(format!("seq:{}", ctg_id), ctg_start - 1, ctg_end - 1)
         .unwrap();
 
     seq
 }
 
 // TODO: caches of gc_content
-pub fn get_gc_content(conn: &mut redis::Connection, chr: &str, start: i32, end: i32) -> f32 {
-    let seq = get_seq(conn, chr, start, end);
+pub fn get_gc_content(conn: &mut redis::Connection, rg: &Range) -> f32 {
+    let seq = get_seq(conn, rg);
 
     if seq.is_empty() {
         return 0 as f32;
@@ -203,19 +203,17 @@ pub fn get_gc_content(conn: &mut redis::Connection, chr: &str, start: i32, end: 
 
 pub fn get_gc_stat(
     conn: &mut redis::Connection,
-    r: &str,
+    rg: &Range,
     size: i32,
     step: i32,
 ) -> (f32, f32, f32, f32) {
-    let range = Range::from_str(r);
-
-    let intspan = IntSpan::from_pair(*range.start(), *range.end());
+    let intspan = rg.intspan();
     let windows = sliding(&intspan, size, step);
 
     let mut gcs = Vec::new();
 
     for w in windows {
-        let gc_content = get_gc_content(conn, range.chr(), w.min(), w.max());
+        let gc_content = get_gc_content(conn, &Range::from(rg.chr(), w.min(), w.max()));
         gcs.push(gc_content);
     }
 

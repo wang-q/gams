@@ -27,12 +27,12 @@ pub fn execute(args: &ArgMatches) -> std::result::Result<(), std::io::Error> {
         let reader = reader(infile);
 
         for line in reader.lines().filter_map(|r| r.ok()) {
-            let range = Range::from_str(&line);
-            if !range.is_valid() {
+            let rg = Range::from_str(&line);
+            if !rg.is_valid() {
                 continue;
             }
 
-            let ctg_id = garr::find_one(&mut conn, range.chr(), *range.start(), *range.end());
+            let ctg_id = garr::find_one(&mut conn, &rg);
             if ctg_id.is_empty() {
                 continue;
             }
@@ -43,11 +43,11 @@ pub fn execute(args: &ArgMatches) -> std::result::Result<(), std::io::Error> {
             let pos_id = format!("pos:{}:{}", ctg_id, serial);
 
             let _: () = redis::pipe()
-                .hset(&pos_id, "chr_name", range.chr())
+                .hset(&pos_id, "chr_name", rg.chr())
                 .ignore()
-                .hset(&pos_id, "chr_start", *range.start())
+                .hset(&pos_id, "chr_start", *rg.start())
                 .ignore()
-                .hset(&pos_id, "chr_end", *range.end())
+                .hset(&pos_id, "chr_end", *rg.end())
                 .ignore()
                 .query(&mut conn)
                 .unwrap();

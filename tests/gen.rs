@@ -1,5 +1,6 @@
 use approx::assert_relative_eq;
 use assert_cmd::prelude::*; // Add methods on commands
+use intspan::*;
 use std::process::Command; // Run programs // f32
 
 #[test]
@@ -28,7 +29,7 @@ fn command_gen() -> Result<(), Box<dyn std::error::Error>> {
         ("II", 1000, 1100, ""),
     ];
     for (name, start, end, expected) in tests {
-        let ctg = garr::find_one(&mut conn, name, start, end);
+        let ctg = garr::find_one(&mut conn, &Range::from(name, start, end));
         assert_eq!(ctg, expected.to_string());
     }
 
@@ -41,7 +42,7 @@ fn command_gen() -> Result<(), Box<dyn std::error::Error>> {
         ("II", 1000, 1100, ""),
     ];
     for (name, start, end, expected) in tests {
-        let ctg = garr::get_seq(&mut conn, name, start, end);
+        let ctg = garr::get_seq(&mut conn, &Range::from(name, start, end));
         assert_eq!(ctg, expected.to_string());
     }
 
@@ -54,7 +55,7 @@ fn command_gen() -> Result<(), Box<dyn std::error::Error>> {
         ("II", 1000, 1100, 0.0),
     ];
     for (name, start, end, expected) in tests {
-        let gc = garr::get_gc_content(&mut conn, name, start, end);
+        let gc = garr::get_gc_content(&mut conn, &Range::from(name, start, end));
         assert_relative_eq!(gc, expected);
     }
 
