@@ -27,10 +27,11 @@ pub fn execute(args: &ArgMatches) -> std::result::Result<(), std::io::Error> {
         let reader = reader(infile);
 
         for line in reader.lines().filter_map(|r| r.ok()) {
-            let rg = Range::from_str(&line);
+            let mut rg = Range::from_str(&line);
             if !rg.is_valid() {
                 continue;
             }
+            *rg.strand_mut() = "".to_string();
 
             let ctg_id = garr::find_one(&mut conn, &rg);
             if ctg_id.is_empty() {

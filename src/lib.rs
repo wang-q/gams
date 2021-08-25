@@ -190,15 +190,25 @@ pub fn get_seq(conn: &mut redis::Connection, rg: &Range) -> String {
     seq
 }
 
-// TODO: caches of gc_content
 pub fn get_gc_content(conn: &mut redis::Connection, rg: &Range) -> f32 {
-    let seq = get_seq(conn, rg);
+    let key = format!("cache:{}", rg.to_string());
+    let res = conn.get(&key).unwrap();
 
-    if seq.is_empty() {
-        return 0 as f32;
-    }
+    return match res {
+        Some(res) => res,
+        None => {
+            let seq = get_seq(conn, rg);
 
-    bio::seq_analysis::gc::gc_content(seq.bytes())
+            let gc_content = if seq.is_empty() {
+                0.
+            } else {
+                bio::seq_analysis::gc::gc_content(seq.bytes())
+            };
+            let _: () = conn.set(&key, gc_content).unwrap();
+
+            gc_content
+        }
+    };
 }
 
 pub fn get_gc_stat(

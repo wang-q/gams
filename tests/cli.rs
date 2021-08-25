@@ -1,8 +1,8 @@
+use approx::assert_relative_eq;
 use assert_cmd::prelude::*; // Add methods on commands
+use intspan::*;
 use predicates::prelude::*; // Used for writing assertions
 use std::process::Command; // Run programs
-use intspan::*;
-use approx::assert_relative_eq;
 
 #[test]
 fn command_invalid() -> Result<(), Box<dyn std::error::Error>> {

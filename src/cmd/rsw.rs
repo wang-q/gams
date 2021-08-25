@@ -98,13 +98,14 @@ pub fn execute(args: &ArgMatches) -> std::result::Result<(), std::io::Error> {
             for (sw_intspan, sw_type, sw_distance) in windows {
                 let rsw_id = format!("rsw:{}:{}", range_id, serial);
 
-                let gc_content =
-                    garr::get_gc_content(&mut conn, &Range::from(&chr_name, sw_intspan.min(), sw_intspan.max()));
+                let gc_content = garr::get_gc_content(
+                    &mut conn,
+                    &Range::from(&chr_name, sw_intspan.min(), sw_intspan.max()),
+                );
 
                 let resized = center_resize(&parent, &sw_intspan, resize);
                 let rg = Range::from(&chr_name, resized.min(), resized.max());
-                let (gc_mean, gc_stddev, gc_cv, gc_snr) =
-                    get_gc_stat(&mut conn, &rg, size, size);
+                let (gc_mean, gc_stddev, gc_cv, gc_snr) = get_gc_stat(&mut conn, &rg, size, size);
 
                 let _: () = redis::pipe()
                     .hset(&rsw_id, "chr_name", &chr_name)

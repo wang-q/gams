@@ -34,10 +34,11 @@ pub fn execute(args: &ArgMatches) -> std::result::Result<(), std::io::Error> {
     for line in reader.lines().filter_map(|r| r.ok()) {
         let parts: Vec<&str> = line.split('\t').collect();
 
-        let rg = Range::from_str(parts[0]);
+        let mut rg = Range::from_str(parts[0]);
         if !rg.is_valid() {
             continue;
         }
+        *rg.strand_mut() = "".to_string();
 
         let signal = parts[2];
 
