@@ -90,18 +90,17 @@ fn command_status_drop() -> Result<(), Box<dyn std::error::Error>> {
     Ok(())
 }
 
-#[test]
-fn command_sliding() -> Result<(), Box<dyn std::error::Error>> {
-    let mut cmd = Command::cargo_bin("garr")?;
-    let output = cmd
-        .arg("sliding")
-        .arg("tests/S288c/genome.fa.gz")
-        .output()
-        .unwrap();
-    let stdout = String::from_utf8(output.stdout).unwrap();
-
-    assert_eq!(stdout.lines().count(), 4604);
-    assert!(stdout.contains("I:230101-230200\t0.57"));
-
-    Ok(())
-}
+// #[test]
+// fn command_sliding() -> Result<(), Box<dyn std::error::Error>> {
+//     let mut cmd = Command::cargo_bin("garr")?;
+//     let output = cmd
+//         .arg("sliding")
+//         .output()
+//         .unwrap();
+//     let stdout = String::from_utf8(output.stdout).unwrap();
+//
+//     assert_eq!(stdout.lines().count(), 4604);
+//     assert!(stdout.contains("I:230101-230200\t0.57"));
+//
+//     Ok(())
+// }

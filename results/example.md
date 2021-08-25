@@ -96,6 +96,8 @@ garr gen tests/S288c/genome.fa.gz --piece 100000
 # add ranges
 garr range tests/S288c/spo11_hot.pos.txt
 
+garr rsw
+
 # add pos
 garr pos tests/S288c/spo11_hot.pos.txt tests/S288c/spo11_hot.pos.txt
 
@@ -254,6 +256,30 @@ garr tsv -s 'ctg:*' -f length
 
 ```
 
+* Ranges and rsw
+
+```shell script
+redis-server --appendonly no --dir ~/data/garr/Atha/
+
+cd ~/data/garr/Atha/
+
+garr env
+
+garr status drop
+
+garr gen genome.fa.gz --piece 500000
+
+garr range ../TDNA/T-DNA.CSHL.pos.txt --tag CSHL
+
+garr rsw --ctg 'ctg:1:*'
+
+garr tsv -s 'rsw:*' > CSHL.rsw.tsv
+
+
+```
+
+
+
 * GC-wave
 
 ```shell script
@@ -301,6 +327,15 @@ garr wave Atha.peaks.tsv
 garr tsv -s "peak:*" |
     keep-header -- tsv-sort -k2,2 -k3,3n -k4,4n \
     > Atha.wave.tsv
+
+cat Atha.wave.tsv |
+    tsv-summarize -H --count
+# 59032
+
+tsv-filter Atha.wave.tsv -H --or \
+    --le left_wave_length:0 --le right_wave_length:0 |
+    tsv-summarize -H --count
+# 12927
 
 ```
 
