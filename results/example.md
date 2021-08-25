@@ -269,11 +269,29 @@ garr status drop
 
 garr gen genome.fa.gz --piece 500000
 
-garr range ../TDNA/T-DNA.CSHL.pos.txt --tag CSHL
+garr tsv -s 'ctg:*' |
+    keep-header -- tsv-sort -k2,2 -k3,3n -k4,4n |
+    cut -f 1 \
+    > ctgs.lst
 
-garr rsw --ctg 'ctg:1:*'
+time parallel -j 4 -k --line-buffer '
+    echo {}
+    garr range ../TDNA/T-DNA.{}.pos.txt --tag {}
+    ' ::: RATM # CSHL FLAG MX RATM
+#real    0m13.682s
+#user    0m1.807s
+#sys     0m6.186s
 
-garr tsv -s 'rsw:*' > CSHL.rsw.tsv
+# TODO: separate rsw to rsw and local
+# TODO: --ctgs accepts a filename
+# TODO: EXPIRE caches
+
+time cat ctgs.lst |
+    parallel -j 4 -k --line-buffer '
+        garr rsw --ctg {}
+        '
+
+garr tsv -s 'rsw:*' > T-DNA.rsw.tsv
 
 
 ```
@@ -284,7 +302,6 @@ garr tsv -s 'rsw:*' > CSHL.rsw.tsv
 
 ```shell script
 cat ctgs.lst |
-    sort |
     parallel -j 4 -k --line-buffer '
         echo {}
 
