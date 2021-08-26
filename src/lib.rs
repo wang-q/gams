@@ -190,12 +190,18 @@ pub fn get_seq(conn: &mut redis::Connection, rg: &Range) -> String {
     seq
 }
 
+/// This is an expensive operation
 pub fn get_gc_content(conn: &mut redis::Connection, rg: &Range) -> f32 {
-    let key = format!("cache:{}", rg.to_string());
-    let res = conn.get(&key).unwrap();
+    let bucket = format!("cache:{}:{}", rg.chr(), rg.start() / 1000);
+    let field = rg.to_string();
+    let res = conn.hget(&bucket, &field).unwrap();
 
     return match res {
-        Some(res) => res,
+        Some(res) => {
+            let _: () = conn.expire(&bucket, 120).unwrap();
+
+            res
+        },
         None => {
             let seq = get_seq(conn, rg);
 
@@ -204,7 +210,9 @@ pub fn get_gc_content(conn: &mut redis::Connection, rg: &Range) -> f32 {
             } else {
                 bio::seq_analysis::gc::gc_content(seq.bytes())
             };
-            let _: () = conn.set(&key, gc_content).unwrap();
+            let _: () = conn.hset(&bucket, &field, gc_content).unwrap();
+            let _: () = conn.expire(&bucket, 120).unwrap();
+            let _: () = conn.expire(&bucket, 120).unwrap();
 
             gc_content
         }
@@ -475,6 +483,7 @@ mod tests {
             ("1-9999", 500, 500, ("451-549", "M", 0, 3)),
             ("1-9999", 500, 800, ("600-699", "M", 0, 3)),
             ("1-9999", 101, 101, ("52-150", "M", 0, 2)),
+            ("10001-19999", 10101, 10101, ("10052-10150", "M", 0, 2)),
         ];
 
         for (parent, start, end, exp) in tests {
