@@ -7,7 +7,7 @@ Genome Analyst with Rust and Redis
 
 ## INSTALL
 
-Current release: 0.0.1
+Current release: 0.1.0
 
 ```shell script
 cargo install --force --offline --path .
@@ -18,7 +18,7 @@ cargo install --force --offline --path .
 ## SYNOPSIS
 
 ```
-$ garr 0.0.1
+$ garr 0.1.0
 wang-q <wang-q@outlook.com>
 Genome Analyst with Rust and Redis
 
