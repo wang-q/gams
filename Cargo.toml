@@ -1,6 +1,6 @@
 [package]
 name = "garr"
-version = "0.0.1"
+version = "0.1.0"
 authors = ["wang-q <wang-q@outlook.com>"]
 edition = "2018"
 description = "Genome Analyst with Rust and Redis"
