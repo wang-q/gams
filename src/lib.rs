@@ -479,6 +479,30 @@ pub fn thresholding_algo(data: &Vec<f32>, lag: usize, threshold: f32, influence:
     signals
 }
 
+/// Push a float to a string vector
+///
+/// ```
+/// # use garr::push_val_f32;
+/// let mut values : Vec<String> = vec![];
+/// push_val_f32(&mut values, 0.123456);
+/// # assert_eq!(values, vec!["0.12346"]);
+/// ```
+pub fn push_val_f32(values: &mut Vec<String>, val: f32) {
+    values.push(format!("{:.5}", val));
+}
+
+/// Push an integer to a string vector
+///
+/// ```
+/// # use garr::push_val_i32;
+/// let mut values : Vec<String> = vec![];
+/// push_val_i32(&mut values, 123456);
+/// # assert_eq!(values, vec!["123456"]);
+/// ```
+pub fn push_val_i32(values: &mut Vec<String>, val: i32) {
+    values.push(format!("{}", val));
+}
+
 #[cfg(test)]
 mod tests {
     use crate::{center_resize, center_sw, thresholding_algo};

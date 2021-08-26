@@ -49,6 +49,15 @@ pub fn make_subcommand<'a, 'b>() -> App<'a, 'b> {
                 .default_value("500")
                 .empty_values(false),
         )
+        .arg(
+            Arg::with_name("outfile")
+                .short("o")
+                .long("outfile")
+                .takes_value(true)
+                .default_value("stdout")
+                .empty_values(false)
+                .help("Output filename. [stdout] for screen"),
+        )
 }
 
 // command implementation
@@ -70,6 +79,23 @@ pub fn execute(args: &ArgMatches) -> std::result::Result<(), std::io::Error> {
     // redis connection
     let mut conn = connect();
 
+    // headers
+    let mut writer = writer(args.value_of("outfile").unwrap());
+    let headers = vec![
+        "chr_name",
+        "chr_start",
+        "chr_end",
+        "type",
+        "distance",
+        "tag",
+        "gc_content",
+        "gc_mean",
+        "gc_stddev",
+        "gc_cv",
+        "gc_snr",
+    ];
+    writer.write_all(format!("{}\t{}\n", "#ID", headers.join("\t")).as_ref())?;
+
     // process each contig
     let ctgs: Vec<String> =
         garr::get_scan_vec(&mut conn, args.value_of("ctg").unwrap().to_string());
@@ -79,7 +105,7 @@ pub fn execute(args: &ArgMatches) -> std::result::Result<(), std::io::Error> {
         eprintln!("Process {} {}:{}-{}", ctg_id, chr_name, chr_start, chr_end);
 
         let parent = IntSpan::from_pair(chr_start, chr_end);
-        // let seq: String = conn.get(format!("seq:{}", ctg_id)).unwrap();
+        let seq: String = conn.get(format!("seq:{}", ctg_id)).unwrap();
 
         let pattern = format!("range:{}:*", ctg_id);
         let ranges: Vec<String> = garr::get_scan_vec(&mut conn, pattern);
@@ -98,49 +124,40 @@ pub fn execute(args: &ArgMatches) -> std::result::Result<(), std::io::Error> {
             for (sw_intspan, sw_type, sw_distance) in windows {
                 let rsw_id = format!("rsw:{}:{}", range_id, serial);
 
-                let gc_content = garr::get_gc_content(
+                let gc_content = garr::ctg_gc_content(
                     &mut conn,
                     &Range::from(&chr_name, sw_intspan.min(), sw_intspan.max()),
+                    &parent,
+                    &seq,
                 );
 
                 let resized = center_resize(&parent, &sw_intspan, resize);
-                let rg = Range::from(&chr_name, resized.min(), resized.max());
-                let (gc_mean, gc_stddev, gc_cv, gc_snr) = get_gc_stat(&mut conn, &rg, size, size);
+                let re_rg = Range::from(&chr_name, resized.min(), resized.max());
+                let (gc_mean, gc_stddev, gc_cv, gc_snr) =
+                    ctg_gc_stat(&mut conn, &re_rg, size, size, &parent, &seq);
 
-                let _: () = redis::pipe()
-                    .hset(&rsw_id, "chr_name", &chr_name)
-                    .ignore()
-                    .hset(&rsw_id, "chr_start", sw_intspan.min())
-                    .ignore()
-                    .hset(&rsw_id, "chr_end", sw_intspan.max())
-                    .ignore()
-                    .hset(&rsw_id, "type", sw_type)
-                    .ignore()
-                    .hset(&rsw_id, "distance", sw_distance)
-                    .ignore()
-                    .hset(&rsw_id, "tag", &tag)
-                    .ignore()
-                    .hset(&rsw_id, "gc_content", gc_content)
-                    .ignore()
-                    .hset(&rsw_id, "gc_mean", gc_mean)
-                    .ignore()
-                    .hset(&rsw_id, "gc_stddev", gc_stddev)
-                    .ignore()
-                    .hset(&rsw_id, "gc_cv", gc_cv)
-                    .ignore()
-                    .hset(&rsw_id, "gc_snr", gc_snr)
-                    .ignore()
-                    .query(&mut conn)
-                    .unwrap();
+                // prepare to output
+                let mut values : Vec<String> = vec![];
+
+                values.push(chr_name.to_string());
+                push_val_i32(&mut values, sw_intspan.min());
+                push_val_i32(&mut values, sw_intspan.max());
+                values.push(sw_type.to_string());
+                push_val_i32(&mut values, sw_distance);
+                values.push(tag.to_string());
+                push_val_f32(&mut values, gc_content);
+                push_val_f32(&mut values, gc_mean);
+                push_val_f32(&mut values, gc_stddev);
+                push_val_f32(&mut values, gc_cv);
+                push_val_f32(&mut values, gc_snr);
+
+                let line = values.join("\t");
+                writer.write_all(format!("{}\t{}\n", rsw_id, line).as_ref())?;
 
                 serial += 1;
             }
         }
     }
-
-    // number of rsw
-    let rsw_count = garr::get_scan_count(&mut conn, "rsw:*".to_string());
-    println!("There are {} rsws", rsw_count);
 
     Ok(())
 }

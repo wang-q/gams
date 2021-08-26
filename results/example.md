@@ -96,7 +96,28 @@ garr gen tests/S288c/genome.fa.gz --piece 100000
 # add ranges
 garr range tests/S288c/spo11_hot.pos.txt
 
-garr rsw
+time garr rsw > /dev/null
+# w/o gc_stat()
+# get_gc_content()
+#real    0m1.444s
+#user    0m0.174s
+#sys     0m0.838s
+
+# ctg_gc_content()
+#real    0m0.774s
+#user    0m0.406s
+#sys     0m0.289s
+
+# w/ gc_stat()
+# get_gc_content()
+#real    0m3.476s
+#user    0m0.436s
+#sys     0m2.037s
+
+# ctg_gc_content()
+#real    0m2.349s
+#user    0m1.041s
+#sys     0m1.102s
 
 # add pos
 garr pos tests/S288c/spo11_hot.pos.txt tests/S288c/spo11_hot.pos.txt
@@ -259,7 +280,11 @@ garr tsv -s 'ctg:*' -f length
 * Ranges and rsw
 
 ```shell script
+rm ~/data/garr/Atha/dump.rdb
+
 redis-server --appendonly no --dir ~/data/garr/Atha/
+#keydb-server --appendonly no --dir ~/data/garr/Atha/
+# keydb is as fast/slow as redis
 
 cd ~/data/garr/Atha/
 
@@ -277,26 +302,44 @@ garr tsv -s 'ctg:*' |
 time parallel -j 4 -k --line-buffer '
     echo {}
     garr range ../TDNA/T-DNA.{}.pos.txt --tag {}
-    ' ::: RATM # CSHL FLAG MX RATM
-#real    0m13.682s
-#user    0m1.807s
-#sys     0m6.186s
+    ' ::: CSHL # FLAG MX RATM
+# redis
+# RATM
+#real    0m14.055s
+#user    0m1.819s
+#sys     0m6.357s
+# 4 files
+#real    0m40.654s
+#user    0m11.503s
+#sys     0m21.387s
 
-# TODO: separate rsw to rsw and local
-# TODO: --ctgs accepts a filename
-# TODO: EXPIRE caches
+# keydb
+# RATM
+#real    0m14.228s
+#user    0m1.792s
+#sys     0m6.314s
+# 4 files
+#real    0m42.186s
+#user    0m11.481s
+#sys     0m21.391s
 
 time cat ctgs.lst |
-    parallel -j 4 -k --line-buffer '
+    parallel -j 2 -k --line-buffer '
         garr rsw --ctg {}
-        '
-
-garr tsv -s 'rsw:*' > T-DNA.rsw.tsv
-
+        ' |
+    tsv-uniq \
+    > T-DNA.rsw.tsv
+# CSHL
+# -j 4
+#real    7m43.384s
+#user    24m58.916s
+#sys     3m42.415s
+# -j 2
+#real    13m38.805s
+#user    21m56.417s
+#sys     4m34.154s
 
 ```
-
-
 
 * GC-wave
 
