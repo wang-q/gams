@@ -18,8 +18,7 @@ cargo install --force --offline --path .
 ## SYNOPSIS
 
 ```
-$ garr help
-garr 0.0.1
+$ garr 0.0.1
 wang-q <wang-q@outlook.com>
 Genome Analyst with Rust and Redis
 
@@ -31,10 +30,16 @@ FLAGS:
     -V, --version    Prints version information
 
 SUBCOMMANDS:
-    env       Create a .env file
-    gen       Generate the database from (gzipped) fasta files
-    help      Prints this message or the help of the given subcommand(s)
-    status    Test Redis config and connection
+    env        Create a .env file
+    gen        Generate the database from (gzipped) fasta files
+    help       Prints this message or the help of the given subcommand(s)
+    pos        Add range files to positions
+    range      Add ranges
+    rsw        Sliding windows around a range
+    sliding    Sliding windows along a chromosome
+    status     Test Redis config and connection
+    tsv        Exports Redis hashes to a tsv file
+    wave       Add peaks of GC-waves
 
 ```
 
@@ -52,7 +57,6 @@ brew tap wang-q/tap
 brew install wang-q/tap/tsv-utils wang-q/tap/intspan
 
 ```
-
 
 * R (4.1) packages
 
