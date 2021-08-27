@@ -30,6 +30,8 @@ serde = "1.0"
 envy = "0.4"
 dotenv = "0.15.0"
 bio = "0.30.0"
+tokio = "1.0"
+datafusion = "5.0.0"
 
 [build-dependencies]
 

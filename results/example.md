@@ -93,6 +93,10 @@ garr status drop
 # generate DB
 garr gen tests/S288c/genome.fa.gz --piece 100000
 
+garr tsv -s 'ctg:*' > tests/S288c/ctg.tsv
+
+garr stat tests/S288c/ctg.tsv -s templates/ctg.sql
+
 # add ranges
 garr range tests/S288c/spo11_hot.pos.txt
 
@@ -300,7 +304,7 @@ time garr gen genome.fa.gz --piece 500000
 garr tsv -s 'ctg:*' |
     keep-header -- tsv-sort -k2,2 -k3,3n -k4,4n |
     cut -f 1 \
-    > ctgs.lst
+    > ctg.lst
 
 time parallel -j 4 -k --line-buffer '
     echo {}
@@ -326,7 +330,7 @@ time parallel -j 4 -k --line-buffer '
 #user    0m11.481s
 #sys     0m21.391s
 
-time cat ctgs.lst |
+time cat ctg.lst |
     parallel -j 2 -k --line-buffer '
         garr rsw --ctg {}
         ' |
@@ -355,7 +359,7 @@ garr status drop
 
 garr gen genome.fa.gz --piece 500000
 
-time cat ctgs.lst |
+time cat ctg.lst |
     parallel -j 4 -k --line-buffer '
         garr sliding \
             --ctg {} \
