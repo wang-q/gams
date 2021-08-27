@@ -137,19 +137,19 @@ pub fn execute(args: &ArgMatches) -> std::result::Result<(), std::io::Error> {
                     ctg_gc_stat(&mut conn, &re_rg, size, size, &parent, &seq);
 
                 // prepare to output
-                let mut values : Vec<String> = vec![];
+                let mut values: Vec<String> = vec![];
 
-                values.push(chr_name.to_string());
-                push_val_i32(&mut values, sw_intspan.min());
-                push_val_i32(&mut values, sw_intspan.max());
-                values.push(sw_type.to_string());
-                push_val_i32(&mut values, sw_distance);
-                values.push(tag.to_string());
-                push_val_f32(&mut values, gc_content);
-                push_val_f32(&mut values, gc_mean);
-                push_val_f32(&mut values, gc_stddev);
-                push_val_f32(&mut values, gc_cv);
-                push_val_f32(&mut values, gc_snr);
+                values.push(format!("{}", chr_name));
+                values.push(format!("{}", sw_intspan.min()));
+                values.push(format!("{}", sw_intspan.max()));
+                values.push(format!("{}", sw_type));
+                values.push(format!("{}", sw_distance));
+                values.push(format!("{}", tag));
+                values.push(format!("{:.5}", gc_content));
+                values.push(format!("{:.5}", gc_mean));
+                values.push(format!("{:.5}", gc_stddev));
+                values.push(format!("{:.5}", gc_cv));
+                values.push(format!("{:.5}", gc_snr));
 
                 let line = values.join("\t");
                 writer.write_all(format!("{}\t{}\n", rsw_id, line).as_ref())?;
