@@ -111,16 +111,16 @@ pub fn execute(args: &ArgMatches) -> std::result::Result<(), std::io::Error> {
         let (chr_name, chr_start, chr_end) = garr::get_key_pos(&mut conn, &ctg_id);
         eprintln!("Process {} {}:{}-{}", ctg_id, chr_name, chr_start, chr_end);
 
-        let intspan = IntSpan::from_pair(chr_start, chr_end);
-        let windows = garr::sliding(&intspan, size, step);
+        let parent = IntSpan::from_pair(chr_start, chr_end);
+        let windows = garr::sliding(&parent, size, step);
 
         let seq: String = conn.get(format!("seq:{}", ctg_id)).unwrap();
 
         let mut gcs: Vec<f32> = Vec::with_capacity(windows.len());
         for window in &windows {
             // converted to ctg index
-            let from = intspan.index(window.min()) as usize;
-            let to = intspan.index(window.max()) as usize;
+            let from = parent.index(window.min()) as usize;
+            let to = parent.index(window.max()) as usize;
 
             // from <= x < to, zero-based
             let subseq = seq.get((from - 1)..(to)).unwrap().bytes();

@@ -292,7 +292,10 @@ garr env
 
 garr status drop
 
-garr gen genome.fa.gz --piece 500000
+time garr gen genome.fa.gz --piece 500000
+#real    0m1.520s
+#user    0m0.582s
+#sys     0m0.407s
 
 garr tsv -s 'ctg:*' |
     keep-header -- tsv-sort -k2,2 -k3,3n -k4,4n |
@@ -344,10 +347,16 @@ time cat ctgs.lst |
 * GC-wave
 
 ```shell script
-cat ctgs.lst |
-    parallel -j 4 -k --line-buffer '
-        echo {}
+cd ~/data/garr/Atha/
 
+garr env
+
+garr status drop
+
+garr gen genome.fa.gz --piece 500000
+
+time cat ctgs.lst |
+    parallel -j 4 -k --line-buffer '
         garr sliding \
             --ctg {} \
             --size 100 --step 1 \
@@ -371,18 +380,24 @@ cat ctgs.lst |
             -H --group-by signal --count
 
         rm {.}.gc.tsv {.}.replace.tsv
-        '
+    '
+#real    5m58.731s
+#user    23m47.703s
+#sys     0m16.114s
 
 tsv-append ctg:*.peaks.tsv -H > Atha.peaks.tsv
+rm ctg:*.peaks.tsv
+
 tsv-summarize Atha.peaks.tsv \
     -H --group-by signal --count
 #signal  count
 #1       32211
 #-1      26821
 
-rm ctg:*.peaks.tsv
-
-garr wave Atha.peaks.tsv
+time garr wave Atha.peaks.tsv
+#real    4m27.902s
+#user    0m26.255s
+#sys     2m31.036s
 
 garr tsv -s "peak:*" |
     keep-header -- tsv-sort -k2,2 -k3,3n -k4,4n \
@@ -409,15 +424,35 @@ cd ~/data/garr/Atha/
 garr env
 
 hyperfine --warmup 1 --export-markdown garr.md.tmp \
-    'garr status drop; garr gen genome.fa.gz --piece 500000' \
-    'garr status drop; garr gen genome.fa.gz --piece 500000; garr pos ../TDNA/T-DNA.CSHL.pos.txt'
+    '
+        garr status drop;
+        garr gen genome.fa.gz --piece 500000;
+    ' \
+    '
+        garr status drop;
+        garr gen genome.fa.gz --piece 500000;
+        garr pos ../TDNA/T-DNA.CSHL.pos.txt;
+    ' \
+    '
+        garr status drop;
+        garr gen genome.fa.gz --piece 500000;
+        garr range ../TDNA/T-DNA.CSHL.pos.txt --tag CSHL;
+    ' \
+    '
+        garr status drop;
+        garr gen genome.fa.gz --piece 500000;
+        garr sliding --size 100 --step 20 --lag 50 |
+            tsv-filter -H --ne signal:0 > /dev/null;
+    '
 
 cat garr.md.tmp
 
 ```
 
-| Command          |       Mean (ms) | Min (ms) | Max (ms) |     Relative |
-|:-----------------|----------------:|---------:|---------:|-------------:|
-| `drop; gen`      |    977.6 ± 63.8 |    935.1 |   1153.0 |         1.00 |
-| `drop; gen; pos` | 11483.9 ± 242.2 |  11126.4 |  11873.0 | 11.75 ± 0.81 |
+| Command               |       Mean [ms] | Min [ms] | Max [ms] |     Relative |
+|:----------------------|----------------:|---------:|---------:|-------------:|
+| `drop; gen;`          |    813.8 ± 18.5 |    783.4 |    834.4 |         1.00 |
+| `drop; gen; pos;`     |  8203.5 ± 166.7 |   8051.7 |   8475.7 | 10.08 ± 0.31 |
+| `drop; gen; range;`   | 20045.7 ± 474.6 |  19218.6 |  21041.7 | 24.63 ± 0.81 |
+| `drop; gen; sliding;` |   7580.7 ± 72.6 |   7467.1 |   7705.8 |  9.31 ± 0.23 |
 

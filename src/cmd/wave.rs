@@ -74,7 +74,7 @@ pub fn execute(args: &ArgMatches) -> std::result::Result<(), std::io::Error> {
 
     // number of peaks
     let peak_count = garr::get_scan_count(&mut conn, "peak:*".to_string());
-    println!("There are {} peaks", peak_count);
+    eprintln!("There are {} peaks", peak_count);
 
     // each ctg
     let ctgs: Vec<String> = garr::get_scan_vec(&mut conn, "ctg:*".to_string());
