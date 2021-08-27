@@ -10,8 +10,8 @@ pub fn make_subcommand<'a, 'b>() -> App<'a, 'b> {
         .about("Exports Redis hashes to a tsv file")
         .after_help(
             "\
-             All hashes should have the same structure. \
-             ID, chr_name, chr_start, chr_end will always be included.
+    All hashes should have the same structure. \
+    ID, chr_name, chr_start, chr_end will always be included. \
              ",
         )
         .arg(
@@ -29,7 +29,7 @@ pub fn make_subcommand<'a, 'b>() -> App<'a, 'b> {
                 .short("f")
                 .multiple(true)
                 .takes_value(true)
-                .help("Sets the pattern to scan, `ctg:*`"),
+                .help("Sets the fields to output"),
         )
         .arg(
             Arg::with_name("outfile")
