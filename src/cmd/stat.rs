@@ -59,6 +59,7 @@ pub async fn execute(args: &ArgMatches) -> std::result::Result<(), std::io::Erro
     let df = ctx.sql(&sql).unwrap();
 
     // execute the plan
+    // TODO: await makes the compilation extremely slow
     let results = df.collect().await.unwrap();
 
     // println!("{:?}", results);

@@ -15,7 +15,7 @@ fn main() -> std::io::Result<()> {
         .subcommand(cmd::pos::make_subcommand())
         .subcommand(cmd::range::make_subcommand())
         .subcommand(cmd::sliding::make_subcommand())
-        .subcommand(cmd::stat::make_subcommand())
+        // .subcommand(cmd::stat::make_subcommand())
         .subcommand(cmd::rsw::make_subcommand())
         .subcommand(cmd::tsv::make_subcommand())
         .subcommand(cmd::wave::make_subcommand());
@@ -29,7 +29,7 @@ fn main() -> std::io::Result<()> {
         ("range", Some(sub_matches)) => cmd::range::execute(sub_matches),
         ("rsw", Some(sub_matches)) => cmd::rsw::execute(sub_matches),
         ("sliding", Some(sub_matches)) => cmd::sliding::execute(sub_matches),
-        ("stat", Some(sub_matches)) => cmd::stat::execute(sub_matches),
+        // ("stat", Some(sub_matches)) => cmd::stat::execute(sub_matches),
         ("tsv", Some(sub_matches)) => cmd::tsv::execute(sub_matches),
         ("wave", Some(sub_matches)) => cmd::wave::execute(sub_matches),
         (_, _) => unreachable!(),
