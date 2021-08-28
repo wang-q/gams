@@ -1,8 +1,8 @@
 use clap::*;
-use datafusion::arrow::datatypes::{DataType, Field, Schema};
+use datafusion::arrow::csv;
+use datafusion::arrow::datatypes::*;
 use datafusion::prelude::*;
-use std::fs;
-use arrow::csv;
+use intspan::writer;
 
 // Create clap subcommand arguments
 pub fn make_subcommand<'a, 'b>() -> App<'a, 'b> {
@@ -22,6 +22,15 @@ pub fn make_subcommand<'a, 'b>() -> App<'a, 'b> {
                 .empty_values(false)
                 .help("SQL query file"),
         )
+        .arg(
+            Arg::with_name("outfile")
+                .short("o")
+                .long("outfile")
+                .takes_value(true)
+                .default_value("stdout")
+                .empty_values(false)
+                .help("Output filename. [stdout] for screen"),
+        )
 }
 
 // command implementation
@@ -30,7 +39,9 @@ pub async fn execute(args: &ArgMatches) -> std::result::Result<(), std::io::Erro
     // opts
     let infile = args.value_of("infile").unwrap();
     let sql_file = args.value_of("sql").unwrap();
-    let sql = fs::read_to_string(sql_file).expect("failed to read query");
+    let sql = std::fs::read_to_string(sql_file).expect("failed to read query");
+
+    let writer = writer(args.value_of("outfile").unwrap());
 
     // Initialize query interface
     let mut ctx = ExecutionContext::new();
@@ -50,7 +61,14 @@ pub async fn execute(args: &ArgMatches) -> std::result::Result<(), std::io::Erro
     // execute the plan
     let results = df.collect().await.unwrap();
 
-    println!("{:?}", results);
+    // println!("{:?}", results);
+
+    // create a builder and writer
+    let builder = csv::WriterBuilder::new()
+        .has_headers(true)
+        .with_delimiter(b'\t');
+    let mut csv_writer = builder.build(writer);
+    csv_writer.write(&results[0]).unwrap();
 
     Ok(())
 }

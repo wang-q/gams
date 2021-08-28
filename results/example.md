@@ -95,7 +95,7 @@ garr gen tests/S288c/genome.fa.gz --piece 100000
 
 garr tsv -s 'ctg:*' > tests/S288c/ctg.tsv
 
-garr stat tests/S288c/ctg.tsv -s templates/ctg.sql
+cargo run stat tests/S288c/ctg.tsv  -s templates/ctg.sql
 
 # add ranges
 garr range tests/S288c/spo11_hot.pos.txt
