@@ -1,4 +1,4 @@
-# garr
+# `garr`
 
 ![Publish](https://github.com/wang-q/garr/workflows/Publish/badge.svg)
 ![Build](https://github.com/wang-q/garr/workflows/Build/badge.svg)
@@ -49,7 +49,12 @@ SUBCOMMANDS:
 
 ```shell script
 brew install redis
-# scoop install redis5          # for redis-cli
+
+# clickhouse
+wget -O https://github.com/ClickHouse/ClickHouse/releases/download/v21.8.4.51-lts/clickhouse-common-static-21.8.4.51.tgz
+tar xvfz clickhouse-common-static-21.8.4.51.tgz
+sudo bash ./clickhouse-common-static-21.8.4.51/install/doinst.sh
+
 brew install parallel wget pigz
 brew install datamash mlr
 
