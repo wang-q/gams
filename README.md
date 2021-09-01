@@ -50,13 +50,8 @@ SUBCOMMANDS:
 ```shell script
 brew install redis
 
-# clickhouse
-wget -O https://github.com/ClickHouse/ClickHouse/releases/download/v21.8.4.51-lts/clickhouse-common-static-21.8.4.51.tgz
-tar xvfz clickhouse-common-static-21.8.4.51.tgz
-sudo bash ./clickhouse-common-static-21.8.4.51/install/doinst.sh
-
 brew install parallel wget pigz
-brew install datamash mlr
+brew install datamash miller
 
 brew tap wang-q/tap
 brew install wang-q/tap/tsv-utils wang-q/tap/intspan
@@ -73,6 +68,19 @@ parallel -j 1 -k --line-buffer '
         getopt \
         extrafont ggplot2 gridExtra \
         tidyverse
+
+```
+
+* Other tools
+
+```shell script
+
+# clickhouse
+curl -LO https://github.com/ClickHouse/ClickHouse/releases/download/v21.8.4.51-lts/clickhouse-common-static-21.8.4.51.tgz
+tar xvfz clickhouse-common-static-21.8.4.51.tgz
+sudo bash ./clickhouse-common-static-21.8.4.51/install/doinst.sh
+
+# winget install qishibo.AnotherRedisDesktopManager
 
 ```
 
