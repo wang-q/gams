@@ -18,7 +18,8 @@ cargo install --force --offline --path .
 ## SYNOPSIS
 
 ```
-$ garr 0.1.0
+$ garr help
+garr 0.1.1-alpha.0
 wang-q <wang-q@outlook.com>
 Genome Analyst with Rust and Redis
 

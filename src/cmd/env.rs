@@ -1,7 +1,7 @@
 use clap::*;
 use garr::*;
-use tera::{Context, Tera};
 use std::fs;
+use tera::{Context, Tera};
 
 // Create clap subcommand arguments
 pub fn make_subcommand<'a, 'b>() -> App<'a, 'b> {
