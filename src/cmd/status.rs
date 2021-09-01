@@ -16,9 +16,10 @@ List of actions:
 
 * cli:  find `redis-cli` in $PATH
 * test: redis.rs functionality
-* info: Command INFO - memory usage of the database
-* drop: Command FLUSHDB - drop the database for accepting new data
-* dump: Command SAVE - export of the contents of the database
+* info: Command INFO     - memory usage of the database
+* drop: Command FLUSHDB  - drop the database for accepting new data
+* dump: Command SAVE     - export of the contents of the database
+* stop: Command SHUTDOWN - quit the server
 
 "#,
         )
@@ -63,6 +64,9 @@ pub fn execute(args: &ArgMatches) -> std::result::Result<(), std::io::Error> {
         }
         "dump" => {
             dump();
+        }
+        "stop" => {
+            stop();
         }
         _ => unreachable!(),
     };
@@ -113,6 +117,13 @@ fn dump() {
         .query(&mut conn)
         .expect("Failed to execute SAVE");
     println!("{}", output);
+}
+
+fn stop() {
+    let mut conn = connect();
+
+    let output = redis::cmd("SHUTDOWN").query::<()>(&mut conn).expect_err();
+    eprintln!("{:#?}", output);
 }
 
 fn basics() {
