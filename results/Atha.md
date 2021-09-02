@@ -352,13 +352,15 @@ clickhouse server
 ```shell script
 cd ~/data/garr/Atha/
 
-clickhouse client --query "$(cat sqls/ddl/ctg.sql)"
-cat tsvs/ctg.tsv |
-    clickhouse client --query "INSERT INTO ctg FORMAT TSVWithNames"
+for q in ctg rsw; do
+    echo ${q}
 
-clickhouse client --query "$(cat sqls/ddl/rsw.sql)"
-cat tsvs/rsw.tsv |
-    clickhouse client --query "INSERT INTO rsw FORMAT TSVWithNames"
+    clickhouse client --query "DROP TABLE IF EXISTS ${q}"
+    clickhouse client --query "$(cat sqls/ddl/${q}.sql)"
+
+    cat tsvs/${q}.tsv |
+        clickhouse client --query "INSERT INTO ${q} FORMAT TSVWithNames"
+done
 
 ```
 
@@ -372,7 +374,6 @@ mkdir -p stats
 for q in rsw-distance rsw-distance-tag; do
     echo ${q}
     clickhouse client --query "$(cat sqls/${q}.sql)" > stats/${q}.tsv
-    echo
 done
 
 ```
