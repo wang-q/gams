@@ -161,7 +161,7 @@ time garr gen genome/genome.fa.gz --piece 500000
 time parallel -j 4 -k --line-buffer '
     echo {}
     garr range features/T-DNA.{}.pos.txt --tag {}
-    ' ::: CSHL # FLAG MX RATM
+    ' ::: CSHL FLAG MX RATM
 # redis
 # RATM
 #real    0m14.055s
@@ -347,7 +347,7 @@ clickhouse server
 
 ```
 
-* queries
+* load
 
 ```shell script
 cd ~/data/garr/Atha/
@@ -355,5 +355,24 @@ cd ~/data/garr/Atha/
 clickhouse client --query "$(cat sqls/ddl/ctg.sql)"
 cat tsvs/ctg.tsv |
     clickhouse client --query "INSERT INTO ctg FORMAT TSVWithNames"
+
+clickhouse client --query "$(cat sqls/ddl/rsw.sql)"
+cat tsvs/rsw.tsv |
+    clickhouse client --query "INSERT INTO rsw FORMAT TSVWithNames"
+
+```
+
+* queries
+
+```shell script
+cd ~/data/garr/Atha/
+
+mkdir -p stats
+
+for q in rsw-distance rsw-distance-tag; do
+    echo ${q}
+    clickhouse client --query "$(cat sqls/${q}.sql)" > stats/${q}.tsv
+    echo
+done
 
 ```

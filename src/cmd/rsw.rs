@@ -94,7 +94,7 @@ pub fn execute(args: &ArgMatches) -> std::result::Result<(), std::io::Error> {
         "gc_cv",
         "gc_snr",
     ];
-    writer.write_all(format!("{}\t{}\n", "#ID", headers.join("\t")).as_ref())?;
+    writer.write_all(format!("{}\t{}\n", "ID", headers.join("\t")).as_ref())?;
 
     // process each contig
     let ctgs: Vec<String> =

@@ -65,6 +65,9 @@ pub fn execute(args: &ArgMatches) -> std::result::Result<(), std::io::Error> {
 
         fs::create_dir_all("sqls/ddl")?;
         gen_ddl_ctg(&context)?;
+        gen_ddl_rsw(&context)?;
+
+        gen_dql_rsw(&context)?;
     }
 
     Ok(())
@@ -92,6 +95,55 @@ fn gen_ddl_ctg(context: &Context) -> std::result::Result<(), std::io::Error> {
     tera.add_raw_templates(vec![(
         "t",
         include_str!("../../templates/ddl/ctg.tera.sql"),
+    )])
+    .unwrap();
+
+    let rendered = tera.render("t", &context).unwrap();
+    intspan::write_lines(outname, &vec![rendered.as_str()])?;
+
+    Ok(())
+}
+
+fn gen_ddl_rsw(context: &Context) -> std::result::Result<(), std::io::Error> {
+    let outname = "sqls/ddl/rsw.sql";
+    eprintln!("Create {}", outname);
+
+    let mut tera = Tera::default();
+    tera.add_raw_templates(vec![(
+        "t",
+        include_str!("../../templates/ddl/rsw.tera.sql"),
+    )])
+    .unwrap();
+
+    let rendered = tera.render("t", &context).unwrap();
+    intspan::write_lines(outname, &vec![rendered.as_str()])?;
+
+    Ok(())
+}
+
+fn gen_dql_rsw(context: &Context) -> std::result::Result<(), std::io::Error> {
+    // rsw-distance
+    let outname = "sqls/rsw-distance.sql";
+    eprintln!("Create {}", outname);
+
+    let mut tera = Tera::default();
+    tera.add_raw_templates(vec![(
+        "t",
+        include_str!("../../templates/dql/rsw-distance.tera.sql"),
+    )])
+    .unwrap();
+
+    let rendered = tera.render("t", &context).unwrap();
+    intspan::write_lines(outname, &vec![rendered.as_str()])?;
+
+    // rsw-distance-tag
+    let outname = "sqls/rsw-distance-tag.sql";
+    eprintln!("Create {}", outname);
+
+    let mut tera = Tera::default();
+    tera.add_raw_templates(vec![(
+        "t",
+        include_str!("../../templates/dql/rsw-distance-tag.tera.sql"),
     )])
     .unwrap();
 
