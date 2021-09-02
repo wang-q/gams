@@ -76,12 +76,19 @@ parallel -j 1 -k --line-buffer '
 
 ```shell script
 
-# clickhouse
-curl -LO https://github.com/ClickHouse/ClickHouse/releases/download/v21.8.4.51-lts/clickhouse-common-static-21.8.4.51.tgz
-tar xvfz clickhouse-common-static-21.8.4.51.tgz
-sudo bash ./clickhouse-common-static-21.8.4.51/install/doinst.sh
-
+# Redis GUI
 # winget install qishibo.AnotherRedisDesktopManager
+
+# Clickhouse
+export LTS=21.8.4.51
+curl -LO https://repo.clickhouse.tech/tgz/lts/clickhouse-common-static-${LTS}.tgz
+
+tar -xzvf clickhouse-common-static-${LTS}.tgz
+sudo bash clickhouse-common-static-${LTS}/install/doinst.sh
+
+# Clickhouse GUI
+git clone https://github.com/VKCOM/lighthouse
+browser lighthouse/index.html
 
 ```
 

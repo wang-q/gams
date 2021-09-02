@@ -68,7 +68,7 @@ done
 
 ## `garr`
 
-* Contigs
+### Contigs
 
 ```shell script
 # start redis-server
@@ -76,7 +76,7 @@ redis-server --appendonly no --dir ~/data/garr/Atha/
 
 cd ~/data/garr/Atha/
 
-garr env
+garr env --all
 
 garr status drop
 
@@ -85,13 +85,20 @@ garr gen genome/genome.fa.gz --piece 500000
 # redis dumps
 mkdir -p ~/data/garr/Atha/dumps/
 
-garr status dump
-cp dump.rdb dumps/ctg.dump.rdb
+while true; do
+    garr status dump
+    if [ $? -eq 0 ]; then
+        cp dump.rdb dumps/ctg.dump.rdb
+        break
+    fi
+    sleep 5
+done
 
 # tsv exports
 mkdir -p tsvs
 
-garr tsv -s 'ctg:*' -f length
+garr tsv -s 'ctg:*' -f length | head
+
 garr tsv -s 'ctg:*' |
     keep-header -- tsv-sort -k2,2 -k3,3n -k4,4n \
     > tsvs/ctg.tsv
@@ -102,25 +109,45 @@ cat tsvs/ctg.tsv |
     > ctg.lst
 
 # positions
-for name in CSHL FLAG MX RATM; do
-    garr pos features/T-DNA.${name}.pos.txt
+parallel -j 4 -k --line-buffer '
+    echo {}
+    garr pos features/T-DNA.{}.pos.txt
+    ' ::: CSHL FLAG MX RATM
+
+garr tsv -s 'pos:*' |
+    keep-header -- tsv-sort -k2,2 -k3,3n -k4,4n \
+    > tsvs/pos.tsv
+
+# dumps
+while true; do
+    garr status dump
+    if [ $? -eq 0 ]; then
+        mkdir -p dumps
+        cp dump.rdb dumps/pos.dump.rdb
+        break
+    fi
+    sleep 5
 done
 
-garr status dump
-cp dump.rdb dumps/pos.dump.rdb
+# stop the server
+garr status stop
+
+sudo /etc/init.d/clickhouse-server start
 
 ```
 
-* Ranges and rsw
+### Ranges and rsw
+
+Benchmarks keydb against redis
 
 ```shell script
-rm ~/data/garr/Atha/dump.rdb
+cd ~/data/garr/Atha/
+
+rm ./dump.rdb
 
 redis-server --appendonly no --dir ~/data/garr/Atha/
 #keydb-server --appendonly no --dir ~/data/garr/Atha/
 # keydb is as fast/slow as redis
-
-cd ~/data/garr/Atha/
 
 garr env
 
@@ -155,18 +182,26 @@ time parallel -j 4 -k --line-buffer '
 #user    0m11.481s
 #sys     0m21.391s
 
-garr status dump
-cp dump.rdb dumps/range.dump.rdb
-
 garr tsv -s "range:*" |
     keep-header -- tsv-sort -k2,2 -k3,3n -k4,4n \
     > tsvs/range.tsv
 
+while true; do
+    garr status dump
+    if [ $? -eq 0 ]; then
+        mkdir -p dumps
+        cp dump.rdb dumps/range.dump.rdb
+        break
+    fi
+    sleep 5
+done
+
+# rsw
 time cat ctg.lst |
-    parallel -j 2 -k --line-buffer '
+    parallel -j 4 -k --line-buffer '
         garr rsw --ctg {}
         ' |
-    tsv-uniq  |
+    tsv-uniq |
     keep-header -- tsv-sort -k2,2 -k3,3n -k4,4n \
     > tsvs/rsw.tsv
 # CSHL
@@ -179,18 +214,22 @@ time cat ctg.lst |
 #user    21m56.417s
 #sys     4m34.154s
 
+garr status stop
+
 ```
 
-* GC-wave
+### GC-wave
+
+Restores from ctg.dump.rdb
 
 ```shell script
 cd ~/data/garr/Atha/
 
+cp dumps/ctg.dump.rdb ./dump.rdb
+
+redis-server --appendonly no --dir ~/data/garr/Atha/ &
+
 garr env
-
-garr status drop
-
-garr gen genome/genome.fa.gz --piece 500000
 
 time cat ctg.lst |
     parallel -j 4 -k --line-buffer '
@@ -222,8 +261,8 @@ time cat ctg.lst |
 #user    23m47.703s
 #sys     0m16.114s
 
-tsv-append tsvs/ctg:*.peak.tsv -H |
-    keep-header -- tsv-sort -k2,2 -k3,3n -k4,4n \
+# Don't need to be sorted
+tsv-append -f <(cat ctg.lst | sed 's/$/.peak.tsv/') -H \
     > tsvs/peak.tsv
 rm tsvs/ctg:*.peak.tsv
 
@@ -253,7 +292,7 @@ tsv-filter tsvs/wave.tsv -H --or \
 
 ```
 
-## benchmarks
+## Benchmarks
 
 ```shell script
 redis-server --appendonly no --dir ~/data/garr/Atha/

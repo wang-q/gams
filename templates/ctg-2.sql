@@ -1,5 +1,5 @@
 SELECT
-    chr_name, COUNT(*), AVERAGE(length)
+    chr_name, COUNT(*), AVG(length)
 FROM
     ctg
 GROUP BY

@@ -122,8 +122,12 @@ fn dump() {
 fn stop() {
     let mut conn = connect();
 
-    let output = redis::cmd("SHUTDOWN").query::<()>(&mut conn).unwrap_err();
-    eprintln!("{:#?}", output);
+    let output = redis::cmd("SHUTDOWN")
+        .arg("SAVE")
+        .query::<()>(&mut conn)
+        .unwrap_err();
+    eprintln!("output = {:#?}", output);
+    eprintln!("Executed SHUTDOWN SAVE");
 }
 
 fn basics() {
