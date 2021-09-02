@@ -295,3 +295,26 @@ cat garr.md.tmp
 | `drop; gen; range;`   | 20045.7 ± 474.6 |  19218.6 |  21041.7 | 24.63 ± 0.81 |
 | `drop; gen; sliding;` |   7580.7 ± 72.6 |   7467.1 |   7705.8 |  9.31 ± 0.23 |
 
+## clickhouse
+
+* server
+
+```shell script
+cd ~/data/garr/Atha/
+
+mkdir -p clickhouse
+cd clickhouse
+clickhouse server
+
+```
+
+* queries
+
+```shell script
+cd ~/data/garr/Atha/
+
+clickhouse client --query "$(cat sqls/ddl/ctg.sql)"
+cat tsvs/ctg.tsv |
+    clickhouse client --query "INSERT INTO ctg FORMAT TSVWithNames"
+
+```

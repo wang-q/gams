@@ -1,5 +1,6 @@
 use clap::*;
 use garr::*;
+use std::collections::HashMap;
 use std::fs;
 use tera::{Context, Tera};
 
@@ -18,6 +19,7 @@ Default values:
 
 "#,
         )
+        .arg(Arg::with_name("all").long("all").help("Create all scripts"))
         .arg(
             Arg::with_name("outfile")
                 .short("o")
@@ -31,8 +33,8 @@ Default values:
 
 // command implementation
 pub fn execute(args: &ArgMatches) -> std::result::Result<(), std::io::Error> {
+    // context from ENV variables
     let mut context = Context::new();
-
     match envy::from_env::<Config>() {
         Ok(config) => {
             context.insert("host", &config.redis_host);
@@ -43,11 +45,58 @@ pub fn execute(args: &ArgMatches) -> std::result::Result<(), std::io::Error> {
         Err(error) => panic!("{:#?}", error),
     }
 
+    // context from args
+    let mut opt = HashMap::new();
+    opt.insert("outfile", args.value_of("outfile").unwrap());
+
+    context.insert("opt", &opt);
+
+    // create .env
+    eprintln!("Create {}", opt.get("outfile").unwrap());
     let mut tera = Tera::default();
     tera.add_raw_templates(vec![("t", include_str!("../../templates/garr.tera.env"))])
         .unwrap();
     let rendered = tera.render("t", &context).unwrap();
-    intspan::write_lines(args.value_of("outfile").unwrap(), &vec![rendered.as_str()])?;
+    intspan::write_lines(opt.get("outfile").unwrap(), &vec![rendered.as_str()])?;
+
+    // create scripts
+    if args.is_present("all") {
+        gen_peak(&context)?;
+
+        fs::create_dir_all("sqls/ddl")?;
+        gen_ddl_ctg(&context)?;
+    }
+
+    Ok(())
+}
+
+fn gen_peak(context: &Context) -> std::result::Result<(), std::io::Error> {
+    let outname = "peak.R";
+    eprintln!("Create {}", outname);
+
+    let mut tera = Tera::default();
+    tera.add_raw_templates(vec![("t", include_str!("../../templates/peak.tera.R"))])
+        .unwrap();
+
+    let rendered = tera.render("t", &context).unwrap();
+    intspan::write_lines(outname, &vec![rendered.as_str()])?;
+
+    Ok(())
+}
+
+fn gen_ddl_ctg(context: &Context) -> std::result::Result<(), std::io::Error> {
+    let outname = "sqls/ddl/ctg.sql";
+    eprintln!("Create {}", outname);
+
+    let mut tera = Tera::default();
+    tera.add_raw_templates(vec![(
+        "t",
+        include_str!("../../templates/ddl/ctg.tera.sql"),
+    )])
+    .unwrap();
+
+    let rendered = tera.render("t", &context).unwrap();
+    intspan::write_lines(outname, &vec![rendered.as_str()])?;
 
     Ok(())
 }
