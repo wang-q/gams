@@ -236,7 +236,7 @@ fn command_wave() -> Result<(), Box<dyn std::error::Error>> {
         .arg("500000")
         .unwrap();
 
-    // range
+    // wave
     let mut cmd = Command::cargo_bin("garr")?;
     let output = cmd
         .arg("wave")

@@ -62,7 +62,7 @@ pub async fn execute(args: &ArgMatches) -> std::result::Result<(), std::io::Erro
     // TODO: await makes the compilation extremely slow
     let results = df.collect().await.unwrap();
 
-    // println!("{:?}", results);
+    // eprintln!("{:?}", results);
 
     // create a builder and writer
     let builder = csv::WriterBuilder::new()

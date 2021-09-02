@@ -74,8 +74,8 @@ pub fn execute(args: &ArgMatches) -> std::result::Result<(), std::io::Error> {
     }
 
     // number of ranges
-    let range_count = garr::get_scan_count(&mut conn, "range:*".to_string());
-    println!("There are {} ranges", range_count);
+    let n_range = garr::get_scan_count(&mut conn, "range:*".to_string());
+    println!("There are {} ranges", n_range);
 
     Ok(())
 }

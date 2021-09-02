@@ -177,11 +177,8 @@ pub fn execute(args: &ArgMatches) -> std::result::Result<(), std::io::Error> {
     println!("There are {} chromosomes", n_chr);
 
     // number of ctg
-    let mut ctgs: Vec<String> = garr::get_scan_vec(&mut conn, "ctg:*".to_string());
-    ctgs.sort();
-    println!("There are {} contigs", ctgs.len());
-
-    write_lines("ctgs.lst", &ctgs.iter().map(AsRef::as_ref).collect())?;
+    let n_ctg: i32 = garr::get_scan_count(&mut conn, "ctg:*".to_string());
+    println!("There are {} contigs", n_ctg);
 
     Ok(())
 }
