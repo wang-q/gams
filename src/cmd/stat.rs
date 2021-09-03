@@ -34,8 +34,7 @@ pub fn make_subcommand<'a, 'b>() -> App<'a, 'b> {
 }
 
 // command implementation
-#[tokio::main]
-pub async fn execute(args: &ArgMatches) -> std::result::Result<(), std::io::Error> {
+pub fn execute(args: &ArgMatches) -> std::result::Result<(), std::io::Error> {
     // opts
     let infile = args.value_of("infile").unwrap();
     let sql_file = args.value_of("sql").unwrap();
@@ -43,33 +42,37 @@ pub async fn execute(args: &ArgMatches) -> std::result::Result<(), std::io::Erro
 
     let writer = writer(args.value_of("outfile").unwrap());
 
-    // Initialize query interface
-    let mut ctx = ExecutionContext::new();
+    let runtime = tokio::runtime::Runtime::new().unwrap();
 
-    // Register data sources
-    let schema = ctg_schema();
-    let options = CsvReadOptions::new()
-        .schema(&schema)
-        .file_extension(".tsv")
-        .has_header(true)
-        .delimiter(b'\t');
-    ctx.register_csv("ctg", infile, options).unwrap();
+    runtime.block_on(async {
+        // Initialize query interface
+        let mut ctx = ExecutionContext::new();
 
-    // create a plan
-    let df = ctx.sql(&sql).unwrap();
+        // Register data sources
+        let schema = ctg_schema();
+        let options = CsvReadOptions::new()
+            .schema(&schema)
+            .file_extension(".tsv")
+            .has_header(true)
+            .delimiter(b'\t');
+        ctx.register_csv("ctg", infile, options).unwrap();
 
-    // execute the plan
-    // TODO: await makes the compilation extremely slow
-    let results = df.collect().await.unwrap();
+        // create a plan
+        let df = ctx.sql(&sql).unwrap();
 
-    // eprintln!("{:?}", results);
+        // execute the plan
+        // TODO: await makes the compilation extremely slow
+        let results = df.collect().await.unwrap();
 
-    // create a builder and writer
-    let builder = csv::WriterBuilder::new()
-        .has_headers(true)
-        .with_delimiter(b'\t');
-    let mut csv_writer = builder.build(writer);
-    csv_writer.write(&results[0]).unwrap();
+        eprintln!("{:?}", results);
+
+        // create a builder and writer
+        let builder = csv::WriterBuilder::new()
+            .has_headers(true)
+            .with_delimiter(b'\t');
+        let mut csv_writer = builder.build(writer);
+        csv_writer.write(&results[0]).unwrap();
+    });
 
     Ok(())
 }
