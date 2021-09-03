@@ -353,11 +353,12 @@ clickhouse server
 cd ~/data/garr/Atha/
 
 for q in ctg rsw; do
-    echo ${q}
-
     clickhouse client --query "DROP TABLE IF EXISTS ${q}"
     clickhouse client --query "$(cat sqls/ddl/${q}.sql)"
+done
 
+for q in ctg rsw; do
+    echo ${q}
     cat tsvs/${q}.tsv |
         clickhouse client --query "INSERT INTO ${q} FORMAT TSVWithNames"
 done
@@ -377,3 +378,4 @@ for q in rsw-distance rsw-distance-tag; do
 done
 
 ```
+
