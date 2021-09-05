@@ -379,3 +379,50 @@ done
 
 ```
 
+## plots
+
+* rsw-distance-tag
+
+```shell script
+cd ~/data/garr/Atha/
+
+mkdir -p plots
+
+cat stats/rsw-distance-tag.tsv |
+    cut -f 1 |
+    grep -v "^tag$" |
+    tsv-uniq \
+    > plots/tag.lst
+
+for tag in $(cat plots/tag.lst); do
+    echo ${tag}
+    base="rsw-distance-tag.${tag}"
+
+    cat stats/rsw-distance-tag.tsv |
+        tsv-filter -H --str-eq tag:${tag} |
+        tsv-select -H --exclude tag \
+        > plots/${base}.tsv
+
+    for y in {2..6}; do
+        echo ${y}
+        Rscript plot_xy.R --infile plots/${base}.tsv --ycol ${y} --yacc 0.002 --outfile plots/${base}.${y}.pdf
+    done
+
+    gs -q -dNOPAUSE -dBATCH -sDEVICE=pdfwrite -sOutputFile=plots/${base}.pdf \
+        $( for y in {2..6}; do echo plots/${base}.${y}.pdf; done )
+
+    for y in {2..6}; do
+        rm plots/${base}.${y}.pdf
+    done
+
+    pdfjam plots/${base}.pdf --nup 5x1 --suffix nup -o plots
+    mv plots/${base}-nup.pdf plots/${base}.pdf
+
+    pdfcrop plots/${base}.pdf
+    mv plots/${base}-crop.pdf plots/${base}.pdf
+
+    rm plots/${base}.tsv
+done
+
+```
+
