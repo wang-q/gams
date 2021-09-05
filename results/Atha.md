@@ -8,7 +8,10 @@ cd ~/data/garr/Atha/genome
 
 # download
 aria2c -j 4 -x 4 -s 2 -c --file-allocation=none \
-    http://ftp.ensemblgenomes.org/pub/release-45/plants/fasta/arabidopsis_thaliana/dna/Arabidopsis_thaliana.TAIR10.dna_sm.toplevel.fa.gz
+    ftp://ftp.ensemblgenomes.org/pub/release-45/plants/fasta/arabidopsis_thaliana/dna/Arabidopsis_thaliana.TAIR10.dna_sm.toplevel.fa.gz
+
+aria2c -j 4 -x 4 -s 2 -c --file-allocation=none \
+    ftp://ftp.ensemblgenomes.org/pub/release-45/plants/gff3/arabidopsis_thaliana/Arabidopsis_thaliana.TAIR10.45.gff3.gz
 
 # chromosomes
 gzip -d -c *dna_sm.toplevel* > toplevel.fa
@@ -25,14 +28,57 @@ faops some toplevel.fa listFile stdout |
     faops split-name stdin .
 rm toplevel.fa listFile
 
-mv Mt.fa Mt.fa.skip
-mv Pt.fa Pt.fa.skip
-
 # .fa.gz
-cat {1..5}.fa |
+cat {1..5}.fa Mt.fa Pt.fa |
     gzip -9 \
     > genome.fa.gz
 faops size genome.fa.gz > chr.sizes
+
+# annotaions
+gzip -dcf Arabidopsis_thaliana.TAIR10.45.gff3.gz |
+    grep -v '^#' |
+    cut -f 1 |
+    sort | uniq -c
+# 213207 1
+# 122450 2
+# 152568 3
+# 121665 4
+# 180531 5
+#    615 Mt
+#    528 Pt
+
+gzip -dcf Arabidopsis_thaliana.TAIR10.45.gff3.gz |
+    grep -v '^#' |
+    cut -f 3 |
+    sort | uniq -c
+# 286067 CDS
+#      7 chromosome
+# 313952 exon
+#  56384 five_prime_UTR
+#  27655 gene
+#   3879 lnc_RNA
+#  48359 mRNA
+#    325 miRNA
+#    377 ncRNA
+#   5178 ncRNA_gene
+#     15 rRNA
+#     82 snRNA
+#    287 snoRNA
+#    689 tRNA
+#  48308 three_prime_UTR
+
+spanr gff Arabidopsis_thaliana.TAIR10.45.gff3.gz --tag CDS -o cds.yml
+
+faops masked *.fa |
+    spanr cover stdin -o repeats.yml
+
+spanr merge repeats.yml cds.yml -o anno.yml
+rm repeats.yml cds.yml
+
+spanr stat chr.sizes anno.yml --all
+#key,chrLength,size,coverage
+#cds,119667750,33775569,0.2822
+#repeats,119667750,28237829,0.2360
 
 ```
 
@@ -284,6 +330,14 @@ garr tsv -s "peak:*" |
 cat tsvs/wave.tsv |
     tsv-summarize -H --count
 # 59032
+
+cat tsvs/wave.tsv |
+    tsv-filter -H --gt left_wave_length:0 |
+    tsv-summarize -H --mean left_wave_length
+
+cat tsvs/wave.tsv |
+    tsv-filter -H --gt right_wave_length:0 |
+    tsv-summarize -H --mean right_wave_length
 
 tsv-filter tsvs/wave.tsv -H --or \
     --le left_wave_length:0 --le right_wave_length:0 |
