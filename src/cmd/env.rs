@@ -62,15 +62,16 @@ pub fn execute(args: &ArgMatches) -> std::result::Result<(), std::io::Error> {
     // create scripts
     if args.is_present("all") {
         gen_peak(&context)?;
+
         gen_plot_xy(&context)?;
 
         fs::create_dir_all("sqls/ddl")?;
         gen_ddl_ctg(&context)?;
         gen_ddl_rsw(&context)?;
 
+        gen_dql_summary(&context)?;
         gen_dql_rsw(&context)?;
 
-        // TODO: worksheet -- summary
         // TODO: plots
     }
 
@@ -130,6 +131,38 @@ fn gen_ddl_rsw(context: &Context) -> std::result::Result<(), std::io::Error> {
     tera.add_raw_templates(vec![(
         "t",
         include_str!("../../templates/ddl/rsw.tera.sql"),
+    )])
+    .unwrap();
+
+    let rendered = tera.render("t", &context).unwrap();
+    intspan::write_lines(outname, &vec![rendered.as_str()])?;
+
+    Ok(())
+}
+
+fn gen_dql_summary(context: &Context) -> std::result::Result<(), std::io::Error> {
+    // summary
+    let outname = "sqls/summary.sql";
+    eprintln!("Create {}", outname);
+
+    let mut tera = Tera::default();
+    tera.add_raw_templates(vec![(
+        "t",
+        include_str!("../../templates/dql/summary.tera.sql"),
+    )])
+    .unwrap();
+
+    let rendered = tera.render("t", &context).unwrap();
+    intspan::write_lines(outname, &vec![rendered.as_str()])?;
+
+    // summary-type
+    let outname = "sqls/summary-type.sql";
+    eprintln!("Create {}", outname);
+
+    let mut tera = Tera::default();
+    tera.add_raw_templates(vec![(
+        "t",
+        include_str!("../../templates/dql/summary-type.tera.sql"),
     )])
     .unwrap();
 

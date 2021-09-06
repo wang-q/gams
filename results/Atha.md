@@ -426,6 +426,32 @@ cd ~/data/garr/Atha/
 
 mkdir -p stats
 
+# summary
+ARRAY=(
+    'ctg::length'
+    'rsw::gc_content'
+)
+
+for item in "${ARRAY[@]}"; do
+    echo ${item} 1>&2
+    TABLE="${item%%::*}"
+    COLUMN="${item##*::}"
+
+    clickhouse client --query "$(
+        cat sqls/summary.sql | sed "s/_TABLE_/${TABLE}/" | sed "s/_COLUMN_/${COLUMN}/"
+    )"
+done |
+    tsv-uniq \
+    > stats/summary.tsv
+
+for t in rsw; do
+    echo ${t} 1>&2
+    clickhouse client --query "$(cat sqls/summary-type.sql | sed "s/_TABLE_/${t}/")"
+done |
+    tsv-uniq \
+    > stats/summary-type.tsv
+
+# rsw
 for q in rsw-distance rsw-distance-tag; do
     echo ${q}
     clickhouse client --query "$(cat sqls/${q}.sql)" > stats/${q}.tsv
@@ -470,10 +496,9 @@ for tag in $(cat plots/tag.lst); do
     done
 
     pdfjam plots/${base}.pdf --nup 5x1 --suffix nup -o plots
-    mv plots/${base}-nup.pdf plots/${base}.pdf
 
-    pdfcrop plots/${base}.pdf
-    mv plots/${base}-crop.pdf plots/${base}.pdf
+    pdfcrop plots/${base}-nup.pdf
+    mv plots/${base}-nup-crop.pdf plots/${base}-nup.pdf
 
     rm plots/${base}.tsv
 done
