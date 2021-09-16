@@ -4,8 +4,8 @@ use intspan::{IntSpan, Range};
 use redis::Commands;
 use serde::Deserialize;
 
-use crate::libs::window::*;
 use crate::libs::stat::*;
+use crate::libs::window::*;
 
 #[derive(Deserialize, Debug)]
 pub struct Config {
