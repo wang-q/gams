@@ -59,12 +59,14 @@ DEL tmp:start:I tmp:end:I
 EXEC
 EOF
 
-faops filter -l 0 tests/S288c/genome.fa.gz stdout |
-    paste - - |
-    sed 's/^>//' |
-    parallel -k -r --col-sep '\t' '
-        redis-cli HSET ctg:{1}:1 seq {2}
-    '
+for CHR in $(cat tests/S288c/chr.sizes | cut -f 1); do
+    echo ${CHR}
+    echo HSET "ctg:${CHR}:1" seq $(
+            faops one -l 0 tests/S288c/genome.fa.gz ${CHR} stdout | sed "1d"
+        ) |
+        redis-cli
+done
+
 #redis-cli --raw HSTRLEN ctg:I:1 seq
 #redis-cli --raw scan 0 match ctg:I:* type hash
 
