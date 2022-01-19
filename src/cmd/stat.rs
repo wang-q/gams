@@ -1,13 +1,11 @@
 use clap::*;
-use datafusion::arrow::csv;
-use datafusion::arrow::datatypes::*;
-use datafusion::prelude::*;
 use intspan::writer;
+use polars::prelude::*;
 
 // Create clap subcommand arguments
 pub fn make_subcommand<'a, 'b>() -> App<'a, 'b> {
     SubCommand::with_name("stat")
-        .about("Add range files to positions")
+        .about("Build-in stats")
         .arg(
             Arg::with_name("infile")
                 .help("Sets the input file to use")
@@ -15,12 +13,11 @@ pub fn make_subcommand<'a, 'b>() -> App<'a, 'b> {
                 .index(1),
         )
         .arg(
-            Arg::with_name("sql")
-                .long("sql")
-                .short("s")
-                .takes_value(true)
-                .empty_values(false)
-                .help("SQL query file"),
+            Arg::with_name("query")
+                .default_value("ctg")
+                .help("Query name")
+                .required(true)
+                .index(2),
         )
         .arg(
             Arg::with_name("outfile")
@@ -37,53 +34,37 @@ pub fn make_subcommand<'a, 'b>() -> App<'a, 'b> {
 pub fn execute(args: &ArgMatches) -> std::result::Result<(), std::io::Error> {
     // opts
     let infile = args.value_of("infile").unwrap();
-    let sql_file = args.value_of("sql").unwrap();
-    let sql = std::fs::read_to_string(sql_file).expect("failed to read query");
+    let query = args.value_of("query").unwrap();
 
     let writer = writer(args.value_of("outfile").unwrap());
 
-    let runtime = tokio::runtime::Runtime::new().unwrap();
+    let df = CsvReader::from_path(infile)
+        .unwrap()
+        .infer_schema(None)
+        .has_header(true)
+        .with_delimiter(b'\t')
+        .finish()
+        .unwrap();
 
-    runtime.block_on(async {
-        // Initialize query interface
-        let mut ctx = ExecutionContext::new();
+    let res = match query {
+        "ctg" => query_ctg(df),
+        _ => unreachable!(),
+    };
 
-        // Register data sources
-        let schema = ctg_schema();
-        let options = CsvReadOptions::new()
-            .schema(&schema)
-            .file_extension(".tsv")
-            .has_header(true)
-            .delimiter(b'\t');
-        ctx.register_csv("ctg", infile, options).unwrap();
-
-        // create a plan
-        let df = ctx.sql(&sql).unwrap();
-
-        // execute the plan
-        // TODO: await makes the compilation extremely slow
-        let results = df.collect().await.unwrap();
-
-        eprintln!("{:?}", results);
-
-        // create a builder and writer
-        let builder = csv::WriterBuilder::new()
-            .has_headers(true)
-            .with_delimiter(b'\t');
-        let mut csv_writer = builder.build(writer);
-        csv_writer.write(&results[0]).unwrap();
-    });
+    // write DataFrame to file
+    CsvWriter::new(writer)
+        .has_header(true)
+        .with_delimiter(b'\t')
+        .finish(&res);
 
     Ok(())
 }
 
-fn ctg_schema() -> Schema {
-    Schema::new(vec![
-        Field::new("ID", DataType::Utf8, true),
-        Field::new("chr_name", DataType::Utf8, true),
-        Field::new("chr_start", DataType::Int32, true),
-        Field::new("chr_end", DataType::Int32, true),
-        Field::new("chr_strand", DataType::Utf8, true),
-        Field::new("length", DataType::Int32, true),
-    ])
+fn query_ctg(df: DataFrame) -> DataFrame {
+    let res = df
+        .groupby(&["chr_name"])
+        .unwrap()
+        .agg(&[("length", &["count", "mean"])]);
+
+    res.unwrap()
 }
