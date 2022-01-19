@@ -55,7 +55,7 @@ brew install parallel wget pigz
 brew install datamash miller
 
 brew tap wang-q/tap
-brew install wang-q/tap/tsv-utils wang-q/tap/intspan
+brew install wang-q/tap/tsv-utils wang-q/tap/intspan wang-q/tap/faops
 
 ```
 
