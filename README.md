@@ -51,7 +51,7 @@ SUBCOMMANDS:
 ```shell script
 brew install redis
 
-brew install parallel wget pigz
+brew install parallel wget aria2 pigz
 brew install datamash miller
 
 brew tap wang-q/tap
@@ -72,7 +72,7 @@ parallel -j 1 -k --line-buffer '
 
 ```
 
-* Other tools
+* Querying tools
 
 ```shell script
 
@@ -89,6 +89,9 @@ sudo bash clickhouse-common-static-${LTS}/install/doinst.sh
 # Clickhouse GUI
 git clone https://github.com/VKCOM/lighthouse
 browser lighthouse/index.html
+
+# textql as an alternative
+brew install textql
 
 ```
 
