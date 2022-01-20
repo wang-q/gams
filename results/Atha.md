@@ -178,7 +178,6 @@ done
 # stop the server
 garr status stop
 
-sudo /etc/init.d/clickhouse-server start
 
 ```
 
@@ -273,7 +272,7 @@ cd ~/data/garr/Atha/
 
 cp dumps/ctg.dump.rdb ./dump.rdb
 
-redis-server --appendonly no --dir ~/data/garr/Atha/ &
+redis-server --appendonly no --dir ~/data/garr/Atha/
 
 garr env
 
@@ -308,15 +307,16 @@ time cat ctg.lst |
 #sys     0m16.114s
 
 # Don't need to be sorted
-tsv-append -f <(cat ctg.lst | sed 's/$/.peak.tsv/') -H \
+tsv-append $(cat ctg.lst | sed 's/$/.peak.tsv/' | sed 's/^/tsvs\//') -H \
     > tsvs/peak.tsv
+
 rm tsvs/ctg:*.peak.tsv
 
 tsv-summarize tsvs/peak.tsv \
     -H --group-by signal --count
 #signal  count
-#1       32211
-#-1      26821
+#1       32361
+#-1      26944
 
 time garr wave tsvs/peak.tsv
 #real    4m27.902s
@@ -329,7 +329,7 @@ garr tsv -s "peak:*" |
 
 cat tsvs/wave.tsv |
     tsv-summarize -H --count
-# 59032
+# 59305
 
 cat tsvs/wave.tsv |
     tsv-filter -H --gt left_wave_length:0 |
@@ -342,16 +342,21 @@ cat tsvs/wave.tsv |
 tsv-filter tsvs/wave.tsv -H --or \
     --le left_wave_length:0 --le right_wave_length:0 |
     tsv-summarize -H --count
-# 12927
+# 13003
+
+garr status stop
+
 
 ```
 
 ## Benchmarks
 
 ```shell script
-redis-server --appendonly no --dir ~/data/garr/Atha/
-
 cd ~/data/garr/Atha/
+
+rm ./dump.rdb
+
+redis-server --appendonly no --dir ~/data/garr/Atha/
 
 garr env
 
@@ -381,12 +386,23 @@ cat garr.md.tmp
 
 ```
 
+* R5 4600U
+
 | Command               |       Mean [ms] | Min [ms] | Max [ms] |     Relative |
 |:----------------------|----------------:|---------:|---------:|-------------:|
 | `drop; gen;`          |    813.8 ± 18.5 |    783.4 |    834.4 |         1.00 |
 | `drop; gen; pos;`     |  8203.5 ± 166.7 |   8051.7 |   8475.7 | 10.08 ± 0.31 |
 | `drop; gen; range;`   | 20045.7 ± 474.6 |  19218.6 |  21041.7 | 24.63 ± 0.81 |
 | `drop; gen; sliding;` |   7580.7 ± 72.6 |   7467.1 |   7705.8 |  9.31 ± 0.23 |
+
+* R7 5800
+
+| Command               |       Mean [ms] | Min [ms] | Max [ms] |     Relative |
+|:----------------------|----------------:|---------:|---------:|-------------:|
+| `drop; gen;`          |     788.0 ± 3.8 |    783.8 |    794.0 |         1.00 |
+| `drop; gen; pos;`     |   4840.2 ± 47.6 |   4764.4 |   4917.1 |  6.14 ± 0.07 |
+| `drop; gen; range;`   | 10872.3 ± 105.0 |  10753.9 |  11119.2 | 13.80 ± 0.15 |
+| `drop; gen; sliding;` |   5031.6 ± 24.0 |   4996.0 |   5071.1 |  6.38 ± 0.04 |
 
 ## clickhouse
 
