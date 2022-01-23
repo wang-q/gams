@@ -183,7 +183,7 @@ garr status stop
 
 ### Ranges and rsw
 
-Benchmarks keydb against redis
+* Benchmarks keydb against redis
 
 ```shell script
 cd ~/data/garr/Atha/
@@ -262,6 +262,83 @@ time cat ctg.lst |
 garr status stop
 
 ```
+
+* Benchmarks docker with NTFS against redis under WSL
+
+```shell
+# start redis-server
+redis-server --appendonly no --dir ~/data/garr/Atha/
+
+cd ~/data/garr/Atha/
+
+# benchmarks
+garr env
+
+garr status drop
+
+time garr gen genome/genome.fa.gz --piece 500000
+#real    0m0.771s
+#user    0m0.611s
+#sys     0m0.110s
+
+time parallel -j 4 -k --line-buffer '
+    echo {}
+    garr range features/T-DNA.{}.pos.txt --tag {}
+    ' ::: CSHL
+#real    0m9.462s
+#user    0m1.271s
+#sys     0m4.027s
+
+time cat ctg.lst |
+    parallel -j 4 -k --line-buffer '
+        garr rsw --ctg {}
+        ' |
+    tsv-uniq |
+    keep-header -- tsv-sort -k2,2 -k3,3n -k4,4n \
+    > tsvs/rsw.tsv
+#real    2m47.957s
+#user    2m46.630s
+#sys     2m20.460s
+
+garr status stop
+
+# start redis from docker and bring local dir into it
+docker run -p 6379:6379 -v C:/Users/wangq/data/garr/Atha:/data redislabs/redisearch:latest
+
+cd /mnt/c/Users/wangq/data/garr/Atha
+
+garr env
+
+garr status drop
+
+time garr gen genome/genome.fa.gz --piece 500000
+#real    0m1.440s
+#user    0m0.714s
+#sys     0m0.042s
+
+time parallel -j 4 -k --line-buffer '
+    echo {}
+    garr range features/T-DNA.{}.pos.txt --tag {}
+    ' ::: CSHL
+#real    0m41.657s
+#user    0m1.661s
+#sys     0m4.614s
+
+time cat ctg.lst |
+    parallel -j 4 -k --line-buffer '
+        garr rsw --ctg {}
+        ' |
+    tsv-uniq |
+    keep-header -- tsv-sort -k2,2 -k3,3n -k4,4n \
+    > tsvs/rsw.tsv
+#real    12m3.494s
+#user    3m34.866s
+#sys     4m9.668s
+
+garr status stop
+
+```
+
 
 ### GC-wave
 
