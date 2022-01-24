@@ -7,7 +7,7 @@
 # cd /mnt/c/Users/wangq/Scripts/garr
 
 # start redis-server
-redis-server --appendonly no --dir tests/S288c/
+redis-server --loadmodule ~/redisearch.so --appendonly no --dir tests/S288c/
 
 # start with dump file
 # redis-server --appendonly no --dir ~/Scripts/rust/garr/tests/S288c/ --dbfilename dump.rdb
@@ -46,6 +46,7 @@ cat tests/S288c/chr.sizes |
     '
 
 # find a contig contains 1000
+# secondary index
 redis-cli --raw ZRANGEBYSCORE ctg-start:I 0 1000
 redis-cli --raw ZRANGEBYSCORE ctg-end:I 1000 +inf
 
@@ -58,6 +59,13 @@ ZINTER 2 tmp:start:I tmp:end:I AGGREGATE MIN
 DEL tmp:start:I tmp:end:I
 EXEC
 EOF
+
+# RediSearch
+redis-cli --raw FT.CREATE idx:ctg:I ON HASH PREFIX 1 ctg:I \
+    SCHEMA chr_start NUMERIC \
+    chr_end NUMERIC
+
+redis-cli --raw FT.SEARCH idx:ctg:I "@chr_start:[-inf 1000] @chr_end:[1000 inf]" RETURN 0
 
 for CHR in $(cat tests/S288c/chr.sizes | cut -f 1); do
     echo ${CHR}

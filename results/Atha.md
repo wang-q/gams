@@ -311,6 +311,8 @@ garr status stop
 # start redis from docker and bring local dir into it
 docker run -p 6379:6379 -v C:/Users/wangq/data/garr/Atha:/data redislabs/redisearch:latest
 
+cp /usr/lib/redis/modules/redisearch.so .
+
 cd /mnt/c/Users/wangq/data/garr/Atha
 
 ```
