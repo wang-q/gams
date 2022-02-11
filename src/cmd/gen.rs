@@ -7,47 +7,47 @@ use std::collections::VecDeque;
 use std::iter::FromIterator;
 
 // Create clap subcommand arguments
-pub fn make_subcommand<'a, 'b>() -> App<'a, 'b> {
-    SubCommand::with_name("gen")
+pub fn make_subcommand<'a>() -> App<'a> {
+    App::new("gen")
         .about("Generate the database from (gzipped) fasta files")
         .arg(
-            Arg::with_name("infiles")
+            Arg::new("infiles")
                 .help("Sets the input files to use")
                 .required(true)
                 .min_values(1)
                 .index(1),
         )
         .arg(
-            Arg::with_name("name")
+            Arg::new("name")
                 .long("name")
-                .short("n")
+                .short('n')
                 .takes_value(true)
                 .default_value("target")
-                .empty_values(false)
+                .forbid_empty_values(true)
                 .help("The common name, e.g. S288c"),
         )
         .arg(
-            Arg::with_name("piece")
+            Arg::new("piece")
                 .long("piece")
                 .takes_value(true)
                 .default_value("500000")
-                .empty_values(false)
+                .forbid_empty_values(true)
                 .help("Break genome into pieces"),
         )
         .arg(
-            Arg::with_name("fill")
+            Arg::new("fill")
                 .long("fill")
                 .takes_value(true)
                 .default_value("50")
-                .empty_values(false)
+                .forbid_empty_values(true)
                 .help("Fill gaps smaller than this"),
         )
         .arg(
-            Arg::with_name("min")
+            Arg::new("min")
                 .long("min")
                 .takes_value(true)
                 .default_value("5000")
-                .empty_values(false)
+                .forbid_empty_values(true)
                 .help("Skip pieces smaller than this"),
         )
 }
@@ -56,17 +56,17 @@ pub fn make_subcommand<'a, 'b>() -> App<'a, 'b> {
 pub fn execute(args: &ArgMatches) -> std::result::Result<(), std::io::Error> {
     // opts
     let common_name = args.value_of("name").unwrap();
-    let piece: i32 = value_t!(args.value_of("piece"), i32).unwrap_or_else(|e| {
+    let piece: i32 = args.value_of_t("piece").unwrap_or_else(|e| {
         eprintln!("Need a integer for --piece\n{}", e);
         std::process::exit(1)
     });
 
-    let fill: i32 = value_t!(args.value_of("fill"), i32).unwrap_or_else(|e| {
+    let fill: i32 = args.value_of_t("fill").unwrap_or_else(|e| {
         eprintln!("Need a integer for --fill\n{}", e);
         std::process::exit(1)
     });
 
-    let min: i32 = value_t!(args.value_of("min"), i32).unwrap_or_else(|e| {
+    let min: i32 = args.value_of_t("min").unwrap_or_else(|e| {
         eprintln!("Need a integer for --min\n{}", e);
         std::process::exit(1)
     });

@@ -5,8 +5,8 @@ use redis::Commands;
 use std::collections::BTreeMap;
 
 // Create clap subcommand arguments
-pub fn make_subcommand<'a, 'b>() -> App<'a, 'b> {
-    SubCommand::with_name("tsv")
+pub fn make_subcommand<'a>() -> App<'a> {
+    App::new("tsv")
         .about("Exports Redis hashes to a tsv file")
         .after_help(
             "\
@@ -15,29 +15,29 @@ pub fn make_subcommand<'a, 'b>() -> App<'a, 'b> {
              ",
         )
         .arg(
-            Arg::with_name("scan")
+            Arg::new("scan")
                 .long("scan")
-                .short("s")
+                .short('s')
                 .takes_value(true)
                 .default_value("ctg:*")
-                .empty_values(false)
+                .forbid_empty_values(true)
                 .help("Sets the pattern to scan, `ctg:*`"),
         )
         .arg(
-            Arg::with_name("field")
+            Arg::new("field")
                 .long("field")
-                .short("f")
-                .multiple(true)
+                .short('f')
+                .multiple_values(true)
                 .takes_value(true)
                 .help("Sets the fields to output"),
         )
         .arg(
-            Arg::with_name("outfile")
-                .short("o")
+            Arg::new("outfile")
+                .short('o')
                 .long("outfile")
                 .takes_value(true)
                 .default_value("stdout")
-                .empty_values(false)
+                .forbid_empty_values(true)
                 .help("Output filename. [stdout] for screen"),
         )
 }

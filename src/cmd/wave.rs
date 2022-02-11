@@ -5,8 +5,8 @@ use redis::Commands;
 use std::io::BufRead;
 
 // Create clap subcommand arguments
-pub fn make_subcommand<'a, 'b>() -> App<'a, 'b> {
-    SubCommand::with_name("wave")
+pub fn make_subcommand<'a>() -> App<'a> {
+    App::new("wave")
         .about("Add peaks of GC-waves")
         .after_help(
             "\
@@ -14,7 +14,7 @@ pub fn make_subcommand<'a, 'b>() -> App<'a, 'b> {
              ",
         )
         .arg(
-            Arg::with_name("infile")
+            Arg::new("infile")
                 .help("Sets the input file to use")
                 .required(true)
                 .index(1),

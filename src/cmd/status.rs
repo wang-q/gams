@@ -7,8 +7,8 @@ use rand::Rng;
 use std::collections::{BTreeMap, BTreeSet};
 
 // Create clap subcommand arguments
-pub fn make_subcommand<'a, 'b>() -> App<'a, 'b> {
-    SubCommand::with_name("status")
+pub fn make_subcommand<'a>() -> App<'a> {
+    App::new("status")
         .about("Test Redis config and connection")
         .after_help(
             r#"
@@ -24,19 +24,19 @@ List of actions:
 "#,
         )
         .arg(
-            Arg::with_name("action")
+            Arg::new("action")
                 .help("What to do")
                 .required(true)
                 .default_value("test")
                 .index(1),
         )
         .arg(
-            Arg::with_name("outfile")
-                .short("o")
+            Arg::new("outfile")
+                .short('o')
                 .long("outfile")
                 .takes_value(true)
                 .default_value("stdout")
-                .empty_values(false)
+                .forbid_empty_values(true)
                 .help("Output filename. [stdout] for screen"),
         )
 }

@@ -5,8 +5,8 @@ use std::fs;
 use tera::{Context, Tera};
 
 // Create clap subcommand arguments
-pub fn make_subcommand<'a, 'b>() -> App<'a, 'b> {
-    SubCommand::with_name("env")
+pub fn make_subcommand<'a>() -> App<'a> {
+    App::new("env")
         .about("Create a .env file")
         .after_help(
             r#"
@@ -19,14 +19,14 @@ Default values:
 
 "#,
         )
-        .arg(Arg::with_name("all").long("all").help("Create all scripts"))
+        .arg(Arg::new("all").long("all").help("Create all scripts"))
         .arg(
-            Arg::with_name("outfile")
-                .short("o")
+            Arg::new("outfile")
+                .short('o')
                 .long("outfile")
                 .takes_value(true)
                 .default_value("garr.env")
-                .empty_values(false)
+                .forbid_empty_values(true)
                 .help("Output filename. [stdout] for screen"),
         )
 }

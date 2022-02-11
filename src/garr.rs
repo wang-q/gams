@@ -8,7 +8,8 @@ fn main() -> std::io::Result<()> {
         .version(crate_version!())
         .author(crate_authors!())
         .about("Genome Analyst with Rust and Redis")
-        .setting(AppSettings::ArgRequiredElseHelp)
+        .global_setting(AppSettings::PropagateVersion)
+        .global_setting(AppSettings::ArgRequiredElseHelp)
         .subcommand(cmd::env::make_subcommand())
         .subcommand(cmd::status::make_subcommand())
         .subcommand(cmd::gen::make_subcommand())
@@ -22,17 +23,17 @@ fn main() -> std::io::Result<()> {
 
     // Check which subcomamnd the user ran...
     match app.get_matches().subcommand() {
-        ("env", Some(sub_matches)) => cmd::env::execute(sub_matches),
-        ("status", Some(sub_matches)) => cmd::status::execute(sub_matches),
-        ("gen", Some(sub_matches)) => cmd::gen::execute(sub_matches),
-        ("pos", Some(sub_matches)) => cmd::pos::execute(sub_matches),
-        ("range", Some(sub_matches)) => cmd::range::execute(sub_matches),
-        ("rsw", Some(sub_matches)) => cmd::rsw::execute(sub_matches),
-        ("sliding", Some(sub_matches)) => cmd::sliding::execute(sub_matches),
-        ("stat", Some(sub_matches)) => cmd::stat::execute(sub_matches),
-        ("tsv", Some(sub_matches)) => cmd::tsv::execute(sub_matches),
-        ("wave", Some(sub_matches)) => cmd::wave::execute(sub_matches),
-        (_, _) => unreachable!(),
+        Some(("env", sub_matches)) => cmd::env::execute(sub_matches),
+        Some(("status", sub_matches)) => cmd::status::execute(sub_matches),
+        Some(("gen", sub_matches)) => cmd::gen::execute(sub_matches),
+        Some(("pos", sub_matches)) => cmd::pos::execute(sub_matches),
+        Some(("range", sub_matches)) => cmd::range::execute(sub_matches),
+        Some(("rsw", sub_matches)) => cmd::rsw::execute(sub_matches),
+        Some(("sliding", sub_matches)) => cmd::sliding::execute(sub_matches),
+        Some(("stat", sub_matches)) => cmd::stat::execute(sub_matches),
+        Some(("tsv", sub_matches)) => cmd::tsv::execute(sub_matches),
+        Some(("wave", sub_matches)) => cmd::wave::execute(sub_matches),
+        _ => unreachable!(),
     }?;
 
     Ok(())

@@ -3,29 +3,29 @@ use intspan::writer;
 use polars::prelude::*;
 
 // Create clap subcommand arguments
-pub fn make_subcommand<'a, 'b>() -> App<'a, 'b> {
-    SubCommand::with_name("stat")
+pub fn make_subcommand<'a>() -> App<'a> {
+    App::new("stat")
         .about("Build-in stats")
         .arg(
-            Arg::with_name("infile")
+            Arg::new("infile")
                 .help("Sets the input file to use")
                 .required(true)
                 .index(1),
         )
         .arg(
-            Arg::with_name("query")
+            Arg::new("query")
                 .default_value("ctg")
                 .help("Query name")
                 .required(true)
                 .index(2),
         )
         .arg(
-            Arg::with_name("outfile")
-                .short("o")
+            Arg::new("outfile")
+                .short('o')
                 .long("outfile")
                 .takes_value(true)
                 .default_value("stdout")
-                .empty_values(false)
+                .forbid_empty_values(true)
                 .help("Output filename. [stdout] for screen"),
         )
 }
@@ -55,7 +55,8 @@ pub fn execute(args: &ArgMatches) -> std::result::Result<(), std::io::Error> {
     CsvWriter::new(writer)
         .has_header(true)
         .with_delimiter(b'\t')
-        .finish(&res);
+        .finish(&res)
+        .unwrap();
 
     Ok(())
 }

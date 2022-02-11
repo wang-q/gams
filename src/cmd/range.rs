@@ -5,22 +5,22 @@ use redis::Commands;
 use std::io::BufRead;
 
 // Create clap subcommand arguments
-pub fn make_subcommand<'a, 'b>() -> App<'a, 'b> {
-    SubCommand::with_name("range")
+pub fn make_subcommand<'a>() -> App<'a> {
+    App::new("range")
         .about("Add ranges")
         .arg(
-            Arg::with_name("infile")
+            Arg::new("infile")
                 .help("Sets the input file to use")
                 .required(true)
                 .index(1),
         )
         .arg(
-            Arg::with_name("tag")
+            Arg::new("tag")
                 .long("tag")
-                .short("t")
+                .short('t')
                 .takes_value(true)
                 .default_value("range")
-                .empty_values(false)
+                .forbid_empty_values(true)
                 .help("Range tags"),
         )
 }

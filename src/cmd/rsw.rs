@@ -4,8 +4,8 @@ use intspan::*;
 use redis::Commands;
 
 // Create clap subcommand arguments
-pub fn make_subcommand<'a, 'b>() -> App<'a, 'b> {
-    SubCommand::with_name("rsw")
+pub fn make_subcommand<'a>() -> App<'a> {
+    App::new("rsw")
         .about("Sliding windows around a range")
         .after_help(
             "\
@@ -13,49 +13,49 @@ pub fn make_subcommand<'a, 'b>() -> App<'a, 'b> {
              ",
         )
         .arg(
-            Arg::with_name("ctg")
+            Arg::new("ctg")
                 .long("ctg")
                 .takes_value(true)
                 .default_value("ctg:*")
-                .empty_values(false)
+                .forbid_empty_values(true)
                 .help("Sets full name or prefix of contigs, `ctg:I:*` or `ctg:I:2`"),
         )
         .arg(
-            Arg::with_name("style")
+            Arg::new("style")
                 .long("style")
                 .takes_value(true)
                 .default_value("intact")
-                .empty_values(false)
+                .forbid_empty_values(true)
                 .help("Style of sliding windows, intact or center"),
         )
         .arg(
-            Arg::with_name("size")
+            Arg::new("size")
                 .long("size")
                 .takes_value(true)
                 .default_value("100")
-                .empty_values(false),
+                .forbid_empty_values(true),
         )
         .arg(
-            Arg::with_name("max")
+            Arg::new("max")
                 .long("max")
                 .takes_value(true)
                 .default_value("20")
-                .empty_values(false),
+                .forbid_empty_values(true),
         )
         .arg(
-            Arg::with_name("resize")
+            Arg::new("resize")
                 .long("resize")
                 .takes_value(true)
                 .default_value("500")
-                .empty_values(false),
+                .forbid_empty_values(true),
         )
         .arg(
-            Arg::with_name("outfile")
-                .short("o")
+            Arg::new("outfile")
+                .short('o')
                 .long("outfile")
                 .takes_value(true)
                 .default_value("stdout")
-                .empty_values(false)
+                .forbid_empty_values(true)
                 .help("Output filename. [stdout] for screen"),
         )
 }
@@ -63,15 +63,15 @@ pub fn make_subcommand<'a, 'b>() -> App<'a, 'b> {
 // command implementation
 pub fn execute(args: &ArgMatches) -> std::result::Result<(), std::io::Error> {
     // opts
-    let size: i32 = value_t!(args.value_of("size"), i32).unwrap_or_else(|e| {
+    let size: i32 = args.value_of_t("size").unwrap_or_else(|e| {
         eprintln!("Need a integer for --size\n{}", e);
         std::process::exit(1)
     });
-    let max: i32 = value_t!(args.value_of("max"), i32).unwrap_or_else(|e| {
+    let max: i32 = args.value_of_t("max").unwrap_or_else(|e| {
         eprintln!("Need a integer for --max\n{}", e);
         std::process::exit(1)
     });
-    let resize: i32 = value_t!(args.value_of("resize"), i32).unwrap_or_else(|e| {
+    let resize: i32 = args.value_of_t("resize").unwrap_or_else(|e| {
         eprintln!("Need a integer for --resize\n{}", e);
         std::process::exit(1)
     });

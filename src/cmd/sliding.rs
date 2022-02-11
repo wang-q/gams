@@ -4,8 +4,8 @@ use intspan::*;
 use redis::Commands;
 
 // Create clap subcommand arguments
-pub fn make_subcommand<'a, 'b>() -> App<'a, 'b> {
-    SubCommand::with_name("sliding")
+pub fn make_subcommand<'a>() -> App<'a> {
+    App::new("sliding")
         .about("Sliding windows along a chromosome")
         .after_help(
             "\
@@ -13,58 +13,58 @@ pub fn make_subcommand<'a, 'b>() -> App<'a, 'b> {
              ",
         )
         .arg(
-            Arg::with_name("ctg")
+            Arg::new("ctg")
                 .long("ctg")
                 .takes_value(true)
                 .default_value("ctg:*")
-                .empty_values(false)
+                .forbid_empty_values(true)
                 .help("Sets full name or prefix of contigs, `ctg:I:*` or `ctg:I:2`"),
         )
         .arg(
-            Arg::with_name("size")
+            Arg::new("size")
                 .long("size")
                 .takes_value(true)
                 .default_value("100")
-                .empty_values(false),
+                .forbid_empty_values(true)
         )
         .arg(
-            Arg::with_name("step")
+            Arg::new("step")
                 .long("step")
                 .takes_value(true)
                 .default_value("50")
-                .empty_values(false),
+                .forbid_empty_values(true)
         )
         .arg(
-            Arg::with_name("lag")
+            Arg::new("lag")
                 .long("lag")
                 .takes_value(true)
                 .default_value("1000")
-                .empty_values(false)
+                .forbid_empty_values(true)
                 .help("The lag of the moving window"),
         )
         .arg(
-            Arg::with_name("threshold")
+            Arg::new("threshold")
                 .long("threshold")
                 .takes_value(true)
                 .default_value("3")
-                .empty_values(false)
+                .forbid_empty_values(true)
                 .help("The z-score at which the algorithm signals"),
         )
         .arg(
-            Arg::with_name("influence")
+            Arg::new("influence")
                 .long("influence")
                 .takes_value(true)
                 .default_value("1")
-                .empty_values(false)
+                .forbid_empty_values(true)
                 .help("The influence (between 0 and 1) of new signals on the mean and standard deviation"),
         )
         .arg(
-            Arg::with_name("outfile")
-                .short("o")
+            Arg::new("outfile")
+                .short('o')
                 .long("outfile")
                 .takes_value(true)
                 .default_value("stdout")
-                .empty_values(false)
+                .forbid_empty_values(true)
                 .help("Output filename. [stdout] for screen"),
         )
 }
@@ -72,23 +72,23 @@ pub fn make_subcommand<'a, 'b>() -> App<'a, 'b> {
 // command implementation
 pub fn execute(args: &ArgMatches) -> std::result::Result<(), std::io::Error> {
     // opts
-    let size: i32 = value_t!(args.value_of("size"), i32).unwrap_or_else(|e| {
+    let size: i32 = args.value_of_t("size").unwrap_or_else(|e| {
         eprintln!("Need a integer for --size\n{}", e);
         std::process::exit(1)
     });
-    let step: i32 = value_t!(args.value_of("step"), i32).unwrap_or_else(|e| {
+    let step: i32 = args.value_of_t("step").unwrap_or_else(|e| {
         eprintln!("Need a integer for --step\n{}", e);
         std::process::exit(1)
     });
-    let lag: usize = value_t!(args.value_of("lag"), usize).unwrap_or_else(|e| {
+    let lag: usize = args.value_of_t("lag").unwrap_or_else(|e| {
         eprintln!("Need a integer for --lag\n{}", e);
         std::process::exit(1)
     });
-    let threshold: f32 = value_t!(args.value_of("threshold"), f32).unwrap_or_else(|e| {
+    let threshold: f32 = args.value_of_t("threshold").unwrap_or_else(|e| {
         eprintln!("Need a float for --threshold\n{}", e);
         std::process::exit(1)
     });
-    let influence: f32 = value_t!(args.value_of("influence"), f32).unwrap_or_else(|e| {
+    let influence: f32 = args.value_of_t("influence").unwrap_or_else(|e| {
         eprintln!("Need a float for --influence\n{}", e);
         std::process::exit(1)
     });
