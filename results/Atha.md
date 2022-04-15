@@ -3,8 +3,8 @@
 ## genome
 
 ```shell script
-mkdir -p ~/data/garr/Atha/genome
-cd ~/data/garr/Atha/genome
+mkdir -p ~/data/gars/Atha/genome
+cd ~/data/gars/Atha/genome
 
 # download
 aria2c -j 4 -x 4 -s 2 -c --file-allocation=none \
@@ -85,8 +85,8 @@ spanr stat chr.sizes anno.yml --all
 ## T-DNA
 
 ```shell script
-mkdir -p ~/data/garr/Atha/features/
-cd ~/data/garr/Atha/features/
+mkdir -p ~/data/gars/Atha/features/
+cd ~/data/gars/Atha/features/
 
 for name in CSHL FLAG MX RATM; do
     aria2c -j 4 -x 4 -s 2 --file-allocation=none -c \
@@ -112,27 +112,27 @@ done
 
 ```
 
-## `garr`
+## `gars`
 
 ### Contigs
 
 ```shell script
 # start redis-server
-redis-server --appendonly no --dir ~/data/garr/Atha/
+redis-server --appendonly no --dir ~/data/gars/Atha/
 
-cd ~/data/garr/Atha/
+cd ~/data/gars/Atha/
 
-garr env --all
+gars env --all
 
-garr status drop
+gars status drop
 
-garr gen genome/genome.fa.gz --piece 500000
+gars gen genome/genome.fa.gz --piece 500000
 
 # redis dumps
-mkdir -p ~/data/garr/Atha/dumps/
+mkdir -p ~/data/gars/Atha/dumps/
 
 while true; do
-    garr status dump
+    gars status dump
     if [ $? -eq 0 ]; then
         cp dump.rdb dumps/ctg.dump.rdb
         break
@@ -143,9 +143,9 @@ done
 # tsv exports
 mkdir -p tsvs
 
-garr tsv -s 'ctg:*' -f length | head
+gars tsv -s 'ctg:*' -f length | head
 
-garr tsv -s 'ctg:*' |
+gars tsv -s 'ctg:*' |
     keep-header -- tsv-sort -k2,2 -k3,3n -k4,4n \
     > tsvs/ctg.tsv
 
@@ -157,16 +157,16 @@ cat tsvs/ctg.tsv |
 # positions
 parallel -j 4 -k --line-buffer '
     echo {}
-    garr pos features/T-DNA.{}.pos.txt
+    gars pos features/T-DNA.{}.pos.txt
     ' ::: CSHL FLAG MX RATM
 
-garr tsv -s 'pos:*' |
+gars tsv -s 'pos:*' |
     keep-header -- tsv-sort -k2,2 -k3,3n -k4,4n \
     > tsvs/pos.tsv
 
 # dumps
 while true; do
-    garr status dump
+    gars status dump
     if [ $? -eq 0 ]; then
         mkdir -p dumps
         cp dump.rdb dumps/pos.dump.rdb
@@ -176,7 +176,7 @@ while true; do
 done
 
 # stop the server
-garr status stop
+gars status stop
 
 
 ```
@@ -186,26 +186,26 @@ garr status stop
 * Benchmarks keydb against redis
 
 ```shell script
-cd ~/data/garr/Atha/
+cd ~/data/gars/Atha/
 
 rm ./dump.rdb
 
-redis-server --appendonly no --dir ~/data/garr/Atha/
-#keydb-server --appendonly no --dir ~/data/garr/Atha/
+redis-server --appendonly no --dir ~/data/gars/Atha/
+#keydb-server --appendonly no --dir ~/data/gars/Atha/
 # keydb is as fast/slow as redis
 
-garr env
+gars env
 
-garr status drop
+gars status drop
 
-time garr gen genome/genome.fa.gz --piece 500000
+time gars gen genome/genome.fa.gz --piece 500000
 #real    0m1.520s
 #user    0m0.582s
 #sys     0m0.407s
 
 time parallel -j 4 -k --line-buffer '
     echo {}
-    garr range features/T-DNA.{}.pos.txt --tag {}
+    gars range features/T-DNA.{}.pos.txt --tag {}
     ' ::: CSHL FLAG MX RATM
 # redis
 # RATM
@@ -227,12 +227,12 @@ time parallel -j 4 -k --line-buffer '
 #user    0m11.481s
 #sys     0m21.391s
 
-garr tsv -s "range:*" |
+gars tsv -s "range:*" |
     keep-header -- tsv-sort -k2,2 -k3,3n -k4,4n \
     > tsvs/range.tsv
 
 while true; do
-    garr status dump
+    gars status dump
     if [ $? -eq 0 ]; then
         mkdir -p dumps
         cp dump.rdb dumps/range.dump.rdb
@@ -244,7 +244,7 @@ done
 # rsw
 time cat ctg.lst |
     parallel -j 4 -k --line-buffer '
-        garr rsw --ctg {}
+        gars rsw --ctg {}
         ' |
     tsv-uniq |
     keep-header -- tsv-sort -k2,2 -k3,3n -k4,4n \
@@ -259,7 +259,7 @@ time cat ctg.lst |
 #user    21m56.417s
 #sys     4m34.154s
 
-garr status stop
+gars status stop
 
 ```
 
@@ -267,23 +267,23 @@ garr status stop
 
 ```shell
 # start redis-server
-redis-server --appendonly no --dir ~/data/garr/Atha/
+redis-server --appendonly no --dir ~/data/gars/Atha/
 
-cd ~/data/garr/Atha/
+cd ~/data/gars/Atha/
 
 # benchmarks
-garr env
+gars env
 
-garr status drop
+gars status drop
 
-time garr gen genome/genome.fa.gz --piece 500000
+time gars gen genome/genome.fa.gz --piece 500000
 #real    0m0.771s
 #user    0m0.611s
 #sys     0m0.110s
 
 time parallel -j 4 -k --line-buffer '
     echo {}
-    garr range features/T-DNA.{}.pos.txt --tag {}
+    gars range features/T-DNA.{}.pos.txt --tag {}
     ' ::: CSHL
 #real    0m9.462s
 #user    0m1.271s
@@ -291,7 +291,7 @@ time parallel -j 4 -k --line-buffer '
 
 time cat ctg.lst |
     parallel -j 4 -k --line-buffer '
-        garr rsw --ctg {}
+        gars rsw --ctg {}
         ' |
     tsv-uniq |
     keep-header -- tsv-sort -k2,2 -k3,3n -k4,4n \
@@ -300,7 +300,7 @@ time cat ctg.lst |
 #user    2m46.630s
 #sys     2m20.460s
 
-garr status stop
+gars status stop
 
 ```
 
@@ -309,11 +309,11 @@ garr status stop
 ```shell
 
 # start redis from docker and bring local dir into it
-docker run -p 6379:6379 -v C:/Users/wangq/data/garr/Atha:/data redislabs/redisearch:latest
+docker run -p 6379:6379 -v C:/Users/wangq/data/gars/Atha:/data redislabs/redisearch:latest
 
 cp /usr/lib/redis/modules/redisearch.so .
 
-cd /mnt/c/Users/wangq/data/garr/Atha
+cd /mnt/c/Users/wangq/data/gars/Atha
 
 ```
 
@@ -321,10 +321,10 @@ cd /mnt/c/Users/wangq/data/garr/Atha
 
 ```shell
 # copy `redisearch.so` from the docker image
-docker run -it --rm --entrypoint /bin/sh -v C:/Users/wangq/data/garr/Atha:/data redislabs/redisearch
+docker run -it --rm --entrypoint /bin/sh -v C:/Users/wangq/data/gars/Atha:/data redislabs/redisearch
 
 # start redis-server
-redis-server --loadmodule ./redisearch.so --appendonly no --dir ~/data/garr/Atha/
+redis-server --loadmodule ./redisearch.so --appendonly no --dir ~/data/gars/Atha/
 
 ```
 
@@ -340,17 +340,17 @@ redis-server --loadmodule ./redisearch.so --appendonly no --dir ~/data/garr/Atha
 Restores from ctg.dump.rdb
 
 ```shell script
-cd ~/data/garr/Atha/
+cd ~/data/gars/Atha/
 
 cp dumps/ctg.dump.rdb ./dump.rdb
 
-redis-server --appendonly no --dir ~/data/garr/Atha/
+redis-server --appendonly no --dir ~/data/gars/Atha/
 
-garr env
+gars env
 
 time cat ctg.lst |
     parallel -j 4 -k --line-buffer '
-        garr sliding \
+        gars sliding \
             --ctg {} \
             --size 100 --step 1 \
             --lag 1000 \
@@ -390,12 +390,12 @@ tsv-summarize tsvs/peak.tsv \
 #1       32361
 #-1      26944
 
-time garr wave tsvs/peak.tsv
+time gars wave tsvs/peak.tsv
 #real    4m27.902s
 #user    0m26.255s
 #sys     2m31.036s
 
-garr tsv -s "peak:*" |
+gars tsv -s "peak:*" |
     keep-header -- tsv-sort -k2,2 -k3,3n -k4,4n \
     > tsvs/wave.tsv
 
@@ -416,7 +416,7 @@ tsv-filter tsvs/wave.tsv -H --or \
     tsv-summarize -H --count
 # 13003
 
-garr status stop
+gars status stop
 
 
 ```
@@ -424,37 +424,37 @@ garr status stop
 ## Benchmarks
 
 ```shell script
-cd ~/data/garr/Atha/
+cd ~/data/gars/Atha/
 
 rm ./dump.rdb
 
-redis-server --appendonly no --dir ~/data/garr/Atha/
+redis-server --appendonly no --dir ~/data/gars/Atha/
 
-garr env
+gars env
 
-hyperfine --warmup 1 --export-markdown garr.md.tmp \
+hyperfine --warmup 1 --export-markdown gars.md.tmp \
     '
-        garr status drop;
-        garr gen genome/genome.fa.gz --piece 500000;
+        gars status drop;
+        gars gen genome/genome.fa.gz --piece 500000;
     ' \
     '
-        garr status drop;
-        garr gen genome/genome.fa.gz --piece 500000;
-        garr pos features/T-DNA.CSHL.pos.txt;
+        gars status drop;
+        gars gen genome/genome.fa.gz --piece 500000;
+        gars pos features/T-DNA.CSHL.pos.txt;
     ' \
     '
-        garr status drop;
-        garr gen genome/genome.fa.gz --piece 500000;
-        garr range features/T-DNA.CSHL.pos.txt --tag CSHL;
+        gars status drop;
+        gars gen genome/genome.fa.gz --piece 500000;
+        gars range features/T-DNA.CSHL.pos.txt --tag CSHL;
     ' \
     '
-        garr status drop;
-        garr gen genome/genome.fa.gz --piece 500000;
-        garr sliding --size 100 --step 20 --lag 50 |
+        gars status drop;
+        gars gen genome/genome.fa.gz --piece 500000;
+        gars sliding --size 100 --step 20 --lag 50 |
             tsv-filter -H --ne signal:0 > /dev/null;
     '
 
-cat garr.md.tmp
+cat gars.md.tmp
 
 ```
 
@@ -481,7 +481,7 @@ cat garr.md.tmp
 * server
 
 ```shell script
-cd ~/data/garr/Atha/
+cd ~/data/gars/Atha/
 
 mkdir -p clickhouse
 cd clickhouse
@@ -492,7 +492,7 @@ clickhouse server
 * load
 
 ```shell script
-cd ~/data/garr/Atha/
+cd ~/data/gars/Atha/
 
 for q in ctg rsw; do
     clickhouse client --query "DROP TABLE IF EXISTS ${q}"
@@ -510,7 +510,7 @@ done
 * queries
 
 ```shell script
-cd ~/data/garr/Atha/
+cd ~/data/gars/Atha/
 
 mkdir -p stats
 
@@ -552,7 +552,7 @@ done
 * rsw-distance-tag
 
 ```shell script
-cd ~/data/garr/Atha/
+cd ~/data/gars/Atha/
 
 mkdir -p plots
 

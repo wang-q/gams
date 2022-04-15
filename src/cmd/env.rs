@@ -1,5 +1,5 @@
 use clap::*;
-use garr::*;
+use crate::*;
 use std::collections::HashMap;
 use std::fs;
 use tera::{Context, Tera};
@@ -25,7 +25,7 @@ Default values:
                 .short('o')
                 .long("outfile")
                 .takes_value(true)
-                .default_value("garr.env")
+                .default_value("gars.env")
                 .forbid_empty_values(true)
                 .help("Output filename. [stdout] for screen"),
         )
@@ -54,7 +54,7 @@ pub fn execute(args: &ArgMatches) -> std::result::Result<(), std::io::Error> {
     // create .env
     eprintln!("Create {}", opt.get("outfile").unwrap());
     let mut tera = Tera::default();
-    tera.add_raw_templates(vec![("t", include_str!("../../templates/garr.tera.env"))])
+    tera.add_raw_templates(vec![("t", include_str!("../../templates/gars.tera.env"))])
         .unwrap();
     let rendered = tera.render("t", &context).unwrap();
     intspan::write_lines(opt.get("outfile").unwrap(), &vec![rendered.as_str()])?;

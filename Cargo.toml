@@ -1,20 +1,20 @@
 [package]
-name = "garr"
+name = "gars"
 version = "0.1.1-alpha.0"
 authors = ["wang-q <wang-q@outlook.com>"]
 edition = "2018"
-description = "Genome Analyst with Rust and Redis"
-documentation = "https://github.com/wang-q/garr"
+description = "Genome Analyst with Rust and rediS"
+documentation = "https://github.com/wang-q/gars"
 readme = "README.md"
-homepage = "https://github.com/wang-q/garr"
-repository = "https://github.com/wang-q/garr"
+homepage = "https://github.com/wang-q/gars"
+repository = "https://github.com/wang-q/gars"
 license = "MIT"
 categories = ["command-line-utilities", "bioinformatics"]
 publish = false
 
 [[bin]]
-name = "garr"
-path = "src/garr.rs"
+name = "gars"
+path = "src/gars.rs"
 
 [dependencies]
 clap = { version = "3.0.14", features = ["derive", "cargo"] }

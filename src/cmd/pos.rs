@@ -1,5 +1,5 @@
 use clap::*;
-use garr::*;
+use crate::*;
 use intspan::*;
 use redis::Commands;
 use std::io::BufRead;
@@ -31,7 +31,7 @@ pub fn execute(args: &ArgMatches) -> std::result::Result<(), std::io::Error> {
             }
             *rg.strand_mut() = "".to_string();
 
-            let ctg_id = garr::find_one(&mut conn, &rg);
+            let ctg_id = crate::find_one(&mut conn, &rg);
             if ctg_id.is_empty() {
                 continue;
             }
@@ -53,7 +53,7 @@ pub fn execute(args: &ArgMatches) -> std::result::Result<(), std::io::Error> {
         }
 
         // total number of pos
-        let pos_count = garr::get_scan_count(&mut conn, "pos:*".to_string());
+        let pos_count = crate::get_scan_count(&mut conn, "pos:*".to_string());
         println!("There are {} positions in total", pos_count);
     }
 

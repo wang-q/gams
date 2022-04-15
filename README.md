@@ -1,15 +1,15 @@
-# `garr`
+# `gars`
 
-![Publish](https://github.com/wang-q/garr/workflows/Publish/badge.svg)
-![Build](https://github.com/wang-q/garr/workflows/Build/badge.svg)
+![Publish](https://github.com/wang-q/gars/workflows/Publish/badge.svg)
+![Build](https://github.com/wang-q/gars/workflows/Build/badge.svg)
 
-Genome Analyst with Rust and Redis
+`gars` - **G**enome **A**nalyst with **R**ust and redi**S**
 
 ## INSTALL
 
 Current release: 0.1.0
 
-```shell script
+```shell
 cargo install --force --offline --path .
 
 ```
@@ -17,14 +17,14 @@ cargo install --force --offline --path .
 
 ## SYNOPSIS
 
-```
-$ garr help
-garr 0.1.1-alpha.0
+```text
+$ gars help
+gars 0.1.1-alpha.0
 wang-q <wang-q@outlook.com>
 Genome Analyst with Rust and Redis
 
 USAGE:
-    garr [SUBCOMMAND]
+    gars [SUBCOMMAND]
 
 FLAGS:
     -h, --help       Prints help information
@@ -48,7 +48,7 @@ SUBCOMMANDS:
 
 * Command line tools managed by `Linuxbrew`
 
-```shell script
+```shell
 brew install redis
 
 brew install parallel wget aria2 pigz
@@ -61,7 +61,7 @@ brew install wang-q/tap/tsv-utils wang-q/tap/intspan wang-q/tap/faops
 
 * R (4.1) packages
 
-```shell script
+```shell
 # R packages
 parallel -j 1 -k --line-buffer '
     Rscript -e '\'' if (!requireNamespace("{}", quietly = TRUE)) { install.packages("{}", repos="https://mirrors.tuna.tsinghua.edu.cn/CRAN") } '\''
@@ -74,7 +74,7 @@ parallel -j 1 -k --line-buffer '
 
 * Querying tools
 
-```shell script
+```shell
 
 # Redis GUI
 # winget install qishibo.AnotherRedisDesktopManager
@@ -97,12 +97,12 @@ brew install textql
 
 ## EXAMPLES
 
-```shell script
-REDIS_TLS=true REDIS_PASSWORD='mYpa$$' garr env -o stdout
+```shell
+REDIS_TLS=true REDIS_PASSWORD='mYpa$$' gars env -o stdout
 
-garr env
+gars env
 
-garr status test
+gars status test
 
 ```
 

@@ -1,6 +1,6 @@
 use bio::io::fasta;
 use clap::*;
-use garr::*;
+use crate::*;
 use intspan::*;
 use redis::Commands;
 use std::collections::VecDeque;
@@ -177,7 +177,7 @@ pub fn execute(args: &ArgMatches) -> std::result::Result<(), std::io::Error> {
     println!("There are {} chromosomes", n_chr);
 
     // number of ctg
-    let n_ctg: i32 = garr::get_scan_count(&mut conn, "ctg:*".to_string());
+    let n_ctg: i32 = crate::get_scan_count(&mut conn, "ctg:*".to_string());
     println!("There are {} contigs", n_ctg);
 
     Ok(())

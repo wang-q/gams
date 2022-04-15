@@ -1,5 +1,5 @@
 use clap::*;
-use garr::*;
+use crate::*;
 use redis::{Commands, RedisResult};
 use std::process::Command;
 

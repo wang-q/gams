@@ -4,22 +4,22 @@
 
 ```shell script
 # Inside WSL
-# cd /mnt/c/Users/wangq/Scripts/garr
+# cd /mnt/c/Users/wangq/Scripts/gars
 
 # start redis-server
 redis-server --loadmodule ~/redisearch.so --appendonly no --dir tests/S288c/
 
 # start with dump file
-# redis-server --appendonly no --dir ~/Scripts/rust/garr/tests/S288c/ --dbfilename dump.rdb
+# redis-server --appendonly no --dir ~/Scripts/rust/gars/tests/S288c/ --dbfilename dump.rdb
 
 # check config
 echo "CONFIG GET *" | redis-cli | grep -e "dir" -e "dbfilename" -A1
 
-# create garr.env
-garr env
+# create gars.env
+gars env
 
 # check DB
-garr status test
+gars status test
 
 # drop DB
 redis-cli FLUSHDB
@@ -28,7 +28,7 @@ redis-cli FLUSHDB
 faops size tests/S288c/genome.fa.gz > tests/S288c/chr.sizes
 
 # generate DB
-#garr gen tests/S288c/chr.sizes
+#gars gen tests/S288c/chr.sizes
 redis-cli SET common_name S288c
 
 cat tests/S288c/chr.sizes |
@@ -91,19 +91,19 @@ ps -e | grep redis-server
 # start redis-server
 redis-server --appendonly no --dir tests/S288c/
 
-# create garr.env
-garr env
+# create gars.env
+gars env
 
 # check DB
-garr status test
+gars status test
 
 # drop DB
-garr status drop
+gars status drop
 
 # generate DB
-garr gen tests/S288c/genome.fa.gz --piece 100000
+gars gen tests/S288c/genome.fa.gz --piece 100000
 
-garr tsv -s 'ctg:*' > tests/S288c/ctg.tsv
+gars tsv -s 'ctg:*' > tests/S288c/ctg.tsv
 
 #cargo run stat tests/S288c/ctg.tsv -s templates/ctg-1.sql
 #cargo run stat tests/S288c/ctg.tsv -s templates/ctg-2.sql
@@ -113,9 +113,9 @@ textql -dlm=tab -header -output-dlm=tab -output-header \
     tests/S288c/ctg.tsv
 
 # add ranges
-garr range tests/S288c/spo11_hot.pos.txt
+gars range tests/S288c/spo11_hot.pos.txt
 
-time garr rsw > /dev/null
+time gars rsw > /dev/null
 # w/o gc_stat()
 # get_gc_content()
 #real    0m1.444s
@@ -139,10 +139,10 @@ time garr rsw > /dev/null
 #sys     0m1.102s
 
 # add pos
-garr pos tests/S288c/spo11_hot.pos.txt tests/S288c/spo11_hot.pos.txt
+gars pos tests/S288c/spo11_hot.pos.txt tests/S288c/spo11_hot.pos.txt
 
 # dump DB to redis-server start dir as dump.rdb
-garr status dump
+gars status dump
 
 ```
 
@@ -151,11 +151,11 @@ garr status dump
 ```shell script
 redis-server --appendonly no --dir tests/S288c/
 
-garr status drop
+gars status drop
 
-garr gen tests/S288c/genome.fa.gz --piece 500000
+gars gen tests/S288c/genome.fa.gz --piece 500000
 
-garr sliding \
+gars sliding \
     --ctg 'ctg:I:' \
     --size 100 --step 1 \
     --lag 1000 \
@@ -199,6 +199,6 @@ tsv-summarize tests/S288c/I.peaks.tsv \
 #-1      94
 #1       61
 
-garr wave tests/S288c/I.peaks.tsv
+gars wave tests/S288c/I.peaks.tsv
 
 ```

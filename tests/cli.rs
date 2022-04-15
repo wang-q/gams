@@ -6,7 +6,7 @@ use std::process::Command; // Run programs
 
 #[test]
 fn command_invalid() -> Result<(), Box<dyn std::error::Error>> {
-    let mut cmd = Command::cargo_bin("garr")?;
+    let mut cmd = Command::cargo_bin("gars")?;
     cmd.arg("foobar");
     cmd.assert().failure().stderr(predicate::str::contains(
         "which wasn't expected, or isn't valid in this context",
@@ -17,7 +17,7 @@ fn command_invalid() -> Result<(), Box<dyn std::error::Error>> {
 
 #[test]
 fn command_env() -> Result<(), Box<dyn std::error::Error>> {
-    let mut cmd = Command::cargo_bin("garr")?;
+    let mut cmd = Command::cargo_bin("gars")?;
     let output = cmd
         .arg("env")
         .arg("--outfile")
@@ -34,7 +34,7 @@ fn command_env() -> Result<(), Box<dyn std::error::Error>> {
 
 #[test]
 fn command_env_env() -> Result<(), Box<dyn std::error::Error>> {
-    let mut cmd = Command::cargo_bin("garr")?;
+    let mut cmd = Command::cargo_bin("gars")?;
     let output = cmd
         .env("REDIS_PASSWORD", "mYpa$$")
         .arg("env")
@@ -56,15 +56,15 @@ fn command_env_env() -> Result<(), Box<dyn std::error::Error>> {
 #[test]
 fn command_status() -> Result<(), Box<dyn std::error::Error>> {
     // env
-    let mut cmd = Command::cargo_bin("garr")?;
+    let mut cmd = Command::cargo_bin("gars")?;
     cmd.arg("env").unwrap();
 
     // drop
-    let mut cmd = Command::cargo_bin("garr")?;
+    let mut cmd = Command::cargo_bin("gars")?;
     cmd.arg("status").arg("drop").unwrap();
 
     // test
-    let mut cmd = Command::cargo_bin("garr")?;
+    let mut cmd = Command::cargo_bin("gars")?;
     let output = cmd.arg("status").arg("test").output().unwrap();
     let stdout = String::from_utf8(output.stdout).unwrap();
 
@@ -72,7 +72,7 @@ fn command_status() -> Result<(), Box<dyn std::error::Error>> {
     assert!(stdout.contains("Running SET commands"));
 
     // dump
-    let mut cmd = Command::cargo_bin("garr")?;
+    let mut cmd = Command::cargo_bin("gars")?;
     let output = cmd.arg("status").arg("dump").output().unwrap();
     let stdout = String::from_utf8(output.stdout).unwrap();
 
@@ -85,15 +85,15 @@ fn command_status() -> Result<(), Box<dyn std::error::Error>> {
 #[test]
 fn command_gen() -> Result<(), Box<dyn std::error::Error>> {
     // env
-    let mut cmd = Command::cargo_bin("garr")?;
+    let mut cmd = Command::cargo_bin("gars")?;
     cmd.arg("env").unwrap();
 
     // drop
-    let mut cmd = Command::cargo_bin("garr")?;
+    let mut cmd = Command::cargo_bin("gars")?;
     cmd.arg("status").arg("drop").unwrap();
 
     // gen
-    let mut cmd = Command::cargo_bin("garr")?;
+    let mut cmd = Command::cargo_bin("gars")?;
     let output = cmd
         .arg("gen")
         .arg("tests/S288c/genome.fa.gz")
@@ -107,7 +107,7 @@ fn command_gen() -> Result<(), Box<dyn std::error::Error>> {
     assert!(stdout.contains("There are 3 contigs"));
 
     // find_one
-    let mut conn = garr::connect();
+    let mut conn = gars::connect();
     let tests = vec![
         ("I", 1000, 1100, "ctg:I:1"),
         ("Mito", 1000, 1100, "ctg:Mito:1"),
@@ -115,12 +115,12 @@ fn command_gen() -> Result<(), Box<dyn std::error::Error>> {
         ("II", 1000, 1100, ""),
     ];
     for (name, start, end, expected) in tests {
-        let ctg = garr::find_one(&mut conn, &Range::from(name, start, end));
+        let ctg = gars::find_one(&mut conn, &Range::from(name, start, end));
         assert_eq!(ctg, expected.to_string());
     }
 
     // get_seq
-    let mut conn = garr::connect();
+    let mut conn = gars::connect();
     let tests = vec![
         ("I", 1000, 1002, "ATA"),
         ("I", 1000, 1010, "ATACAATTATA"),
@@ -128,12 +128,12 @@ fn command_gen() -> Result<(), Box<dyn std::error::Error>> {
         ("II", 1000, 1100, ""),
     ];
     for (name, start, end, expected) in tests {
-        let ctg = garr::get_seq(&mut conn, &Range::from(name, start, end));
+        let ctg = gars::get_seq(&mut conn, &Range::from(name, start, end));
         assert_eq!(ctg, expected.to_string());
     }
 
     // get_gc_content
-    let mut conn = garr::connect();
+    let mut conn = gars::connect();
     let tests = vec![
         ("I", 1000, 1002, 0.0),      // ATA
         ("I", 1000, 1010, 1. / 11.), // ATACAATTATA
@@ -141,7 +141,7 @@ fn command_gen() -> Result<(), Box<dyn std::error::Error>> {
         ("II", 1000, 1100, 0.0),
     ];
     for (name, start, end, expected) in tests {
-        let gc = garr::get_gc_content(&mut conn, &Range::from(name, start, end));
+        let gc = gars::get_gc_content(&mut conn, &Range::from(name, start, end));
         assert_relative_eq!(gc, expected);
     }
 
@@ -151,15 +151,15 @@ fn command_gen() -> Result<(), Box<dyn std::error::Error>> {
 #[test]
 fn command_pos() -> Result<(), Box<dyn std::error::Error>> {
     // env
-    let mut cmd = Command::cargo_bin("garr")?;
+    let mut cmd = Command::cargo_bin("gars")?;
     cmd.arg("env").unwrap();
 
     // drop
-    let mut cmd = Command::cargo_bin("garr")?;
+    let mut cmd = Command::cargo_bin("gars")?;
     cmd.arg("status").arg("drop").unwrap();
 
     // gen
-    let mut cmd = Command::cargo_bin("garr")?;
+    let mut cmd = Command::cargo_bin("gars")?;
     cmd.arg("gen")
         .arg("tests/S288c/genome.fa.gz")
         .arg("--piece")
@@ -167,7 +167,7 @@ fn command_pos() -> Result<(), Box<dyn std::error::Error>> {
         .unwrap();
 
     // pos
-    let mut cmd = Command::cargo_bin("garr")?;
+    let mut cmd = Command::cargo_bin("gars")?;
     let output = cmd
         .arg("pos")
         .arg("tests/S288c/spo11_hot.pos.txt")
@@ -186,15 +186,15 @@ fn command_pos() -> Result<(), Box<dyn std::error::Error>> {
 #[test]
 fn command_range() -> Result<(), Box<dyn std::error::Error>> {
     // env
-    let mut cmd = Command::cargo_bin("garr")?;
+    let mut cmd = Command::cargo_bin("gars")?;
     cmd.arg("env").unwrap();
 
     // drop
-    let mut cmd = Command::cargo_bin("garr")?;
+    let mut cmd = Command::cargo_bin("gars")?;
     cmd.arg("status").arg("drop").unwrap();
 
     // gen
-    let mut cmd = Command::cargo_bin("garr")?;
+    let mut cmd = Command::cargo_bin("gars")?;
     cmd.arg("gen")
         .arg("tests/S288c/genome.fa.gz")
         .arg("--piece")
@@ -202,7 +202,7 @@ fn command_range() -> Result<(), Box<dyn std::error::Error>> {
         .unwrap();
 
     // range
-    let mut cmd = Command::cargo_bin("garr")?;
+    let mut cmd = Command::cargo_bin("gars")?;
     let output = cmd
         .arg("range")
         .arg("tests/S288c/spo11_hot.pos.txt")
@@ -221,15 +221,15 @@ fn command_range() -> Result<(), Box<dyn std::error::Error>> {
 #[test]
 fn command_wave() -> Result<(), Box<dyn std::error::Error>> {
     // env
-    let mut cmd = Command::cargo_bin("garr")?;
+    let mut cmd = Command::cargo_bin("gars")?;
     cmd.arg("env").unwrap();
 
     // drop
-    let mut cmd = Command::cargo_bin("garr")?;
+    let mut cmd = Command::cargo_bin("gars")?;
     cmd.arg("status").arg("drop").unwrap();
 
     // gen
-    let mut cmd = Command::cargo_bin("garr")?;
+    let mut cmd = Command::cargo_bin("gars")?;
     cmd.arg("gen")
         .arg("tests/S288c/genome.fa.gz")
         .arg("--piece")
@@ -237,7 +237,7 @@ fn command_wave() -> Result<(), Box<dyn std::error::Error>> {
         .unwrap();
 
     // wave
-    let mut cmd = Command::cargo_bin("garr")?;
+    let mut cmd = Command::cargo_bin("gars")?;
     let output = cmd
         .arg("wave")
         .arg("tests/S288c/I.peaks.tsv")
@@ -261,7 +261,7 @@ fn test_gc_stat() {
         ),
     ];
     for (gcs, exp) in tests {
-        let (mean, stddev, cv, snr) = garr::gc_stat(&gcs);
+        let (mean, stddev, cv, snr) = gars::gc_stat(&gcs);
         assert_relative_eq!(mean, exp.0);
         assert_relative_eq!(stddev, exp.1);
         assert_relative_eq!(cv, exp.2);

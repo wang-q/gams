@@ -1,4 +1,4 @@
-//! Subcommand modules for the `garr` binary.
+//! Subcommand modules for the `gars` binary.
 
 pub mod env;
 pub mod gen;

@@ -2,13 +2,15 @@
 
 ## Unreleased - ReleaseDate
 
-* Add `garr status stop`
+* Renamed to `gars`
+
+* Add `gars status stop`
 
 * Queries done by clickhouse
-  * `garr env` creates sqls
+  * `gars env` creates sqls
   * Stats of ctg and rsw
 
-* `garr stat`
+* `gars stat`
   * `Polars` can't read sqls, so use the built-in queries
   * `Datafusion` makes the compilation extremely slow
 

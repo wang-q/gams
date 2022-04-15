@@ -31,7 +31,7 @@ fn default_redis_tls() -> bool {
 }
 
 pub fn connect() -> redis::Connection {
-    dotenv::from_filename("garr.env").expect("Failed to read garr.env file");
+    dotenv::from_filename("gars.env").expect("Failed to read gars.env file");
 
     let redis_host = dotenv::var("REDIS_HOST").unwrap();
     let redis_port = dotenv::var("REDIS_PORT").unwrap();

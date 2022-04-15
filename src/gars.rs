@@ -4,10 +4,10 @@ use clap::*;
 mod cmd;
 
 fn main() -> std::io::Result<()> {
-    let app = App::new("garr")
+    let app = App::new("gars")
         .version(crate_version!())
         .author(crate_authors!())
-        .about("Genome Analyst with Rust and Redis")
+        .about("Genome Analyst with Rust and rediS")
         .global_setting(AppSettings::PropagateVersion)
         .global_setting(AppSettings::ArgRequiredElseHelp)
         .subcommand(cmd::env::make_subcommand())
