@@ -107,7 +107,7 @@ fn command_gen() -> Result<(), Box<dyn std::error::Error>> {
     assert!(stdout.contains("There are 3 contigs"));
 
     // find_one
-    let mut conn = gars::connect();
+    let mut conn = connect();
     let tests = vec![
         ("I", 1000, 1100, "ctg:I:1"),
         ("Mito", 1000, 1100, "ctg:Mito:1"),
@@ -120,7 +120,7 @@ fn command_gen() -> Result<(), Box<dyn std::error::Error>> {
     }
 
     // get_seq
-    let mut conn = gars::connect();
+    let mut conn = connect();
     let tests = vec![
         ("I", 1000, 1002, "ATA"),
         ("I", 1000, 1010, "ATACAATTATA"),
@@ -133,7 +133,7 @@ fn command_gen() -> Result<(), Box<dyn std::error::Error>> {
     }
 
     // get_gc_content
-    let mut conn = gars::connect();
+    let mut conn = connect();
     let tests = vec![
         ("I", 1000, 1002, 0.0),      // ATA
         ("I", 1000, 1010, 1. / 11.), // ATACAATTATA

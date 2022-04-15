@@ -1,7 +1,6 @@
-use crate::*;
 use clap::*;
+use gars::*;
 use redis::{Commands, RedisResult};
-use std::process::Command;
 
 use rand::Rng;
 use std::collections::{BTreeMap, BTreeSet};
@@ -75,7 +74,7 @@ pub fn execute(args: &ArgMatches) -> std::result::Result<(), std::io::Error> {
 }
 
 fn info() {
-    let mut conn = crate::connect();
+    let mut conn = connect();
     let info: redis::InfoDict = redis::cmd("INFO")
         .query(&mut conn)
         .expect("Failed to execute INFO");
@@ -97,14 +96,14 @@ fn info() {
 }
 
 fn cli() {
-    match Command::new("redis-cli").arg("--version").output() {
+    match std::process::Command::new("redis-cli").arg("--version").output() {
         Ok(o) => println!("Find `{:#?}` in $PATH", String::from_utf8(o.stdout)),
         Err(_) => println!("`redis-cli` was not found! Check your $PATH!"),
     }
 }
 
 fn drop() {
-    let mut conn = crate::connect();
+    let mut conn = connect();
     let output: String = redis::cmd("FLUSHDB")
         .query(&mut conn)
         .expect("Failed to execute FLUSHDB");
@@ -112,7 +111,7 @@ fn drop() {
 }
 
 fn dump() {
-    let mut conn = crate::connect();
+    let mut conn = connect();
     let output: String = redis::cmd("SAVE")
         .query(&mut conn)
         .expect("Failed to execute SAVE");
@@ -120,7 +119,7 @@ fn dump() {
 }
 
 fn stop() {
-    let mut conn = crate::connect();
+    let mut conn = connect();
 
     let output = redis::cmd("SHUTDOWN")
         .arg("SAVE")
@@ -131,7 +130,7 @@ fn stop() {
 }
 
 fn basics() {
-    let mut conn = crate::connect();
+    let mut conn = connect();
     println!("******* Running SET, GET, INCR commands *******");
 
     let _: () = redis::cmd("SET")
@@ -159,7 +158,7 @@ fn basics() {
 }
 
 fn hash() {
-    let mut conn = crate::connect();
+    let mut conn = connect();
 
     println!("******* Running HASH commands *******");
 
@@ -205,7 +204,7 @@ fn hash() {
 }
 
 fn list() {
-    let mut conn = crate::connect();
+    let mut conn = connect();
     println!("******* Running LIST commands *******");
 
     let list_name = "items";
@@ -240,7 +239,7 @@ fn list() {
 }
 
 fn set() {
-    let mut conn = crate::connect();
+    let mut conn = connect();
     println!("******* Running SET commands *******");
 
     let set_name = "users";
@@ -268,7 +267,7 @@ fn set() {
 }
 
 fn sorted_set() {
-    let mut conn = crate::connect();
+    let mut conn = connect();
     println!("******* Running SORTED SET commands *******");
 
     let sorted_set = "leaderboard";
@@ -306,7 +305,7 @@ fn sorted_set() {
 }
 
 fn pipe_atomic() {
-    let mut conn = crate::connect();
+    let mut conn = connect();
     println!("******* Running MULTI EXEC commands *******");
 
     redis::pipe()
@@ -382,7 +381,7 @@ fn pipe_atomic() {
 }
 
 fn script() {
-    let mut conn = crate::connect();
+    let mut conn = connect();
     println!("******* Running Lua Scripts *******");
 
     let script = redis::Script::new(

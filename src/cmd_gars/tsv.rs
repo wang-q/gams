@@ -1,5 +1,5 @@
-use crate::*;
 use clap::*;
+use gars::*;
 use intspan::*;
 use redis::Commands;
 use std::collections::BTreeMap;
@@ -56,8 +56,8 @@ pub fn execute(args: &ArgMatches) -> std::result::Result<(), std::io::Error> {
     };
 
     // redis connection
-    let mut conn = crate::connect();
-    let mut conn2 = crate::connect(); // can't use one same `conn` inside an iter
+    let mut conn = connect();
+    let mut conn2 = connect(); // can't use one same `conn` inside an iter
 
     // headers
     let mut writer = writer(args.value_of("outfile").unwrap());

@@ -1,5 +1,5 @@
-use crate::*;
 use clap::*;
+use gars::*;
 use intspan::*;
 use redis::Commands;
 
@@ -77,7 +77,7 @@ pub fn execute(args: &ArgMatches) -> std::result::Result<(), std::io::Error> {
     });
 
     // redis connection
-    let mut conn = crate::connect();
+    let mut conn = connect();
 
     // headers
     let mut writer = writer(args.value_of("outfile").unwrap());
@@ -98,43 +98,43 @@ pub fn execute(args: &ArgMatches) -> std::result::Result<(), std::io::Error> {
 
     // process each contig
     let ctgs: Vec<String> =
-        crate::get_scan_vec(&mut conn, args.value_of("ctg").unwrap().to_string());
+        gars::get_scan_vec(&mut conn, args.value_of("ctg").unwrap().to_string());
     eprintln!("{} contigs to be processed", ctgs.len());
     for ctg_id in ctgs {
-        let (chr_name, chr_start, chr_end) = crate::get_key_pos(&mut conn, &ctg_id);
+        let (chr_name, chr_start, chr_end) = gars::get_key_pos(&mut conn, &ctg_id);
         eprintln!("Process {} {}:{}-{}", ctg_id, chr_name, chr_start, chr_end);
 
         let parent = IntSpan::from_pair(chr_start, chr_end);
         let seq: String = conn.get(format!("seq:{}", ctg_id)).unwrap();
 
         let pattern = format!("range:{}:*", ctg_id);
-        let ranges: Vec<String> = crate::get_scan_vec(&mut conn, pattern);
+        let ranges: Vec<String> = gars::get_scan_vec(&mut conn, pattern);
         eprintln!("\t{} ranges to be processed", ranges.len());
 
         for range_id in ranges {
             // eprintln!("\t{}", range_id);
-            let (_, range_start, range_end) = crate::get_key_pos(&mut conn, &range_id);
+            let (_, range_start, range_end) = gars::get_key_pos(&mut conn, &range_id);
             let tag: String = conn.hget(&range_id, "tag").unwrap();
 
             // No need to use Redis counter
             let mut serial: isize = 1;
 
-            let windows = crate::center_sw(&parent, range_start, range_end, size, max);
+            let windows = gars::center_sw(&parent, range_start, range_end, size, max);
 
             for (sw_intspan, sw_type, sw_distance) in windows {
                 let rsw_id = format!("rsw:{}:{}", range_id, serial);
 
-                let gc_content = crate::ctg_gc_content(
+                let gc_content = gars::ctg_gc_content(
                     &mut conn,
                     &Range::from(&chr_name, sw_intspan.min(), sw_intspan.max()),
                     &parent,
                     &seq,
                 );
 
-                let resized = crate::center_resize(&parent, &sw_intspan, resize);
+                let resized = gars::center_resize(&parent, &sw_intspan, resize);
                 let re_rg = Range::from(&chr_name, resized.min(), resized.max());
                 let (gc_mean, gc_stddev, gc_cv, gc_snr) =
-                    crate::ctg_gc_stat(&mut conn, &re_rg, size, size, &parent, &seq);
+                    gars::ctg_gc_stat(&mut conn, &re_rg, size, size, &parent, &seq);
 
                 // prepare to output
                 let mut values: Vec<String> = vec![];

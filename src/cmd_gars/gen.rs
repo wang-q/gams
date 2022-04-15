@@ -1,6 +1,6 @@
-use crate::*;
 use bio::io::fasta;
 use clap::*;
+use gars::*;
 use intspan::*;
 use redis::Commands;
 use std::collections::VecDeque;
@@ -72,7 +72,7 @@ pub fn execute(args: &ArgMatches) -> std::result::Result<(), std::io::Error> {
     });
 
     // redis connection
-    let mut conn = crate::connect();
+    let mut conn = connect();
 
     // common_name
     let _: () = conn.set("common_name", common_name).unwrap();
@@ -177,7 +177,7 @@ pub fn execute(args: &ArgMatches) -> std::result::Result<(), std::io::Error> {
     println!("There are {} chromosomes", n_chr);
 
     // number of ctg
-    let n_ctg: i32 = crate::get_scan_count(&mut conn, "ctg:*".to_string());
+    let n_ctg: i32 = gars::get_scan_count(&mut conn, "ctg:*".to_string());
     println!("There are {} contigs", n_ctg);
 
     Ok(())

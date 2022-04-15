@@ -1,5 +1,5 @@
-use crate::*;
 use clap::*;
+use gars::*;
 use intspan::*;
 use redis::Commands;
 
@@ -94,7 +94,7 @@ pub fn execute(args: &ArgMatches) -> std::result::Result<(), std::io::Error> {
     });
 
     // redis connection
-    let mut conn = crate::connect();
+    let mut conn = connect();
 
     // headers
     let mut writer = writer(args.value_of("outfile").unwrap());
@@ -105,14 +105,14 @@ pub fn execute(args: &ArgMatches) -> std::result::Result<(), std::io::Error> {
 
     // process each contig
     let ctgs: Vec<String> =
-        crate::get_scan_vec(&mut conn, args.value_of("ctg").unwrap().to_string());
+        gars::get_scan_vec(&mut conn, args.value_of("ctg").unwrap().to_string());
     eprintln!("{} contigs to be processed", ctgs.len());
     for ctg_id in ctgs {
-        let (chr_name, chr_start, chr_end) = crate::get_key_pos(&mut conn, &ctg_id);
+        let (chr_name, chr_start, chr_end) = gars::get_key_pos(&mut conn, &ctg_id);
         eprintln!("Process {} {}:{}-{}", ctg_id, chr_name, chr_start, chr_end);
 
         let parent = IntSpan::from_pair(chr_start, chr_end);
-        let windows = crate::sliding(&parent, size, step);
+        let windows = gars::sliding(&parent, size, step);
 
         let seq: String = conn.get(format!("seq:{}", ctg_id)).unwrap();
 
@@ -128,7 +128,7 @@ pub fn execute(args: &ArgMatches) -> std::result::Result<(), std::io::Error> {
             gcs.push(gc_content);
         }
 
-        let signals = crate::thresholding_algo(&gcs, lag, threshold, influence);
+        let signals = gars::thresholding_algo(&gcs, lag, threshold, influence);
 
         // outputs
         for i in 0..windows.len() {

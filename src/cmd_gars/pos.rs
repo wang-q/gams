@@ -1,5 +1,5 @@
-use crate::*;
 use clap::*;
+use gars::*;
 use intspan::*;
 use redis::Commands;
 use std::io::BufRead;
@@ -20,7 +20,7 @@ pub fn make_subcommand<'a>() -> Command<'a> {
 // command implementation
 pub fn execute(args: &ArgMatches) -> std::result::Result<(), std::io::Error> {
     // redis connection
-    let mut conn = crate::connect();
+    let mut conn = connect();
 
     // processing each file
     for infile in args.values_of("infiles").unwrap() {
@@ -33,7 +33,7 @@ pub fn execute(args: &ArgMatches) -> std::result::Result<(), std::io::Error> {
             }
             *rg.strand_mut() = "".to_string();
 
-            let ctg_id = crate::find_one(&mut conn, &rg);
+            let ctg_id = gars::find_one(&mut conn, &rg);
             if ctg_id.is_empty() {
                 continue;
             }
@@ -55,7 +55,7 @@ pub fn execute(args: &ArgMatches) -> std::result::Result<(), std::io::Error> {
         }
 
         // total number of pos
-        let pos_count = crate::get_scan_count(&mut conn, "pos:*".to_string());
+        let pos_count = gars::get_scan_count(&mut conn, "pos:*".to_string());
         println!("There are {} positions in total", pos_count);
     }
 

@@ -1,5 +1,5 @@
-use crate::*;
 use clap::*;
+use gars::*;
 use std::collections::HashMap;
 use std::fs;
 use tera::{Context, Tera};
@@ -35,7 +35,7 @@ Default values:
 pub fn execute(args: &ArgMatches) -> std::result::Result<(), std::io::Error> {
     // context from ENV variables
     let mut context = Context::new();
-    match envy::from_env::<crate::Config>() {
+    match envy::from_env::<Config>() {
         Ok(config) => {
             context.insert("host", &config.redis_host);
             context.insert("port", &config.redis_port);

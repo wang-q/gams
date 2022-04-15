@@ -9,7 +9,7 @@ pub fn center_sw(
 ) -> Vec<(IntSpan, String, i32)> {
     let mut windows = vec![];
 
-    let w0 = crate::center_resize(parent, &IntSpan::from_pair(start, end), size);
+    let w0 = center_resize(parent, &IntSpan::from_pair(start, end), size);
     windows.push((w0.clone(), "M".to_string(), 0));
 
     for sw_type in ["L", "R"] {
