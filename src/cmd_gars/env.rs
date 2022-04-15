@@ -1,12 +1,12 @@
-use clap::*;
 use crate::*;
+use clap::*;
 use std::collections::HashMap;
 use std::fs;
 use tera::{Context, Tera};
 
 // Create clap subcommand arguments
-pub fn make_subcommand<'a>() -> App<'a> {
-    App::new("env")
+pub fn make_subcommand<'a>() -> Command<'a> {
+    Command::new("env")
         .about("Create a .env file")
         .after_help(
             r#"
@@ -35,7 +35,7 @@ Default values:
 pub fn execute(args: &ArgMatches) -> std::result::Result<(), std::io::Error> {
     // context from ENV variables
     let mut context = Context::new();
-    match envy::from_env::<Config>() {
+    match envy::from_env::<crate::Config>() {
         Ok(config) => {
             context.insert("host", &config.redis_host);
             context.insert("port", &config.redis_port);

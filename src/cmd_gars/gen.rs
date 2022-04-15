@@ -1,14 +1,14 @@
+use crate::*;
 use bio::io::fasta;
 use clap::*;
-use crate::*;
 use intspan::*;
 use redis::Commands;
 use std::collections::VecDeque;
 use std::iter::FromIterator;
 
 // Create clap subcommand arguments
-pub fn make_subcommand<'a>() -> App<'a> {
-    App::new("gen")
+pub fn make_subcommand<'a>() -> Command<'a> {
+    Command::new("gen")
         .about("Generate the database from (gzipped) fasta files")
         .arg(
             Arg::new("infiles")
@@ -72,7 +72,7 @@ pub fn execute(args: &ArgMatches) -> std::result::Result<(), std::io::Error> {
     });
 
     // redis connection
-    let mut conn = connect();
+    let mut conn = crate::connect();
 
     // common_name
     let _: () = conn.set("common_name", common_name).unwrap();

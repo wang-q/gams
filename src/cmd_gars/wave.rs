@@ -1,12 +1,12 @@
-use clap::*;
 use crate::*;
+use clap::*;
 use intspan::*;
 use redis::Commands;
 use std::io::BufRead;
 
 // Create clap subcommand arguments
-pub fn make_subcommand<'a>() -> App<'a> {
-    App::new("wave")
+pub fn make_subcommand<'a>() -> Command<'a> {
+    Command::new("wave")
         .about("Add peaks of GC-waves")
         .after_help(
             "\
@@ -27,7 +27,7 @@ pub fn execute(args: &ArgMatches) -> std::result::Result<(), std::io::Error> {
     let infile = args.value_of("infile").unwrap();
 
     // redis connection
-    let mut conn = connect();
+    let mut conn = crate::connect();
 
     // processing each line
     let reader = reader(infile);
@@ -42,7 +42,7 @@ pub fn execute(args: &ArgMatches) -> std::result::Result<(), std::io::Error> {
 
         let signal = parts[2];
 
-        let ctg_id = garr::find_one(&mut conn, &rg);
+        let ctg_id = crate::find_one(&mut conn, &rg);
         if ctg_id.is_empty() {
             continue;
         }
@@ -53,7 +53,7 @@ pub fn execute(args: &ArgMatches) -> std::result::Result<(), std::io::Error> {
         let peak_id = format!("peak:{}:{}", ctg_id, serial);
 
         let length = rg.end() - rg.start() + 1;
-        let gc_content = garr::get_gc_content(&mut conn, &rg);
+        let gc_content = crate::get_gc_content(&mut conn, &rg);
 
         let _: () = redis::pipe()
             .hset(&peak_id, "chr_name", rg.chr())
@@ -73,17 +73,17 @@ pub fn execute(args: &ArgMatches) -> std::result::Result<(), std::io::Error> {
     }
 
     // number of peaks
-    let n_peak = garr::get_scan_count(&mut conn, "peak:*".to_string());
+    let n_peak = crate::get_scan_count(&mut conn, "peak:*".to_string());
     println!("There are {} peaks", n_peak);
 
     // each ctg
-    let ctgs: Vec<String> = garr::get_scan_vec(&mut conn, "ctg:*".to_string());
+    let ctgs: Vec<String> = crate::get_scan_vec(&mut conn, "ctg:*".to_string());
     eprintln!("{} contigs to be processed", ctgs.len());
     for ctg_id in ctgs {
-        let (chr_name, chr_start, chr_end) = garr::get_key_pos(&mut conn, &ctg_id);
+        let (chr_name, chr_start, chr_end) = crate::get_key_pos(&mut conn, &ctg_id);
         eprintln!("Process {} {}:{}-{}", ctg_id, chr_name, chr_start, chr_end);
 
-        let hash = garr::get_scan_int(
+        let hash = crate::get_scan_int(
             &mut conn,
             format!("peak:{}:*", ctg_id),
             "chr_start".to_string(),

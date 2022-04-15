@@ -1,12 +1,12 @@
-use clap::*;
 use crate::*;
+use clap::*;
 use intspan::*;
 use redis::Commands;
 use std::collections::BTreeMap;
 
 // Create clap subcommand arguments
-pub fn make_subcommand<'a>() -> App<'a> {
-    App::new("tsv")
+pub fn make_subcommand<'a>() -> Command<'a> {
+    Command::new("tsv")
         .about("Exports Redis hashes to a tsv file")
         .after_help(
             "\
@@ -56,8 +56,8 @@ pub fn execute(args: &ArgMatches) -> std::result::Result<(), std::io::Error> {
     };
 
     // redis connection
-    let mut conn = connect();
-    let mut conn2 = connect(); // can't use one same `conn` inside an iter
+    let mut conn = crate::connect();
+    let mut conn2 = crate::connect(); // can't use one same `conn` inside an iter
 
     // headers
     let mut writer = writer(args.value_of("outfile").unwrap());

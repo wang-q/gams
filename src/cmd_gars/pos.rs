@@ -1,24 +1,26 @@
-use clap::*;
 use crate::*;
+use clap::*;
 use intspan::*;
 use redis::Commands;
 use std::io::BufRead;
 
 // Create clap subcommand arguments
-pub fn make_subcommand<'a>() -> App<'a> {
-    App::new("pos").about("Add range files to positions").arg(
-        Arg::new("infiles")
-            .help("Sets the input file to use")
-            .required(true)
-            .min_values(1)
-            .index(1),
-    )
+pub fn make_subcommand<'a>() -> Command<'a> {
+    Command::new("pos")
+        .about("Add range files to positions")
+        .arg(
+            Arg::new("infiles")
+                .help("Sets the input file to use")
+                .required(true)
+                .min_values(1)
+                .index(1),
+        )
 }
 
 // command implementation
 pub fn execute(args: &ArgMatches) -> std::result::Result<(), std::io::Error> {
     // redis connection
-    let mut conn = connect();
+    let mut conn = crate::connect();
 
     // processing each file
     for infile in args.values_of("infiles").unwrap() {

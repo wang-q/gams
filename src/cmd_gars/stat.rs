@@ -3,8 +3,8 @@ use intspan::writer;
 use polars::prelude::*;
 
 // Create clap subcommand arguments
-pub fn make_subcommand<'a>() -> App<'a> {
-    App::new("stat")
+pub fn make_subcommand<'a>() -> Command<'a> {
+    Command::new("stat")
         .about("Build-in stats")
         .arg(
             Arg::new("infile")

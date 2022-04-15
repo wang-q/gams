@@ -9,7 +9,7 @@ readme = "README.md"
 homepage = "https://github.com/wang-q/gars"
 repository = "https://github.com/wang-q/gars"
 license = "MIT"
-categories = ["command-line-utilities", "bioinformatics"]
+categories = ["command-line-utilities", "science"]
 publish = false
 
 [[bin]]

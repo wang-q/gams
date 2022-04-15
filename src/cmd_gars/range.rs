@@ -1,12 +1,12 @@
-use clap::*;
 use crate::*;
+use clap::*;
 use intspan::*;
 use redis::Commands;
 use std::io::BufRead;
 
 // Create clap subcommand arguments
-pub fn make_subcommand<'a>() -> App<'a> {
-    App::new("range")
+pub fn make_subcommand<'a>() -> Command<'a> {
+    Command::new("range")
         .about("Add ranges")
         .arg(
             Arg::new("infile")
@@ -32,7 +32,7 @@ pub fn execute(args: &ArgMatches) -> std::result::Result<(), std::io::Error> {
     let tag = args.value_of("tag").unwrap();
 
     // redis connection
-    let mut conn = connect();
+    let mut conn = crate::connect();
 
     // processing each line
     let reader = reader(infile);
@@ -43,7 +43,7 @@ pub fn execute(args: &ArgMatches) -> std::result::Result<(), std::io::Error> {
         }
         *rg.strand_mut() = "".to_string();
 
-        let ctg_id = garr::find_one(&mut conn, &rg);
+        let ctg_id = crate::find_one(&mut conn, &rg);
         if ctg_id.is_empty() {
             continue;
         }
@@ -54,7 +54,7 @@ pub fn execute(args: &ArgMatches) -> std::result::Result<(), std::io::Error> {
         let range_id = format!("range:{}:{}", ctg_id, serial);
 
         let length = rg.end() - rg.start() + 1;
-        let gc_content = garr::get_gc_content(&mut conn, &rg);
+        let gc_content = crate::get_gc_content(&mut conn, &rg);
 
         let _: () = redis::pipe()
             .hset(&range_id, "chr_name", rg.chr())
@@ -74,7 +74,7 @@ pub fn execute(args: &ArgMatches) -> std::result::Result<(), std::io::Error> {
     }
 
     // number of ranges
-    let n_range = garr::get_scan_count(&mut conn, "range:*".to_string());
+    let n_range = crate::get_scan_count(&mut conn, "range:*".to_string());
     println!("There are {} ranges", n_range);
 
     Ok(())
