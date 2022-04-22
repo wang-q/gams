@@ -46,7 +46,7 @@ pub fn execute(args: &ArgMatches) -> std::result::Result<(), std::io::Error> {
         .finish()
         .unwrap();
 
-    let res = match query {
+    let mut res = match query {
         "ctg" => query_ctg(df),
         _ => unreachable!(),
     };
@@ -55,7 +55,7 @@ pub fn execute(args: &ArgMatches) -> std::result::Result<(), std::io::Error> {
     CsvWriter::new(writer)
         .has_header(true)
         .with_delimiter(b'\t')
-        .finish(&res)
+        .finish(&mut res)
         .unwrap();
 
     Ok(())
