@@ -183,7 +183,7 @@ gars status drop
 gars gen tests/S288c/genome.fa.gz --piece 500000
 
 gars sliding \
-    --ctg 'ctg:I:' \
+    --ctg 'ctg:I:*' \
     --size 100 --step 1 \
     --lag 1000 \
     --threshold 3.0 \
