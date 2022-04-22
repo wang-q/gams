@@ -7,11 +7,6 @@ use redis::Commands;
 pub fn make_subcommand<'a>() -> Command<'a> {
     Command::new("rsw")
         .about("Sliding windows around a range")
-        .after_help(
-            "\
-             --step and --lag should be adjust simultaneously \
-             ",
-        )
         .arg(
             Arg::new("ctg")
                 .long("ctg")

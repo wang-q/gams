@@ -96,7 +96,10 @@ fn info() {
 }
 
 fn cli() {
-    match std::process::Command::new("redis-cli").arg("--version").output() {
+    match std::process::Command::new("redis-cli")
+        .arg("--version")
+        .output()
+    {
         Ok(o) => println!("Find `{:#?}` in $PATH", String::from_utf8(o.stdout)),
         Err(_) => println!("`redis-cli` was not found! Check your $PATH!"),
     }

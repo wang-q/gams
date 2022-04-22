@@ -14,7 +14,6 @@ cargo install --force --offline --path .
 
 ```
 
-
 ## SYNOPSIS
 
 ```text
