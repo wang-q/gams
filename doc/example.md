@@ -1,12 +1,10 @@
-# From cli
+# `redis-cli`
 
-## `redis-cli`
+## ZRANGE and redisearch
 
-```shell script
-# Inside WSL
-# cd /mnt/c/Users/wangq/Scripts/gars
-
+```shell
 # start redis-server
+rm tests/S288c/dump.rdb
 redis-server --loadmodule ~/redisearch.so --appendonly no --dir tests/S288c/
 
 # start with dump file
@@ -15,20 +13,13 @@ redis-server --loadmodule ~/redisearch.so --appendonly no --dir tests/S288c/
 # check config
 echo "CONFIG GET *" | redis-cli | grep -e "dir" -e "dbfilename" -A1
 
-# create gars.env
-gars env
-
-# check DB
-gars status test
-
-# drop DB
+# drop existing DB
 redis-cli FLUSHDB
 
 # chr.sizes
 faops size tests/S288c/genome.fa.gz > tests/S288c/chr.sizes
 
 # generate DB
-#gars gen tests/S288c/chr.sizes
 redis-cli SET common_name S288c
 
 cat tests/S288c/chr.sizes |
@@ -67,6 +58,20 @@ redis-cli --raw FT.CREATE idx:ctg:I ON HASH PREFIX 1 ctg:I \
 
 redis-cli --raw FT.SEARCH idx:ctg:I "@chr_start:[-inf 1000] @chr_end:[1000 inf]" RETURN 0
 
+hyperfine --warmup 1 --export-markdown search.md.tmp \
+    '
+redis-cli --raw <<EOF
+MULTI
+ZRANGESTORE tmp:start:I ctg-start:I 0 1000 BYSCORE
+ZRANGESTORE tmp:end:I ctg-end:I 1000 +inf BYSCORE
+SET comment "ZINTERSTORE tmp:ctg:I 2 tmp:start:I tmp:end:I AGGREGATE MIN"
+ZINTER 2 tmp:start:I tmp:end:I AGGREGATE MIN
+DEL tmp:start:I tmp:end:I
+EXEC
+EOF
+    ' \
+    'redis-cli --raw FT.SEARCH idx:ctg:I "@chr_start:[-inf 1000] @chr_end:[1000 inf]" RETURN 0'
+
 for CHR in $(cat tests/S288c/chr.sizes | cut -f 1); do
     echo ${CHR}
     echo HSET "ctg:${CHR}:1" seq $(
@@ -85,10 +90,16 @@ ps -e | grep redis-server
 
 ```
 
-## `gen`
+| Command    | Mean [ms] | Min [ms] | Max [ms] |    Relative |
+|:-----------|----------:|---------:|---------:|------------:|
+| ZRANGE     | 3.3 ± 0.7 |      2.3 |     19.3 | 3.53 ± 1.13 |
+| redisearch | 0.9 ± 0.2 |      0.6 |      3.3 |        1.00 |
+
+## `gen` and `rsw`
 
 ```shell script
 # start redis-server
+rm tests/S288c/dump.rdb
 redis-server --appendonly no --dir tests/S288c/
 
 # create gars.env
@@ -109,8 +120,18 @@ gars tsv -s 'ctg:*' > tests/S288c/ctg.tsv
 #cargo run stat tests/S288c/ctg.tsv -s templates/ctg-2.sql
 
 textql -dlm=tab -header -output-dlm=tab -output-header \
-    -sql "$(cat templates/ctg-1.sql)" \
+    -sql "$(cat templates/ctg-2.sql)" \
     tests/S288c/ctg.tsv
+
+gars stat tests/S288c/ctg.tsv ctg
+
+hyperfine --warmup 1 --export-markdown stat.md.tmp \
+    '
+    textql -dlm=tab -header -output-dlm=tab -output-header \
+        -sql "$(cat templates/ctg-2.sql)" \
+        tests/S288c/ctg.tsv
+    ' \
+    'gars stat tests/S288c/ctg.tsv ctg'
 
 # add ranges
 gars range tests/S288c/spo11_hot.pos.txt
@@ -146,9 +167,15 @@ gars status dump
 
 ```
 
+| Command   | Mean [ms] | Min [ms] | Max [ms] |    Relative |
+|:----------|----------:|---------:|---------:|------------:|
+| textql    | 5.1 ± 0.4 |      4.2 |      6.8 | 1.05 ± 0.18 |
+| gars stat | 4.9 ± 0.8 |      4.2 |     19.6 |        1.00 |
+
 ## GC-wave
 
 ```shell script
+rm tests/S288c/dump.rdb
 redis-server --appendonly no --dir tests/S288c/
 
 gars status drop
