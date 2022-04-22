@@ -25,7 +25,6 @@ List of actions:
         .arg(
             Arg::new("action")
                 .help("What to do")
-                .required(true)
                 .default_value("test")
                 .index(1),
         )
