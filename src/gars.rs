@@ -16,7 +16,7 @@ fn main() -> std::io::Result<()> {
         .subcommand(cmd_gars::pos::make_subcommand())
         .subcommand(cmd_gars::range::make_subcommand())
         .subcommand(cmd_gars::sliding::make_subcommand())
-        .subcommand(cmd_gars::stat::make_subcommand())
+        // .subcommand(cmd_gars::stat::make_subcommand())
         .subcommand(cmd_gars::rsw::make_subcommand())
         .subcommand(cmd_gars::tsv::make_subcommand())
         .subcommand(cmd_gars::wave::make_subcommand());
@@ -30,7 +30,7 @@ fn main() -> std::io::Result<()> {
         Some(("range", sub_matches)) => cmd_gars::range::execute(sub_matches),
         Some(("rsw", sub_matches)) => cmd_gars::rsw::execute(sub_matches),
         Some(("sliding", sub_matches)) => cmd_gars::sliding::execute(sub_matches),
-        Some(("stat", sub_matches)) => cmd_gars::stat::execute(sub_matches),
+        // Some(("stat", sub_matches)) => cmd_gars::stat::execute(sub_matches),
         Some(("tsv", sub_matches)) => cmd_gars::tsv::execute(sub_matches),
         Some(("wave", sub_matches)) => cmd_gars::wave::execute(sub_matches),
         _ => unreachable!(),

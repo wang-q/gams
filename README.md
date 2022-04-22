@@ -12,6 +12,9 @@ Current release: 0.1.0
 ```shell
 cargo install --force --offline --path .
 
+# test
+cargo test -- --test-threads=1
+
 ```
 
 ## SYNOPSIS
@@ -74,7 +77,6 @@ parallel -j 1 -k --line-buffer '
 * Querying tools
 
 ```shell
-
 # Redis GUI
 # winget install qishibo.AnotherRedisDesktopManager
 
