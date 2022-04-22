@@ -218,7 +218,7 @@ fn list() {
         .expect("Failed to execute LPUSH for 'items'");
 
     let item: String = conn
-        .lpop(list_name)
+        .lpop(list_name, None)
         .expect("Failed to execute LPOP for 'items'");
     println!("first item: {}", item);
 

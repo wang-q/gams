@@ -17,11 +17,11 @@ name = "gars"
 path = "src/gars.rs"
 
 [dependencies]
-clap = { version = "3.1.1", features = ["derive", "cargo"] }
+clap = { version = "3.1.12", features = ["derive", "cargo"] }
 lazy_static = "1.3.0"
 tera = "1"
 intspan = "0.4.15"
-redis = { version = "0.20.0", features = ["tls"] }
+redis = { version = "0.21.5", default-features = false, features = ["tls", "script"] }
 rand = "0.8.1"
 serde = "1.0"
 envy = "0.4"
