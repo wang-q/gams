@@ -2,6 +2,8 @@
 
 ## Unreleased - ReleaseDate
 
+## 0.2.0 - 2022-04-23
+
 * Renamed to `gars`
 
 * Add `gars status stop`
