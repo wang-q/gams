@@ -14,25 +14,8 @@ aria2c -j 4 -x 4 -s 2 -c --file-allocation=none \
     ftp://ftp.ensemblgenomes.org/pub/release-45/plants/gff3/arabidopsis_thaliana/Arabidopsis_thaliana.TAIR10.45.gff3.gz
 
 # chromosomes
-gzip -d -c *dna_sm.toplevel* > toplevel.fa
-
-faops count toplevel.fa |
-    perl -nla -e '
-        next if $F[0] eq 'total';
-        print $F[0] if $F[1] > 50000;
-        print $F[0] if $F[1] > 5000  and $F[6]/$F[1] < 0.05;
-    ' |
-    uniq > listFile
-faops some toplevel.fa listFile stdout |
-    faops filter -N stdin stdout |
-    faops split-name stdin .
-rm toplevel.fa listFile
-
-# .fa.gz
-cat {1..5}.fa Mt.fa Pt.fa |
-    gzip -9 \
-    > genome.fa.gz
-faops size genome.fa.gz > chr.sizes
+gzip -dcf *dna_sm.toplevel* > genome.fa
+faops size genome.fa > chr.sizes
 
 # annotaions
 gzip -dcf Arabidopsis_thaliana.TAIR10.45.gff3.gz |
@@ -69,7 +52,7 @@ gzip -dcf Arabidopsis_thaliana.TAIR10.45.gff3.gz |
 
 spanr gff Arabidopsis_thaliana.TAIR10.45.gff3.gz --tag CDS -o cds.yml
 
-faops masked *.fa |
+faops masked genome.fa.gz|
     spanr cover stdin -o repeats.yml
 
 spanr merge repeats.yml cds.yml -o anno.yml
@@ -118,6 +101,7 @@ done
 
 ```shell script
 # start redis-server
+rm ~/data/gars/Atha/dump.rdb
 redis-server --appendonly no --dir ~/data/gars/Atha/
 
 cd ~/data/gars/Atha/
@@ -126,7 +110,7 @@ gars env --all
 
 gars status drop
 
-gars gen genome/genome.fa.gz --piece 500000
+gars gen genome/genome.fa --piece 500000
 
 # redis dumps
 mkdir -p ~/data/gars/Atha/dumps/
@@ -189,7 +173,6 @@ gars status stop
 cd ~/data/gars/Atha/
 
 rm ./dump.rdb
-
 redis-server --appendonly no --dir ~/data/gars/Atha/
 #keydb-server --appendonly no --dir ~/data/gars/Atha/
 # keydb is as fast/slow as redis
@@ -198,7 +181,7 @@ gars env
 
 gars status drop
 
-time gars gen genome/genome.fa.gz --piece 500000
+time gars gen genome/genome.fa --piece 500000
 #real    0m1.520s
 #user    0m0.582s
 #sys     0m0.407s
@@ -469,12 +452,12 @@ cat gars.md.tmp
 
 * R7 5800
 
-| Command               |       Mean [ms] | Min [ms] | Max [ms] |     Relative |
-|:----------------------|----------------:|---------:|---------:|-------------:|
-| `drop; gen;`          |     788.0 ± 3.8 |    783.8 |    794.0 |         1.00 |
-| `drop; gen; pos;`     |   4840.2 ± 47.6 |   4764.4 |   4917.1 |  6.14 ± 0.07 |
-| `drop; gen; range;`   | 10872.3 ± 105.0 |  10753.9 |  11119.2 | 13.80 ± 0.15 |
-| `drop; gen; sliding;` |   5031.6 ± 24.0 |   4996.0 |   5071.1 |  6.38 ± 0.04 |
+| Command               |     Mean [ms] | Min [ms] | Max [ms] |     Relative |
+|:----------------------|--------------:|---------:|---------:|-------------:|
+| `drop; gen;`          |  171.1 ± 13.7 |    162.8 |    223.6 |         1.00 |
+| `drop; gen; pos;`     | 2091.6 ± 27.4 |   2051.5 |   2128.7 | 12.22 ± 0.99 |
+| `drop; gen; range;`   | 3675.0 ± 44.2 |   3605.8 |   3739.5 | 21.48 ± 1.74 |
+| `drop; gen; sliding;` | 1276.4 ± 14.0 |   1265.4 |   1310.2 |  7.46 ± 0.60 |
 
 ## clickhouse
 
