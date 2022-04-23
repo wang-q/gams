@@ -1,11 +1,15 @@
+extern crate clap;
+
 use clap::*;
 use intspan::writer;
 use polars::prelude::*;
 
-// Create clap subcommand arguments
-pub fn make_subcommand<'a>() -> Command<'a> {
-    Command::new("stat")
-        .about("Build-in stats")
+fn main() -> std::io::Result<()> {
+    let app = Command::new("gars-stat")
+        .version(crate_version!())
+        .author(crate_authors!())
+        .about("Build-in stats for gars")
+        .arg_required_else_help(true)
         .arg(
             Arg::new("infile")
                 .help("Sets the input file to use")
@@ -27,11 +31,17 @@ pub fn make_subcommand<'a>() -> Command<'a> {
                 .default_value("stdout")
                 .forbid_empty_values(true)
                 .help("Output filename. [stdout] for screen"),
-        )
+        );
+
+    let args = app.get_matches();
+
+    execute(&args).unwrap();
+
+    Ok(())
 }
 
 // command implementation
-pub fn execute(args: &ArgMatches) -> std::result::Result<(), std::io::Error> {
+fn execute(args: &ArgMatches) -> std::result::Result<(), Box<dyn std::error::Error>> {
     // opts
     let infile = args.value_of("infile").unwrap();
     let query = args.value_of("query").unwrap();
