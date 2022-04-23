@@ -15,6 +15,9 @@ cargo install --force --offline --path .
 # test
 cargo test -- --test-threads=1
 
+# gars-stat
+cargo build --features build-stat
+
 ```
 
 ## SYNOPSIS
