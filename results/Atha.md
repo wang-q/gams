@@ -115,6 +115,8 @@ gars gen genome/genome.fa --piece 500000
 # redis dumps
 mkdir -p ~/data/gars/Atha/dumps/
 
+gars status dump && sync dump.rdb && cp dump.rdb dumps/ctg.dump.rdb
+
 while true; do
     gars status dump
     if [ $? -eq 0 ]; then
