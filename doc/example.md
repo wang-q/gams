@@ -7,6 +7,9 @@
 rm tests/S288c/dump.rdb
 redis-server --appendonly no --dir tests/S288c/
 
+# start with dump file
+# redis-server --appendonly no --dir ~/Scripts/rust/gars/tests/S288c/ --dbfilename dump.rdb
+
 # create gars.env
 gars env
 
@@ -21,22 +24,7 @@ gars gen tests/S288c/genome.fa.gz --piece 100000
 
 gars tsv -s 'ctg:*' > tests/S288c/ctg.tsv
 
-#cargo run stat tests/S288c/ctg.tsv -s templates/ctg-1.sql
-#cargo run stat tests/S288c/ctg.tsv -s templates/ctg-2.sql
-
-textql -dlm=tab -header -output-dlm=tab -output-header \
-    -sql "$(cat templates/ctg-2.sql)" \
-    tests/S288c/ctg.tsv
-
-gars stat tests/S288c/ctg.tsv ctg
-
-hyperfine --warmup 1 --export-markdown stat.md.tmp \
-    '
-    textql -dlm=tab -header -output-dlm=tab -output-header \
-        -sql "$(cat templates/ctg-2.sql)" \
-        tests/S288c/ctg.tsv
-    ' \
-    'gars stat tests/S288c/ctg.tsv ctg'
+gars-stat tests/S288c/ctg.tsv ctg
 
 # add ranges
 gars range tests/S288c/spo11_hot.pos.txt
@@ -71,11 +59,6 @@ gars pos tests/S288c/spo11_hot.pos.txt tests/S288c/spo11_hot.pos.txt
 gars status dump
 
 ```
-
-| Command   | Mean [ms] | Min [ms] | Max [ms] |    Relative |
-|:----------|----------:|---------:|---------:|------------:|
-| textql    | 5.1 ± 0.4 |      4.2 |      6.8 | 1.05 ± 0.18 |
-| gars stat | 4.9 ± 0.8 |      4.2 |     19.6 |        1.00 |
 
 ## GC-wave
 
