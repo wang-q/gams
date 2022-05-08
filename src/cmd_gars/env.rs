@@ -61,11 +61,16 @@ pub fn execute(args: &ArgMatches) -> std::result::Result<(), std::io::Error> {
 
     // create scripts
     if args.is_present("all") {
+        // dirs
+        fs::create_dir_all("sqls/ddl")?;
+        fs::create_dir_all("dumps")?;
+        fs::create_dir_all("tsvs")?;
+
+        // files
         gen_peak(&context)?;
 
         gen_plot_xy(&context)?;
 
-        fs::create_dir_all("sqls/ddl")?;
         gen_ddl_ctg(&context)?;
         gen_ddl_rsw(&context)?;
 

@@ -64,7 +64,7 @@ brew install wang-q/tap/tsv-utils wang-q/tap/intspan wang-q/tap/faops
 
 ```
 
-* R (4.1) packages
+* R (4.2) packages
 
 ```shell
 # R packages
