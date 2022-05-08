@@ -17,7 +17,7 @@ cp /usr/lib/redis/modules/redisearch.so .
 
 ```shell
 docker run -p 6379:6379 redislabs/redisearch
-#redis-server --loadmodule ~/redisearch.so
+# redis-server --loadmodule ~/redisearch.so
 
 gars env
 
@@ -44,7 +44,7 @@ redis-cli --raw FT.CREATE idx:ctg:I ON HASH PREFIX 1 ctg:I \
 
 redis-cli --raw FT.SEARCH idx:ctg:I "@chr_start:[-inf 1000] @chr_end:[1000 inf]" RETURN 0
 
-hyperfine --warmup 1 --export-markdown search.md.tmp \
+hyperfine --export-markdown search.md.tmp \
     '
 redis-cli --raw <<EOF
 MULTI
@@ -60,6 +60,26 @@ EOF
 
 
 ```
+
+## R7 5800 Windows 11
+
+* docker
+
+| Command    | Mean [ms] | Min [ms] | Max [ms] |    Relative |
+|:-----------|----------:|---------:|---------:|------------:|
+| ZRANGE     | 5.0 ± 0.3 |      4.3 |      7.7 | 4.81 ± 0.52 |
+| redisearch | 1.0 ± 0.1 |      0.8 |      2.2 |        1.00 |
+
+* wsl
+
+| Command    | Mean [ms] | Min [ms] | Max [ms] |    Relative |
+|:-----------|----------:|---------:|---------:|------------:|
+| ZRANGE     | 3.2 ± 0.2 |      2.9 |      4.5 | 3.95 ± 0.48 |
+| redisearch | 0.8 ± 0.1 |      0.6 |      2.1 |        1.00 |
+
+## i7 8700K macOS
+
+* docker
 
 | Command    |  Mean [ms] | Min [ms] | Max [ms] |    Relative |
 |:-----------|-----------:|---------:|---------:|------------:|
