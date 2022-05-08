@@ -16,7 +16,7 @@ cargo install --force --offline --path .
 cargo test -- --test-threads=1
 
 # gars-stat
-cargo build --features build-stat
+cargo install --force --path . --features build-stat
 
 ```
 
@@ -82,6 +82,7 @@ parallel -j 1 -k --line-buffer '
 ```shell
 # Redis GUI
 # winget install qishibo.AnotherRedisDesktopManager
+# brew install --cask another-redis-desktop-manager
 
 # Clickhouse
 export LTS=21.8.4.51
