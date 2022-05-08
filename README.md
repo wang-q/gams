@@ -24,21 +24,21 @@ cargo install --force --path . --features build-stat
 
 ```text
 $ gars help
-gars 0.1.1-alpha.0
+gars 0.2.0
 wang-q <wang-q@outlook.com>
-Genome Analyst with Rust and Redis
+Genome Analyst with Rust and rediS
 
 USAGE:
     gars [SUBCOMMAND]
 
-FLAGS:
-    -h, --help       Prints help information
-    -V, --version    Prints version information
+OPTIONS:
+    -h, --help       Print help information
+    -V, --version    Print version information
 
 SUBCOMMANDS:
     env        Create a .env file
     gen        Generate the database from (gzipped) fasta files
-    help       Prints this message or the help of the given subcommand(s)
+    help       Print this message or the help of the given subcommand(s)
     pos        Add range files to positions
     range      Add ranges
     rsw        Sliding windows around a range
