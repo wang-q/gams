@@ -14,8 +14,7 @@ brew install textql
 ## ctg
 
 ```shell
-docker run -p 6379:6379 redislabs/redisearch
-#redis-server --loadmodule ~/redisearch.so
+redis-server
 
 gars env
 
@@ -42,6 +41,15 @@ hyperfine --warmup 1 --export-markdown stat.md.tmp \
 
 
 ```
+
+## R7 5800 Windows 11
+
+| Command   | Mean [ms] | Min [ms] | Max [ms] |    Relative |
+|:----------|----------:|---------:|---------:|------------:|
+| gars-stat | 4.3 ± 0.2 |      3.9 |      5.3 |        1.00 |
+| textql    | 5.8 ± 0.2 |      5.0 |      6.6 | 1.35 ± 0.07 |
+
+## i7 8700K macOS
 
 | Command   | Mean [ms] | Min [ms] | Max [ms] |    Relative |
 |:----------|----------:|---------:|---------:|------------:|
