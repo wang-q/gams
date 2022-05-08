@@ -8,17 +8,17 @@ cd ~/data/gars/Atha/genome
 
 # download
 aria2c -j 4 -x 4 -s 2 -c --file-allocation=none \
-    ftp://ftp.ensemblgenomes.org/pub/release-45/plants/fasta/arabidopsis_thaliana/dna/Arabidopsis_thaliana.TAIR10.dna_sm.toplevel.fa.gz
+    http://ftp.ensemblgenomes.org/pub/release-52/plants/fasta/arabidopsis_thaliana/dna/Arabidopsis_thaliana.TAIR10.dna_sm.toplevel.fa.gz
 
 aria2c -j 4 -x 4 -s 2 -c --file-allocation=none \
-    ftp://ftp.ensemblgenomes.org/pub/release-45/plants/gff3/arabidopsis_thaliana/Arabidopsis_thaliana.TAIR10.45.gff3.gz
+    http://ftp.ensemblgenomes.org/pub/release-52/plants/gff3/arabidopsis_thaliana/Arabidopsis_thaliana.TAIR10.52.gff3.gz
 
 # chromosomes
 gzip -dcf *dna_sm.toplevel* > genome.fa
 faops size genome.fa > chr.sizes
 
 # annotaions
-gzip -dcf Arabidopsis_thaliana.TAIR10.45.gff3.gz |
+gzip -dcf Arabidopsis_thaliana.TAIR10.52.gff3.gz |
     grep -v '^#' |
     cut -f 1 |
     sort | uniq -c
@@ -30,7 +30,7 @@ gzip -dcf Arabidopsis_thaliana.TAIR10.45.gff3.gz |
 #    615 Mt
 #    528 Pt
 
-gzip -dcf Arabidopsis_thaliana.TAIR10.45.gff3.gz |
+gzip -dcf Arabidopsis_thaliana.TAIR10.52.gff3.gz |
     grep -v '^#' |
     cut -f 3 |
     sort | uniq -c
@@ -40,19 +40,19 @@ gzip -dcf Arabidopsis_thaliana.TAIR10.45.gff3.gz |
 #  56384 five_prime_UTR
 #  27655 gene
 #   3879 lnc_RNA
-#  48359 mRNA
 #    325 miRNA
+#  48359 mRNA
 #    377 ncRNA
 #   5178 ncRNA_gene
 #     15 rRNA
-#     82 snRNA
 #    287 snoRNA
-#    689 tRNA
+#     82 snRNA
 #  48308 three_prime_UTR
+#    689 tRNA
 
-spanr gff Arabidopsis_thaliana.TAIR10.45.gff3.gz --tag CDS -o cds.yml
+spanr gff Arabidopsis_thaliana.TAIR10.52.gff3.gz --tag CDS -o cds.yml
 
-faops masked genome.fa.gz|
+faops masked genome.fa |
     spanr cover stdin -o repeats.yml
 
 spanr merge repeats.yml cds.yml -o anno.yml
@@ -112,23 +112,9 @@ gars status drop
 
 gars gen genome/genome.fa --piece 500000
 
-# redis dumps
-mkdir -p ~/data/gars/Atha/dumps/
-
 gars status dump && sync dump.rdb && cp dump.rdb dumps/ctg.dump.rdb
 
-while true; do
-    gars status dump
-    if [ $? -eq 0 ]; then
-        cp dump.rdb dumps/ctg.dump.rdb
-        break
-    fi
-    sleep 5
-done
-
 # tsv exports
-mkdir -p tsvs
-
 gars tsv -s 'ctg:*' -f length | head
 
 gars tsv -s 'ctg:*' |
@@ -150,16 +136,7 @@ gars tsv -s 'pos:*' |
     keep-header -- tsv-sort -k2,2 -k3,3n -k4,4n \
     > tsvs/pos.tsv
 
-# dumps
-while true; do
-    gars status dump
-    if [ $? -eq 0 ]; then
-        mkdir -p dumps
-        cp dump.rdb dumps/pos.dump.rdb
-        break
-    fi
-    sleep 5
-done
+gars status dump && sync dump.rdb && cp dump.rdb dumps/pos.dump.rdb
 
 # stop the server
 gars status stop
@@ -184,9 +161,9 @@ gars env
 gars status drop
 
 time gars gen genome/genome.fa --piece 500000
-#real    0m1.520s
-#user    0m0.582s
-#sys     0m0.407s
+#real    0m0.991s
+#user    0m0.132s
+#sys     0m0.171s
 
 time parallel -j 4 -k --line-buffer '
     echo {}
@@ -194,37 +171,23 @@ time parallel -j 4 -k --line-buffer '
     ' ::: CSHL FLAG MX RATM
 # redis
 # RATM
-#real    0m14.055s
-#user    0m1.819s
-#sys     0m6.357s
-# 4 files
-#real    0m40.654s
-#user    0m11.503s
-#sys     0m21.387s
-
-# keydb
-# RATM
-#real    0m14.228s
-#user    0m1.792s
-#sys     0m6.314s
-# 4 files
-#real    0m42.186s
-#user    0m11.481s
-#sys     0m21.391s
+#real    0m8.063s
+#user    0m0.896s
+#sys     0m3.742s
+# 4 files -j 1
+#real    0m42.089s
+#user    0m4.843s
+#sys     0m18.921s
+# 4 files -j 4
+#real    0m22.120s
+#user    0m7.340s
+#sys     0m12.258s
 
 gars tsv -s "range:*" |
     keep-header -- tsv-sort -k2,2 -k3,3n -k4,4n \
     > tsvs/range.tsv
 
-while true; do
-    gars status dump
-    if [ $? -eq 0 ]; then
-        mkdir -p dumps
-        cp dump.rdb dumps/range.dump.rdb
-        break
-    fi
-    sleep 5
-done
+gars status dump && sync dump.rdb && cp dump.rdb dumps/range.dump.rdb
 
 # rsw
 time cat ctg.lst |
@@ -234,15 +197,19 @@ time cat ctg.lst |
     tsv-uniq |
     keep-header -- tsv-sort -k2,2 -k3,3n -k4,4n \
     > tsvs/rsw.tsv
-# CSHL
+# RATM
 # -j 4
-#real    7m43.384s
-#user    24m58.916s
-#sys     3m42.415s
+#real    2m27.614s
+#user    2m33.522s
+#sys     2m6.527s
 # -j 2
-#real    13m38.805s
-#user    21m56.417s
-#sys     4m34.154s
+#real    2m59.001s
+#user    2m7.536s
+#sys     2m13.788s
+# -j 1
+#real    6m57.922s
+#user    1m47.404s
+#sys     3m59.627s
 
 gars status stop
 
