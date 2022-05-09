@@ -6,7 +6,7 @@
 
 * Separate gars-stat
 * Restructuring of documents
-* Store gz seq to redis
+* Store gzipped seq to redis
 * cache_gc_content and cache_gc_stat()
 
 ## 0.2.0 - 2022-04-23

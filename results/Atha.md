@@ -154,8 +154,6 @@ gars status stop
 
 ### Ranges and rsw
 
-* Benchmarks keydb against redis
-
 ```shell script
 cd ~/data/gars/Atha/
 
@@ -219,46 +217,6 @@ time cat ctg.lst |
 #real    1m5.568s
 #user    0m15.660s
 #sys     0m34.372s
-
-gars status stop
-
-```
-
-* Benchmarks  against redis under WSL
-
-```shell
-cd ~/data/gars/Atha/
-
-# start redis-server
-rm ./dump.rdb
-redis-server --appendonly no --dir ~/data/gars/Atha/
-
-# benchmarks
-gars env
-
-gars status drop
-
-time gars gen genome/genome.fa.gz --piece 500000
-#real    0m0.771s
-#user    0m0.611s
-#sys     0m0.110s
-
-time parallel -j 4 -k --line-buffer '
-    echo {}
-    gars range features/T-DNA.{}.pos.txt --tag {}
-    ' ::: CSHL
-#real    0m9.462s
-#user    0m1.271s
-#sys     0m4.027s
-
-time cat ctg.lst |
-    parallel -j 4 -k --line-buffer '
-        gars rsw --ctg {}
-        ' \
-    > /dev/null
-#real    2m47.957s
-#user    2m46.630s
-#sys     2m20.460s
 
 gars status stop
 
