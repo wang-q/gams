@@ -54,7 +54,6 @@ pub fn execute(args: &ArgMatches) -> std::result::Result<(), std::io::Error> {
         let range_id = format!("range:{}:{}", ctg_id, serial);
 
         let length = rg.end() - rg.start() + 1;
-        let gc_content = gars::get_gc_content(&mut conn, &rg);
 
         let _: () = redis::pipe()
             .hset(&range_id, "chr_name", rg.chr())
@@ -64,8 +63,6 @@ pub fn execute(args: &ArgMatches) -> std::result::Result<(), std::io::Error> {
             .hset(&range_id, "chr_end", *rg.end())
             .ignore()
             .hset(&range_id, "length", length)
-            .ignore()
-            .hset(&range_id, "gc", gc_content)
             .ignore()
             .hset(&range_id, "tag", tag)
             .ignore()
