@@ -192,6 +192,52 @@ pub fn get_ctg_seq(conn: &mut redis::Connection, ctg_id: &str) -> String {
     ctg_seq
 }
 
+/// GC-content within a ctg
+pub fn cache_gc_content(
+    rg: &Range,
+    parent: &IntSpan,
+    seq: &String,
+    cache: &mut HashMap<String, f32>,
+) -> f32 {
+    let field = rg.to_string();
+
+    if !cache.contains_key(&field) {
+        // converted to ctg index
+        let from = parent.index(*rg.start()) as usize;
+        let to = parent.index(*rg.end()) as usize;
+
+        // from <= x < to, zero-based
+        let sub_seq = seq.get((from - 1)..(to)).unwrap().bytes();
+
+        let gc_content = bio::seq_analysis::gc::gc_content(sub_seq);
+        cache.insert(field.clone(), gc_content);
+    };
+
+    *cache.get(&field).unwrap()
+}
+
+pub fn cache_gc_stat(
+    rg: &Range,
+    parent: &IntSpan,
+    seq: &String,
+    cache: &mut HashMap<String, f32>,
+    size: i32,
+    step: i32,
+) -> (f32, f32, f32, f32) {
+    let intspan = rg.intspan();
+    let windows = sliding(&intspan, size, step);
+
+    let mut gcs = Vec::new();
+
+    for w in windows {
+        let gc_content =
+            cache_gc_content(&Range::from(rg.chr(), w.min(), w.max()), parent, seq, cache);
+        gcs.push(gc_content);
+    }
+
+    gc_stat(&gcs)
+}
+
 pub fn get_rg_seq(conn: &mut redis::Connection, rg: &Range) -> String {
     let ctg_id = find_one(conn, rg);
 
@@ -206,9 +252,10 @@ pub fn get_rg_seq(conn: &mut redis::Connection, rg: &Range) -> String {
 
     let ctg_seq = get_ctg_seq(conn, &ctg_id);
 
-    let seq: String = String::from(&ctg_seq[ctg_start - 1..ctg_end]);
+    // from <= x < to, zero-based
+    let seq = ctg_seq.get((ctg_start - 1)..(ctg_end)).unwrap();
 
-    seq
+    String::from(seq)
 }
 
 /// This is an expensive operation
@@ -240,40 +287,6 @@ pub fn get_gc_content(conn: &mut redis::Connection, rg: &Range) -> f32 {
     };
 }
 
-pub fn ctg_gc_content(
-    conn: &mut redis::Connection,
-    rg: &Range,
-    parent: &IntSpan,
-    seq: &String,
-) -> f32 {
-    let bucket = format!("cache:{}:{}", rg.chr(), rg.start() / 1000);
-    let field = rg.to_string();
-    let expire = 180;
-    let res = conn.hget(&bucket, &field).unwrap();
-
-    return match res {
-        Some(res) => {
-            let _: () = conn.expire(&bucket, expire).unwrap();
-
-            res
-        }
-        None => {
-            // converted to ctg index
-            let from = parent.index(*rg.start()) as usize;
-            let to = parent.index(*rg.end()) as usize;
-
-            // from <= x < to, zero-based
-            let sub_seq = seq.get((from - 1)..(to)).unwrap().bytes();
-            let gc_content = bio::seq_analysis::gc::gc_content(sub_seq);
-
-            let _: () = conn.hset(&bucket, &field, gc_content).unwrap();
-            let _: () = conn.expire(&bucket, expire).unwrap();
-
-            gc_content
-        }
-    };
-}
-
 pub fn get_gc_stat(
     conn: &mut redis::Connection,
     rg: &Range,
@@ -287,28 +300,6 @@ pub fn get_gc_stat(
 
     for w in windows {
         let gc_content = get_gc_content(conn, &Range::from(rg.chr(), w.min(), w.max()));
-        gcs.push(gc_content);
-    }
-
-    gc_stat(&gcs)
-}
-
-pub fn ctg_gc_stat(
-    conn: &mut redis::Connection,
-    rg: &Range,
-    size: i32,
-    step: i32,
-    parent: &IntSpan,
-    seq: &String,
-) -> (f32, f32, f32, f32) {
-    let intspan = rg.intspan();
-    let windows = sliding(&intspan, size, step);
-
-    let mut gcs = Vec::new();
-
-    for w in windows {
-        let gc_content =
-            ctg_gc_content(conn, &Range::from(rg.chr(), w.min(), w.max()), parent, seq);
         gcs.push(gc_content);
     }
 
