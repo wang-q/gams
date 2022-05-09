@@ -113,7 +113,7 @@ pub fn execute(args: &ArgMatches) -> std::result::Result<(), std::io::Error> {
         let parent = IntSpan::from_pair(chr_start, chr_end);
         let windows = gars::sliding(&parent, size, step);
 
-        let seq: String = get_ctg_seq(&mut conn, &ctg_id);
+        let ctg_seq: String = get_ctg_seq(&mut conn, &ctg_id);
 
         let mut gcs: Vec<f32> = Vec::with_capacity(windows.len());
         for window in &windows {
@@ -122,7 +122,7 @@ pub fn execute(args: &ArgMatches) -> std::result::Result<(), std::io::Error> {
             let to = parent.index(window.max()) as usize;
 
             // from <= x < to, zero-based
-            let subseq = seq.get((from - 1)..(to)).unwrap().bytes();
+            let subseq = ctg_seq.get((from - 1)..(to)).unwrap().bytes();
             let gc_content = bio::seq_analysis::gc::gc_content(subseq);
             gcs.push(gc_content);
         }
