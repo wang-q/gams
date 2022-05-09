@@ -100,7 +100,7 @@ pub fn execute(args: &ArgMatches) -> std::result::Result<(), std::io::Error> {
         eprintln!("Process {} {}:{}-{}", ctg_id, chr_name, chr_start, chr_end);
 
         let parent = IntSpan::from_pair(chr_start, chr_end);
-        let seq: String = conn.get(format!("seq:{}", ctg_id)).unwrap();
+        let seq: String = get_ctg_seq(&mut conn, &ctg_id);
 
         let pattern = format!("range:{}:*", ctg_id);
         let ranges: Vec<String> = gars::get_scan_vec(&mut conn, pattern);

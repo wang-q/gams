@@ -1,4 +1,7 @@
+use flate2::read::GzDecoder;
 use std::collections::{BTreeMap, HashMap};
+use std::io;
+use std::io::Read;
 
 use intspan::{IntSpan, Range};
 use redis::Commands;
@@ -175,7 +178,21 @@ pub fn find_one(conn: &mut redis::Connection, rg: &Range) -> String {
     key.to_string()
 }
 
-pub fn get_seq(conn: &mut redis::Connection, rg: &Range) -> String {
+pub fn decode_gz(bytes: &[u8]) -> io::Result<String> {
+    let mut gz = GzDecoder::new(&bytes[..]);
+    let mut s = String::new();
+    gz.read_to_string(&mut s)?;
+    Ok(s)
+}
+
+pub fn get_ctg_seq(conn: &mut redis::Connection, ctg_id: &str) -> String {
+    let ctg_bytes: Vec<u8> = conn.get(format!("seq:{}", ctg_id)).unwrap();
+    let ctg_seq = decode_gz(&ctg_bytes).unwrap();
+
+    ctg_seq
+}
+
+pub fn get_rg_seq(conn: &mut redis::Connection, rg: &Range) -> String {
     let ctg_id = find_one(conn, rg);
 
     if ctg_id.is_empty() {
@@ -184,12 +201,12 @@ pub fn get_seq(conn: &mut redis::Connection, rg: &Range) -> String {
 
     let chr_start: i32 = conn.hget(&ctg_id, "chr_start").unwrap();
 
-    let ctg_start = (rg.start() - chr_start + 1) as isize;
-    let ctg_end = (rg.end() - chr_start + 1) as isize;
+    let ctg_start = (rg.start() - chr_start + 1) as usize;
+    let ctg_end = (rg.end() - chr_start + 1) as usize;
 
-    let seq: String = conn
-        .getrange(format!("seq:{}", ctg_id), ctg_start - 1, ctg_end - 1)
-        .unwrap();
+    let ctg_seq = get_ctg_seq(conn, &ctg_id);
+
+    let seq: String = String::from(&ctg_seq[ctg_start - 1..ctg_end]);
 
     seq
 }
@@ -208,7 +225,7 @@ pub fn get_gc_content(conn: &mut redis::Connection, rg: &Range) -> f32 {
             res
         }
         None => {
-            let seq = get_seq(conn, rg);
+            let seq = get_rg_seq(conn, rg);
 
             let gc_content = if seq.is_empty() {
                 0.

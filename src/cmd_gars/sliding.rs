@@ -114,7 +114,7 @@ pub fn execute(args: &ArgMatches) -> std::result::Result<(), std::io::Error> {
         let parent = IntSpan::from_pair(chr_start, chr_end);
         let windows = gars::sliding(&parent, size, step);
 
-        let seq: String = conn.get(format!("seq:{}", ctg_id)).unwrap();
+        let seq: String = get_ctg_seq(&mut conn, &ctg_id);
 
         let mut gcs: Vec<f32> = Vec::with_capacity(windows.len());
         for window in &windows {

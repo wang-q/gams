@@ -1,9 +1,13 @@
 use bio::io::fasta;
 use clap::*;
+use flate2::read::GzEncoder;
+use flate2::Compression;
 use gars::*;
 use intspan::*;
 use redis::Commands;
 use std::collections::VecDeque;
+use std::io;
+use std::io::Read;
 use std::iter::FromIterator;
 
 // Create clap subcommand arguments
@@ -155,9 +159,9 @@ pub fn execute(args: &ArgMatches) -> std::result::Result<(), std::io::Error> {
                 let _: () = conn.hset(&ctg_id, "chr_end", end).unwrap();
                 let _: () = conn.hset(&ctg_id, "chr_strand", "+").unwrap();
                 let _: () = conn.hset(&ctg_id, "length", end - start + 1).unwrap();
-                let _: () = conn
-                    .set(format!("seq:{}", ctg_id), &chr_seq[start - 1..end])
-                    .unwrap();
+                let seq: &[u8] = &chr_seq[start - 1..end];
+                let bytes = encode_gz(seq).unwrap();
+                let _: () = conn.set(format!("seq:{}", ctg_id), &bytes).unwrap();
 
                 // indexing ctg
                 let _: () = conn
@@ -181,4 +185,11 @@ pub fn execute(args: &ArgMatches) -> std::result::Result<(), std::io::Error> {
     println!("There are {} contigs", n_ctg);
 
     Ok(())
+}
+
+fn encode_gz(seq: &[u8]) -> io::Result<Vec<u8>> {
+    let mut bytes = Vec::new();
+    let mut z = GzEncoder::new(&seq[..], Compression::default());
+    z.read_to_end(&mut bytes)?;
+    Ok(bytes)
 }
