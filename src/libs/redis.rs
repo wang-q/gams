@@ -286,22 +286,3 @@ pub fn get_gc_content(conn: &mut redis::Connection, rg: &Range) -> f32 {
         }
     };
 }
-
-pub fn get_gc_stat(
-    conn: &mut redis::Connection,
-    rg: &Range,
-    size: i32,
-    step: i32,
-) -> (f32, f32, f32, f32) {
-    let intspan = rg.intspan();
-    let windows = sliding(&intspan, size, step);
-
-    let mut gcs = Vec::new();
-
-    for w in windows {
-        let gc_content = get_gc_content(conn, &Range::from(rg.chr(), w.min(), w.max()));
-        gcs.push(gc_content);
-    }
-
-    gc_stat(&gcs)
-}
