@@ -14,8 +14,10 @@ aria2c -j 4 -x 4 -s 2 -c --file-allocation=none \
     http://ftp.ensemblgenomes.org/pub/release-52/plants/gff3/arabidopsis_thaliana/Arabidopsis_thaliana.TAIR10.52.gff3.gz
 
 # chromosomes
-gzip -dcf *dna_sm.toplevel* > genome.fa
-faops size genome.fa > chr.sizes
+gzip -dcf *dna_sm.toplevel* |
+    faops order stdin <(for chr in $(seq 1 1 5) Mt Pt; do echo $chr; done) stdout |
+    pigz > genome.fa.gz
+faops size genome.fa.gz > chr.sizes
 
 # annotaions
 gzip -dcf Arabidopsis_thaliana.TAIR10.52.gff3.gz |
@@ -52,7 +54,7 @@ gzip -dcf Arabidopsis_thaliana.TAIR10.52.gff3.gz |
 
 spanr gff Arabidopsis_thaliana.TAIR10.52.gff3.gz --tag CDS -o cds.yml
 
-faops masked genome.fa |
+faops masked genome.fa.gz |
     spanr cover stdin -o repeats.yml
 
 spanr merge repeats.yml cds.yml -o anno.yml
@@ -110,7 +112,7 @@ gars env --all
 
 gars status drop
 
-time gars gen genome/genome.fa --piece 500000
+time gars gen genome/genome.fa.gz --piece 500000
 #real    0m1.614s
 #user    0m0.825s
 #sys     0m0.130s
@@ -166,7 +168,7 @@ gars env
 
 gars status drop
 
-gars gen genome/genome.fa --piece 500000
+gars gen genome/genome.fa.gz --piece 500000
 
 time parallel -j 4 -k --line-buffer '
     echo {}
@@ -225,10 +227,11 @@ gars status stop
 * Benchmarks  against redis under WSL
 
 ```shell
-# start redis-server
-redis-server --appendonly no --dir ~/data/gars/Atha/
-
 cd ~/data/gars/Atha/
+
+# start redis-server
+rm ./dump.rdb
+redis-server --appendonly no --dir ~/data/gars/Atha/
 
 # benchmarks
 gars env
@@ -251,10 +254,8 @@ time parallel -j 4 -k --line-buffer '
 time cat ctg.lst |
     parallel -j 4 -k --line-buffer '
         gars rsw --ctg {}
-        ' |
-    tsv-uniq |
-    keep-header -- tsv-sort -k2,2 -k3,3n -k4,4n \
-    > tsvs/rsw.tsv
+        ' \
+    > /dev/null
 #real    2m47.957s
 #user    2m46.630s
 #sys     2m20.460s
@@ -262,37 +263,6 @@ time cat ctg.lst |
 gars status stop
 
 ```
-
-* docker with NTFS
-
-```shell
-
-# start redis from docker and bring local dir into it
-docker run -p 6379:6379 -v C:/Users/wangq/data/gars/Atha:/data redislabs/redisearch:latest
-
-cp /usr/lib/redis/modules/redisearch.so .
-
-cd /mnt/c/Users/wangq/data/gars/Atha
-
-```
-
-* with `redisearch.so`
-
-```shell
-# copy `redisearch.so` from the docker image
-docker run -it --rm --entrypoint /bin/sh -v C:/Users/wangq/data/gars/Atha:/data redislabs/redisearch
-
-# start redis-server
-redis-server --loadmodule ./redisearch.so --appendonly no --dir ~/data/gars/Atha/
-
-```
-
-| Command           |      gen |     range |         rsw |
-|:------------------|---------:|----------:|------------:|
-| WSL               | 0m0.771s |  0m9.462s |   2m47.957s |
-| redisearch.so     | 0m0.803s |  0m9.929s |   2m53.232s |
-| docker under NTFS | 0m1.440s | 0m41.657s |   12m3.494s |
-
 
 ### GC-wave
 
@@ -378,61 +348,6 @@ gars status stop
 
 
 ```
-
-## Benchmarks
-
-```shell script
-cd ~/data/gars/Atha/
-
-rm ./dump.rdb
-
-redis-server --appendonly no --dir ~/data/gars/Atha/
-
-gars env
-
-hyperfine --warmup 1 --export-markdown gars.md.tmp \
-    '
-        gars status drop;
-        gars gen genome/genome.fa.gz --piece 500000;
-    ' \
-    '
-        gars status drop;
-        gars gen genome/genome.fa.gz --piece 500000;
-        gars pos features/T-DNA.CSHL.pos.txt;
-    ' \
-    '
-        gars status drop;
-        gars gen genome/genome.fa.gz --piece 500000;
-        gars range features/T-DNA.CSHL.pos.txt --tag CSHL;
-    ' \
-    '
-        gars status drop;
-        gars gen genome/genome.fa.gz --piece 500000;
-        gars sliding --size 100 --step 20 --lag 50 |
-            tsv-filter -H --ne signal:0 > /dev/null;
-    '
-
-cat gars.md.tmp
-
-```
-
-* R5 4600U
-
-| Command               |       Mean [ms] | Min [ms] | Max [ms] |     Relative |
-|:----------------------|----------------:|---------:|---------:|-------------:|
-| `drop; gen;`          |    813.8 ± 18.5 |    783.4 |    834.4 |         1.00 |
-| `drop; gen; pos;`     |  8203.5 ± 166.7 |   8051.7 |   8475.7 | 10.08 ± 0.31 |
-| `drop; gen; range;`   | 20045.7 ± 474.6 |  19218.6 |  21041.7 | 24.63 ± 0.81 |
-| `drop; gen; sliding;` |   7580.7 ± 72.6 |   7467.1 |   7705.8 |  9.31 ± 0.23 |
-
-* R7 5800
-
-| Command               |     Mean [ms] | Min [ms] | Max [ms] |     Relative |
-|:----------------------|--------------:|---------:|---------:|-------------:|
-| `drop; gen;`          |  171.1 ± 13.7 |    162.8 |    223.6 |         1.00 |
-| `drop; gen; pos;`     | 2091.6 ± 27.4 |   2051.5 |   2128.7 | 12.22 ± 0.99 |
-| `drop; gen; range;`   | 3675.0 ± 44.2 |   3605.8 |   3739.5 | 21.48 ± 1.74 |
-| `drop; gen; sliding;` | 1276.4 ± 14.0 |   1265.4 |   1310.2 |  7.46 ± 0.60 |
 
 ## clickhouse
 
