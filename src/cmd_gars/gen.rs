@@ -189,7 +189,7 @@ pub fn execute(args: &ArgMatches) -> std::result::Result<(), std::io::Error> {
 
 fn encode_gz(seq: &[u8]) -> io::Result<Vec<u8>> {
     let mut bytes = Vec::new();
-    let mut z = GzEncoder::new(&seq[..], Compression::default());
+    let mut z = GzEncoder::new(&seq[..], Compression::fast());
     z.read_to_end(&mut bytes)?;
     Ok(bytes)
 }
