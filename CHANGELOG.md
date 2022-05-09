@@ -2,6 +2,8 @@
 
 ## Unreleased - ReleaseDate
 
+## 0.2.1 - 2022-05-10
+
 * Separate gars-stat
 * Restructuring of documents
 * Store gz seq to redis
