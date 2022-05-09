@@ -110,7 +110,10 @@ gars env --all
 
 gars status drop
 
-gars gen genome/genome.fa --piece 500000
+time gars gen genome/genome.fa --piece 500000
+#real    0m1.614s
+#user    0m0.825s
+#sys     0m0.130s
 
 gars status dump && sync dump.rdb && cp dump.rdb dumps/ctg.dump.rdb
 
@@ -127,10 +130,13 @@ cat tsvs/ctg.tsv |
     > ctg.lst
 
 # positions
-parallel -j 4 -k --line-buffer '
+time parallel -j 4 -k --line-buffer '
     echo {}
     gars pos features/T-DNA.{}.pos.txt
     ' ::: CSHL FLAG MX RATM
+#real    0m9.859s
+#user    0m3.670s
+#sys     0m4.434s
 
 gars tsv -s 'pos:*' |
     keep-header -- tsv-sort -k2,2 -k3,3n -k4,4n \
@@ -160,17 +166,14 @@ gars env
 
 gars status drop
 
-time gars gen genome/genome.fa --piece 500000
-#real    0m0.991s
-#user    0m0.132s
-#sys     0m0.171s
+gars gen genome/genome.fa --piece 500000
 
 time parallel -j 4 -k --line-buffer '
     echo {}
     gars range features/T-DNA.{}.pos.txt --tag {}
     ' ::: CSHL FLAG MX RATM
 # redis
-# RATM
+# CSHL
 #real    0m8.063s
 #user    0m0.896s
 #sys     0m3.742s
@@ -197,19 +200,23 @@ time cat ctg.lst |
     tsv-uniq |
     keep-header -- tsv-sort -k2,2 -k3,3n -k4,4n \
     > tsvs/rsw.tsv
-# RATM
+# CSHL
+# -j 8
+#real    0m17.968s
+#user    0m22.665s
+#sys     0m16.002s
 # -j 4
-#real    2m27.614s
-#user    2m33.522s
-#sys     2m6.527s
+#real    0m27.474s
+#user    0m26.367s
+#sys     0m22.333s
 # -j 2
-#real    2m59.001s
-#user    2m7.536s
-#sys     2m13.788s
+#real    0m34.926s
+#user    0m22.339s
+#sys     0m24.795s
 # -j 1
-#real    6m57.922s
-#user    1m47.404s
-#sys     3m59.627s
+#real    1m5.568s
+#user    0m15.660s
+#sys     0m34.372s
 
 gars status stop
 
@@ -295,7 +302,6 @@ Restores from ctg.dump.rdb
 cd ~/data/gars/Atha/
 
 cp dumps/ctg.dump.rdb ./dump.rdb
-
 redis-server --appendonly no --dir ~/data/gars/Atha/
 
 gars env
