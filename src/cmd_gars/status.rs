@@ -127,7 +127,6 @@ fn stop() {
         .arg("SAVE")
         .query::<()>(&mut conn)
         .unwrap_err();
-    eprintln!("output = {:#?}", output);
     eprintln!("Executed SHUTDOWN SAVE");
 }
 
