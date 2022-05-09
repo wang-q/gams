@@ -1,7 +1,6 @@
 use clap::*;
 use gars::*;
 use intspan::*;
-use redis::Commands;
 
 // Create clap subcommand arguments
 pub fn make_subcommand<'a>() -> Command<'a> {

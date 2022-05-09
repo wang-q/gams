@@ -123,7 +123,7 @@ fn dump() {
 fn stop() {
     let mut conn = connect();
 
-    let output = redis::cmd("SHUTDOWN")
+    redis::cmd("SHUTDOWN")
         .arg("SAVE")
         .query::<()>(&mut conn)
         .unwrap_err();
