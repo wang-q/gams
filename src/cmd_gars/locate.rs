@@ -10,6 +10,12 @@ use rust_lapper::{Interval, Lapper};
 pub fn make_subcommand<'a>() -> Command<'a> {
     Command::new("locate")
         .about("Locate the given ranges to the corresponding ctgs")
+        .after_help(
+            r#"
+It can also be used as a benchmark program.
+
+"#,
+        )
         .arg(
             Arg::new("ranges")
                 .help("The given ranges, separating by spaces")
