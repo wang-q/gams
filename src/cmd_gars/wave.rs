@@ -139,6 +139,7 @@ pub fn execute(args: &ArgMatches) -> std::result::Result<(), Box<dyn std::error:
                 .hget(&peaks[i], &["signal", "chr_start", "chr_end", "gc"])
                 .unwrap();
 
+            // hset_multiple cannot be used because of the different value types
             let _: () = conn.hset(&peaks[i], "left_signal", prev_signal).unwrap();
             prev_signal = cur_signal.clone();
 

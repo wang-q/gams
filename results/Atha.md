@@ -278,9 +278,9 @@ tsv-summarize tsvs/peak.tsv \
 
 # Loading peaks
 time gars wave tsvs/peak.tsv
-#real    2m33.424s
-#user    0m32.862s
-#sys     1m26.265s
+#real    2m21.534s
+#user    0m30.389s
+#sys     1m18.400s
 
 gars tsv -s "peak:*" |
     keep-header -- tsv-sort -k2,2 -k3,3n -k4,4n \
@@ -304,7 +304,6 @@ tsv-filter tsvs/wave.tsv -H --or \
 # 13003
 
 gars status stop
-
 
 ```
 
