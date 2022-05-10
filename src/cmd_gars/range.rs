@@ -34,6 +34,9 @@ pub fn execute(args: &ArgMatches) -> std::result::Result<(), Box<dyn std::error:
     // redis connection
     let mut conn = connect();
 
+    // index of ctgs
+    let lapper_of = gars::get_idx_ctg(&mut conn);
+
     // processing each line
     let reader = reader(infile);
     for line in reader.lines().filter_map(|r| r.ok()) {
@@ -43,7 +46,7 @@ pub fn execute(args: &ArgMatches) -> std::result::Result<(), Box<dyn std::error:
         }
         *rg.strand_mut() = "".to_string();
 
-        let ctg_id = gars::find_one_z(&mut conn, &rg);
+        let ctg_id = gars::find_one_idx(&lapper_of, &rg);
         if ctg_id.is_empty() {
             continue;
         }
