@@ -106,7 +106,7 @@ pub fn execute(args: &ArgMatches) -> std::result::Result<(), Box<dyn std::error:
                     }
                 }
             }
-            println!(
+            eprintln!(
                 "Ambiguous region for {}:\n    {}\n",
                 chr_id,
                 ambiguous_set.runlist()
@@ -117,7 +117,7 @@ pub fn execute(args: &ArgMatches) -> std::result::Result<(), Box<dyn std::error:
             valid_set.subtract(&ambiguous_set);
             valid_set = valid_set.fill(fill - 1);
             valid_set = valid_set.excise(min);
-            println!(
+            eprintln!(
                 "Valid region for {}:\n    {}\n",
                 chr_id,
                 valid_set.runlist()
@@ -176,13 +176,16 @@ pub fn execute(args: &ArgMatches) -> std::result::Result<(), Box<dyn std::error:
         }
     }
 
+    eprintln!("Building the lapper index of ctgs...\n");
+    gars::build_idx_ctg(&mut conn);
+
     // number of chr
     let n_chr: i32 = conn.hlen("chr").unwrap();
-    println!("There are {} chromosomes", n_chr);
+    eprintln!("There are {} chromosomes", n_chr);
 
     // number of ctg
     let n_ctg: i32 = gars::get_scan_count(&mut conn, "ctg:*".to_string());
-    println!("There are {} contigs", n_ctg);
+    eprintln!("There are {} contigs", n_ctg);
 
     Ok(())
 }

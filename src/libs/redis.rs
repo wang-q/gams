@@ -7,6 +7,10 @@ use intspan::{IntSpan, Range};
 use redis::Commands;
 use serde::Deserialize;
 
+use rust_lapper::{Interval, Lapper};
+// Interval: represent a range from [start, stop), carrying val
+type Iv = Interval<u32, String>; // the first type should be Unsigned
+
 use crate::libs::stat::*;
 use crate::libs::window::*;
 
@@ -122,6 +126,43 @@ pub fn get_scan_int(
     }
 
     hash
+}
+
+pub fn build_idx_ctg(conn: &mut redis::Connection) {
+    // seq_name => Vector of Intervals
+    let mut ivs_of: BTreeMap<String, Vec<Iv>> = BTreeMap::new();
+
+    // each ctg
+    let ctgs: Vec<String> = get_scan_vec(conn, "ctg:*".to_string());
+    for ctg_id in ctgs {
+        let (chr_name, chr_start, chr_end) = get_key_pos(conn, &ctg_id);
+
+        if !ivs_of.contains_key(chr_name.as_str()) {
+            let ivs: Vec<Iv> = vec![];
+            ivs_of.insert(chr_name.clone(), ivs);
+        }
+
+        let iv = Iv {
+            start: chr_start as u32,
+            stop: chr_end as u32 + 1,
+            val: ctg_id,
+        };
+
+        ivs_of
+            .entry(chr_name.to_string())
+            .and_modify(|e| e.push(iv));
+    }
+
+    for chr in ivs_of.keys() {
+        let lapper = Lapper::new(ivs_of.get(chr).unwrap().to_owned());
+        let serialized = bincode::serialize(&lapper).unwrap();
+        //
+        // eprintln!("serialized = {:#?}", serialized);
+        // eprintln!("deserialzed = {:#?}", deserialzed);
+
+        // hash lapper
+        let _: () = conn.hset("lapper", chr, &serialized).unwrap();
+    }
 }
 
 
