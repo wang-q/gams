@@ -13,7 +13,7 @@ cp ~/data/gars/Atha/features/T-DNA.CSHL.pos.txt .
 
 ```
 
-## hyperfine
+## `gars`
 
 ```shell
 cd ~/gars
@@ -43,19 +43,51 @@ hyperfine --warmup 1 --export-markdown gars.md.tmp \
     '
         gars status drop;
         gars gen genome.fa.gz --piece 500000;
-        gars sliding --size 100 --step 20 --lag 50 |
-            tsv-filter -H --ne signal:0 > /dev/null;
+        gars sliding --size 100 --step 20 --lag 50 > /dev/null;
     '
 
 cat gars.md.tmp
 
 ```
 
-## R7 5800 Windows 11
+### R7 5800 Windows 11
 
 | Command             |      Mean [s] | Min [s] | Max [s] |    Relative |
 |:--------------------|--------------:|--------:|--------:|------------:|
-| drop; gen;          | 1.082 ± 0.002 |   1.079 |   1.086 |        1.00 |
-| drop; gen; pos;     | 5.060 ± 0.113 |   4.944 |   5.252 | 4.68 ± 0.11 |
-| drop; gen; range;   | 5.037 ± 0.068 |   4.975 |   5.175 | 4.66 ± 0.06 |
-| drop; gen; sliding; | 5.761 ± 0.017 |   5.730 |   5.780 | 5.33 ± 0.02 |
+| drop; gen;          | 1.126 ± 0.004 |   1.123 |   1.135 |        1.00 |
+| drop; gen; pos;     | 2.995 ± 0.031 |   2.956 |   3.061 | 2.66 ± 0.03 |
+| drop; gen; range;   | 3.514 ± 0.681 |   3.015 |   5.095 | 3.12 ± 0.61 |
+| drop; gen; sliding; | 5.624 ± 0.024 |   5.603 |   5.685 | 5.00 ± 0.03 |
+
+## `gars locate`
+
+```shell
+cd ~/gars
+
+# redis
+rm dump.rdb
+redis-server
+
+# gars
+gars env
+
+gars status drop
+
+gars gen genome.fa.gz --piece 500000;
+
+hyperfine -N --export-markdown locate.md.tmp \
+    'gars locate -f T-DNA.CSHL.pos.txt' \
+    'gars locate --idx -f T-DNA.CSHL.pos.txt' \
+    'gars locate --zrange -f T-DNA.CSHL.pos.txt'
+
+cat locate.md.tmp
+
+```
+
+### R7 5800 Windows 11
+
+| Command |     Mean [ms] | Min [ms] | Max [ms] |     Relative |
+|:--------|--------------:|---------:|---------:|-------------:|
+| lapper  |  919.9 ± 19.7 |    890.5 |    946.6 | 41.85 ± 1.22 |
+| idx     |    22.0 ± 0.4 |     21.3 |     24.1 |         1.00 |
+| zrange  | 2048.7 ± 11.4 |   2037.8 |   2065.4 | 93.21 ± 1.89 |
