@@ -40,4 +40,6 @@ fn main() -> std::io::Result<()> {
     Ok(())
 }
 
+// TODO: sliding wave
+// TODO: `gars` count
 // TODO: annotations - coding and repeats
