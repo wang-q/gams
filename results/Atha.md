@@ -167,7 +167,7 @@ gars status drop
 
 gars gen genome/genome.fa.gz --piece 500000
 
-time parallel -j 1 -k --line-buffer '
+time parallel -j 4 -k --line-buffer '
     echo {}
     gars range features/T-DNA.{}.pos.txt --tag {}
     ' ::: CSHL FLAG MX RATM
@@ -193,29 +193,30 @@ gars status dump && sync dump.rdb && cp dump.rdb dumps/range.dump.rdb
 
 # rsw
 time cat ctg.lst |
-    parallel -j 4 -k --line-buffer '
+    parallel -j 1 -k --line-buffer '
         gars rsw --ctg {}
         ' |
     tsv-uniq |
     keep-header -- tsv-sort -k2,2 -k3,3n -k4,4n \
     > tsvs/rsw.tsv
 # CSHL
+# -j 1 redis-server CPU usage at ~70%
 # -j 8
-#real    0m17.968s
-#user    0m22.665s
-#sys     0m16.002s
+#real    0m17.129s
+#user    0m21.602s
+#sys     0m16.187s
 # -j 4
 #real    0m18.409s
 #user    0m20.197s
 #sys     0m15.143s
 # -j 2
-#real    0m34.926s
-#user    0m22.339s
-#sys     0m24.795s
+#real    0m24.126s
+#user    0m17.670s
+#sys     0m17.428s
 # -j 1
-#real    1m5.568s
-#user    0m15.660s
-#sys     0m34.372s
+#real    0m56.005s
+#user    0m15.893s
+#sys     0m28.647s
 
 gars status stop
 
