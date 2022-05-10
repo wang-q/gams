@@ -124,7 +124,8 @@ pub fn get_scan_int(
     hash
 }
 
-pub fn find_one(conn: &mut redis::Connection, rg: &Range) -> String {
+
+pub fn find_one_z(conn: &mut redis::Connection, rg: &Range) -> String {
     // MULTI
     // ZRANGESTORE tmp-s:I ctg-s:I 0 1000 BYSCORE
     // ZRANGESTORE tmp-e:I ctg-e:I 1100 +inf BYSCORE
@@ -239,7 +240,7 @@ pub fn cache_gc_stat(
 }
 
 pub fn get_rg_seq(conn: &mut redis::Connection, rg: &Range) -> String {
-    let ctg_id = find_one(conn, rg);
+    let ctg_id = find_one_z(conn, rg);
 
     if ctg_id.is_empty() {
         return "".to_string();

@@ -33,7 +33,7 @@ pub fn execute(args: &ArgMatches) -> std::result::Result<(), Box<dyn std::error:
             }
             *rg.strand_mut() = "".to_string();
 
-            let ctg_id = gars::find_one(&mut conn, &rg);
+            let ctg_id = gars::find_one_z(&mut conn, &rg);
             if ctg_id.is_empty() {
                 continue;
             }

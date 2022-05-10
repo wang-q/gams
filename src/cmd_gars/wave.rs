@@ -42,7 +42,7 @@ pub fn execute(args: &ArgMatches) -> std::result::Result<(), Box<dyn std::error:
 
         let signal = parts[2];
 
-        let ctg_id = gars::find_one(&mut conn, &rg);
+        let ctg_id = gars::find_one_z(&mut conn, &rg);
         if ctg_id.is_empty() {
             continue;
         }

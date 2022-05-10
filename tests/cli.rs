@@ -115,7 +115,7 @@ fn command_gen() -> Result<(), Box<dyn std::error::Error>> {
         ("II", 1000, 1100, ""),
     ];
     for (name, start, end, expected) in tests {
-        let ctg = gars::find_one(&mut conn, &Range::from(name, start, end));
+        let ctg = gars::find_one_z(&mut conn, &Range::from(name, start, end));
         assert_eq!(ctg, expected.to_string());
     }
 
