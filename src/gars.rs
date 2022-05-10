@@ -13,6 +13,7 @@ fn main() -> std::io::Result<()> {
         .subcommand(cmd_gars::env::make_subcommand())
         .subcommand(cmd_gars::status::make_subcommand())
         .subcommand(cmd_gars::gen::make_subcommand())
+        .subcommand(cmd_gars::locate::make_subcommand())
         .subcommand(cmd_gars::pos::make_subcommand())
         .subcommand(cmd_gars::range::make_subcommand())
         .subcommand(cmd_gars::sliding::make_subcommand())
@@ -25,6 +26,7 @@ fn main() -> std::io::Result<()> {
         Some(("env", sub_matches)) => cmd_gars::env::execute(sub_matches),
         Some(("status", sub_matches)) => cmd_gars::status::execute(sub_matches),
         Some(("gen", sub_matches)) => cmd_gars::gen::execute(sub_matches),
+        Some(("locate", sub_matches)) => cmd_gars::locate::execute(sub_matches),
         Some(("pos", sub_matches)) => cmd_gars::pos::execute(sub_matches),
         Some(("range", sub_matches)) => cmd_gars::range::execute(sub_matches),
         Some(("rsw", sub_matches)) => cmd_gars::rsw::execute(sub_matches),

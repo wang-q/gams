@@ -128,6 +128,9 @@ gars tsv -s 'ctg:*' > tests/S288c/ctg.tsv
 
 gars-stat tests/S288c/ctg.tsv ctg
 
+# locate an range
+gars locate "I(+):1000-1100"
+
 # add ranges
 gars range tests/S288c/spo11_hot.pos.txt
 
