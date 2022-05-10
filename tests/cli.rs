@@ -256,10 +256,9 @@ fn command_wave() -> Result<(), Box<dyn std::error::Error>> {
         .arg("tests/S288c/I.peaks.tsv")
         .output()
         .unwrap();
-    let stdout = String::from_utf8(output.stdout).unwrap();
+    let stderr = String::from_utf8(output.stderr).unwrap();
 
-    assert_eq!(stdout.lines().count(), 1);
-    assert!(stdout.contains("There are 155 peaks"));
+    assert!(stderr.contains("There are 155 peaks"));
 
     Ok(())
 }

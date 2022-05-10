@@ -260,9 +260,9 @@ time cat ctg.lst |
 
         rm {.}.gc.tsv {.}.replace.tsv
     '
-#real    5m58.731s
-#user    23m47.703s
-#sys     0m16.114s
+#real    3m55.356s
+#user    15m31.976s
+#sys     0m7.637s
 
 # Don't need to be sorted
 tsv-append $(cat ctg.lst | sed 's/$/.peak.tsv/' | sed 's/^/tsvs\//') -H \
@@ -276,10 +276,11 @@ tsv-summarize tsvs/peak.tsv \
 #1       32361
 #-1      26944
 
+# Loading peaks
 time gars wave tsvs/peak.tsv
-#real    4m27.902s
-#user    0m26.255s
-#sys     2m31.036s
+#real    2m33.424s
+#user    0m32.862s
+#sys     1m26.265s
 
 gars tsv -s "peak:*" |
     keep-header -- tsv-sort -k2,2 -k3,3n -k4,4n \
