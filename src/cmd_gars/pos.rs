@@ -18,7 +18,7 @@ pub fn make_subcommand<'a>() -> Command<'a> {
 }
 
 // command implementation
-pub fn execute(args: &ArgMatches) -> std::result::Result<(), std::io::Error> {
+pub fn execute(args: &ArgMatches) -> std::result::Result<(), Box<dyn std::error::Error>> {
     // redis connection
     let mut conn = connect();
 

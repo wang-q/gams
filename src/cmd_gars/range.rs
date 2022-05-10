@@ -26,7 +26,7 @@ pub fn make_subcommand<'a>() -> Command<'a> {
 }
 
 // command implementation
-pub fn execute(args: &ArgMatches) -> std::result::Result<(), std::io::Error> {
+pub fn execute(args: &ArgMatches) -> std::result::Result<(), Box<dyn std::error::Error>> {
     // opts
     let infile = args.value_of("infile").unwrap();
     let tag = args.value_of("tag").unwrap();

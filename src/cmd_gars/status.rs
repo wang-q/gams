@@ -40,7 +40,7 @@ List of actions:
 }
 
 // command implementation
-pub fn execute(args: &ArgMatches) -> std::result::Result<(), std::io::Error> {
+pub fn execute(args: &ArgMatches) -> std::result::Result<(), Box<dyn std::error::Error>> {
     match args.value_of("action").unwrap() {
         "cli" => {
             cli();

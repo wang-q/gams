@@ -57,7 +57,7 @@ pub fn make_subcommand<'a>() -> Command<'a> {
 }
 
 // command implementation
-pub fn execute(args: &ArgMatches) -> std::result::Result<(), std::io::Error> {
+pub fn execute(args: &ArgMatches) -> std::result::Result<(), Box<dyn std::error::Error>> {
     // opts
     let common_name = args.value_of("name").unwrap();
     let piece: i32 = args.value_of_t("piece").unwrap_or_else(|e| {
