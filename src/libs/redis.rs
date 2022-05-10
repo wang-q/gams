@@ -173,17 +173,11 @@ pub fn find_one_l(conn: &mut redis::Connection, rg: &Range) -> String {
     }
 
     let lapper: Lapper<u32, String> = bincode::deserialize(&lapper_bytes).unwrap();
-    let res = lapper
-        .find(*rg.start() as u32, *rg.end() as u32)
-        .next();
+    let res = lapper.find(*rg.start() as u32, *rg.end() as u32).next();
 
     return match res {
-        Some(iv) => {
-            iv.val.clone()
-        }
-        None => {
-            "".to_string()
-        }
+        Some(iv) => iv.val.clone(),
+        None => "".to_string(),
     };
 }
 
