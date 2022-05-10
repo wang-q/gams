@@ -183,7 +183,6 @@ fn hash() {
         .arg(format!("{}:{}", prefix, "rust"))
         .query(&mut conn)
         .expect("Failed to execute HGETALL");
-
     println!("info for rust redis driver: {:?}", info);
 
     let _: () = conn
@@ -200,8 +199,12 @@ fn hash() {
     let repo_name: String = conn
         .hget(format!("{}:{}", prefix, "go"), "repo")
         .expect("Failed to execute HGET");
-
     println!("go redis driver repo name: {:?}", repo_name);
+
+    let (go_name, go_repo): (String, String) = conn
+        .hget(format!("{}:{}", prefix, "go"), &["name", "repo"])
+        .expect("Failed to execute HGET");
+    println!("go redis driver: {:?} {:?}", go_name, go_repo);
 }
 
 fn list() {

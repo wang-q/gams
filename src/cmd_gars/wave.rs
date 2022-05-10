@@ -130,23 +130,24 @@ pub fn execute(args: &ArgMatches) -> std::result::Result<(), Box<dyn std::error:
         }
 
         // left
-        let mut prev_signal: String = conn.hget(peaks.first().unwrap(), "signal").unwrap();
-        let mut prev_end: i32 = conn.hget(ctg_id, "chr_start").unwrap();
-        let mut prev_gc: f32 = conn.hget(peaks.first().unwrap(), "gc").unwrap();
+        let (mut prev_signal, mut prev_gc): (String, f32) = conn
+            .hget(peaks.first().unwrap(), &["signal", "gc"])
+            .unwrap();
+        let mut prev_end: i32 = chr_start;
         for i in 0..peaks.len() {
-            let cur_signal: String = conn.hget(&peaks[i], "signal").unwrap();
+            let (cur_signal, cur_start, cur_end, cur_gc): (String, i32, i32, f32) = conn
+                .hget(&peaks[i], &["signal", "chr_start", "chr_end", "gc"])
+                .unwrap();
+
             let _: () = conn.hset(&peaks[i], "left_signal", prev_signal).unwrap();
             prev_signal = cur_signal.clone();
 
-            let cur_start: i32 = conn.hget(&peaks[i], "chr_start").unwrap();
-            let cur_end: i32 = conn.hget(&peaks[i], "chr_end").unwrap();
             let left_wave_length = cur_start - prev_end + 1;
             let _: () = conn
                 .hset(&peaks[i], "left_wave_length", left_wave_length)
                 .unwrap();
             prev_end = cur_end;
 
-            let cur_gc: f32 = conn.hget(&peaks[i], "gc").unwrap();
             let left_amplitude: f32 = (cur_gc - prev_gc).abs();
             let _: () = conn
                 .hset(&peaks[i], "left_amplitude", left_amplitude)
@@ -155,23 +156,23 @@ pub fn execute(args: &ArgMatches) -> std::result::Result<(), Box<dyn std::error:
         }
 
         // right
-        let mut next_signal: String = conn.hget(peaks.last().unwrap(), "signal").unwrap();
-        let mut next_start: i32 = conn.hget(ctg_id, "chr_end").unwrap();
-        let mut next_gc: f32 = conn.hget(peaks.last().unwrap(), "gc").unwrap();
+        let (mut next_signal, mut next_gc): (String, f32) =
+            conn.hget(peaks.last().unwrap(), &["signal", "gc"]).unwrap();
+        let mut next_start: i32 = chr_end;
         for i in (0..peaks.len()).rev() {
-            let cur_signal: String = conn.hget(&peaks[i], "signal").unwrap();
+            let (cur_signal, cur_start, cur_end, cur_gc): (String, i32, i32, f32) = conn
+                .hget(&peaks[i], &["signal", "chr_start", "chr_end", "gc"])
+                .unwrap();
+
             let _: () = conn.hset(&peaks[i], "right_signal", next_signal).unwrap();
             next_signal = cur_signal.clone();
 
-            let cur_start: i32 = conn.hget(&peaks[i], "chr_start").unwrap();
-            let cur_end: i32 = conn.hget(&peaks[i], "chr_end").unwrap();
             let right_wave_length = next_start - cur_end + 1;
             let _: () = conn
                 .hset(&peaks[i], "right_wave_length", right_wave_length)
                 .unwrap();
             next_start = cur_start;
 
-            let cur_gc: f32 = conn.hget(&peaks[i], "gc").unwrap();
             let right_amplitude: f32 = (cur_gc - next_gc).abs();
             let _: () = conn
                 .hset(&peaks[i], "right_amplitude", right_amplitude)

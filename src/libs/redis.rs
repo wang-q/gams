@@ -65,9 +65,9 @@ pub fn connect() -> redis::Connection {
 }
 
 pub fn get_key_pos(conn: &mut redis::Connection, key: &str) -> (String, i32, i32) {
-    let chr_name: String = conn.hget(key, "chr_name").unwrap();
-    let chr_start: i32 = conn.hget(key, "chr_start").unwrap();
-    let chr_end: i32 = conn.hget(key, "chr_end").unwrap();
+    let (chr_name, chr_start, chr_end): (String, i32, i32) = conn
+        .hget(key, &["chr_name", "chr_start", "chr_end"])
+        .unwrap();
 
     (chr_name, chr_start, chr_end)
 }
