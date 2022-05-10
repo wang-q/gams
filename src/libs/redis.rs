@@ -156,13 +156,40 @@ pub fn build_idx_ctg(conn: &mut redis::Connection) {
     for chr in ivs_of.keys() {
         let lapper = Lapper::new(ivs_of.get(chr).unwrap().to_owned());
         let serialized = bincode::serialize(&lapper).unwrap();
-        //
-        // eprintln!("serialized = {:#?}", serialized);
-        // eprintln!("deserialzed = {:#?}", deserialzed);
 
         // hash lapper
         let _: () = conn.hset("lapper", chr, &serialized).unwrap();
     }
+}
+
+pub fn get_idx_ctg(conn: &mut redis::Connection) -> BTreeMap<String, Lapper<u32, String>> {
+    // seq_name => Lapper => ctg_id
+    let mut lapper_of: BTreeMap<String, Lapper<u32, String>> = BTreeMap::new();
+
+    let chrs: Vec<String> = conn.hkeys("lapper").unwrap();
+
+    for chr in chrs {
+        let lapper_bytes: Vec<u8> = conn.hget("lapper", chr.as_str()).unwrap();
+        let lapper: Lapper<u32, String> = bincode::deserialize(&lapper_bytes).unwrap();
+
+        lapper_of.insert(chr.clone(), lapper);
+    }
+
+    lapper_of
+}
+
+pub fn find_one_idx(lapper_of: &BTreeMap<String, Lapper<u32, String>>, rg: &Range) -> String {
+    if !lapper_of.contains_key(rg.chr()) {
+        return "".to_string();
+    }
+
+    let lapper = lapper_of.get(rg.chr()).unwrap();
+    let res = lapper.find(*rg.start() as u32, *rg.end() as u32).next();
+
+    return match res {
+        Some(iv) => iv.val.clone(),
+        None => "".to_string(),
+    };
 }
 
 pub fn find_one_l(conn: &mut redis::Connection, rg: &Range) -> String {

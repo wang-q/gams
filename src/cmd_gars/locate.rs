@@ -1,6 +1,7 @@
 use clap::*;
 use gars::*;
 use intspan::*;
+use std::collections::BTreeMap;
 use std::io::BufRead;
 
 use rust_lapper::{Interval, Lapper};
@@ -31,9 +32,14 @@ pub fn make_subcommand<'a>() -> Command<'a> {
                 .help("Rebuild the index of ctgs"),
         )
         .arg(
+            Arg::new("idx")
+                .long("idx")
+                .takes_value(false)
+                .help("Use the cached index"),
+        )
+        .arg(
             Arg::new("zrange")
                 .long("zrange")
-                .short('z')
                 .takes_value(false)
                 .help("Use Redis ZRANGESTORE and ZINTER to locate the ctg"),
         )
@@ -79,7 +85,13 @@ pub fn execute(args: &ArgMatches) -> std::result::Result<(), Box<dyn std::error:
             .collect();
     }
 
-    // processing each file
+    // index of ctgs
+    let mut lapper_of: BTreeMap<String, Lapper<u32, String>> = BTreeMap::new();
+    if args.is_present("idx") {
+        lapper_of = gars::get_idx_ctg(&mut conn);
+    }
+
+    // processing each range
     for range in ranges {
         let mut rg = Range::from_str(range.as_str());
         if !rg.is_valid() {
@@ -87,7 +99,9 @@ pub fn execute(args: &ArgMatches) -> std::result::Result<(), Box<dyn std::error:
         }
         *rg.strand_mut() = "".to_string();
 
-        let ctg_id = if args.is_present("zrange") {
+        let ctg_id = if args.is_present("idx") {
+            gars::find_one_idx(&lapper_of, &rg)
+        } else if args.is_present("zrange") {
             gars::find_one_z(&mut conn, &rg)
         } else {
             gars::find_one_l(&mut conn, &rg)
