@@ -113,9 +113,9 @@ gars env --all
 gars status drop
 
 time gars gen genome/genome.fa.gz --piece 500000
-#real    0m1.614s
-#user    0m0.825s
-#sys     0m0.130s
+#real    0m1.219s
+#user    0m0.980s
+#sys     0m0.123s
 
 gars status dump && sync dump.rdb && cp dump.rdb dumps/ctg.dump.rdb
 
@@ -136,9 +136,9 @@ time parallel -j 4 -k --line-buffer '
     echo {}
     gars pos features/T-DNA.{}.pos.txt
     ' ::: CSHL FLAG MX RATM
-#real    0m9.859s
-#user    0m3.670s
-#sys     0m4.434s
+#real    0m3.663s
+#user    0m2.096s
+#sys     0m2.666s
 
 gars tsv -s 'pos:*' |
     keep-header -- tsv-sort -k2,2 -k3,3n -k4,4n \
@@ -148,7 +148,6 @@ gars status dump && sync dump.rdb && cp dump.rdb dumps/pos.dump.rdb
 
 # stop the server
 gars status stop
-
 
 ```
 
@@ -168,23 +167,23 @@ gars status drop
 
 gars gen genome/genome.fa.gz --piece 500000
 
-time parallel -j 4 -k --line-buffer '
+time parallel -j 1 -k --line-buffer '
     echo {}
     gars range features/T-DNA.{}.pos.txt --tag {}
     ' ::: CSHL FLAG MX RATM
 # redis
 # CSHL
-#real    0m8.063s
-#user    0m0.896s
-#sys     0m3.742s
+#real    0m1.985s
+#user    0m0.344s
+#sys     0m1.049s
 # 4 files -j 1
-#real    0m42.089s
-#user    0m4.843s
-#sys     0m18.921s
+#real    0m9.261s
+#user    0m1.240s
+#sys     0m4.966s
 # 4 files -j 4
-#real    0m22.120s
-#user    0m7.340s
-#sys     0m12.258s
+#real    0m3.824s
+#user    0m2.606s
+#sys     0m2.362s
 
 gars tsv -s "range:*" |
     keep-header -- tsv-sort -k2,2 -k3,3n -k4,4n \
@@ -206,9 +205,9 @@ time cat ctg.lst |
 #user    0m22.665s
 #sys     0m16.002s
 # -j 4
-#real    0m27.474s
-#user    0m26.367s
-#sys     0m22.333s
+#real    0m18.409s
+#user    0m20.197s
+#sys     0m15.143s
 # -j 2
 #real    0m34.926s
 #user    0m22.339s

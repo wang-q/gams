@@ -4,8 +4,6 @@ use intspan::*;
 use std::collections::BTreeMap;
 use std::io::BufRead;
 
-use rust_lapper::{Interval, Lapper};
-
 // Create clap subcommand arguments
 pub fn make_subcommand<'a>() -> Command<'a> {
     Command::new("locate")
@@ -92,7 +90,7 @@ pub fn execute(args: &ArgMatches) -> std::result::Result<(), Box<dyn std::error:
     }
 
     // index of ctgs
-    let mut lapper_of: BTreeMap<String, Lapper<u32, String>> = BTreeMap::new();
+    let mut lapper_of = BTreeMap::new();
     if args.is_present("idx") {
         lapper_of = gars::get_idx_ctg(&mut conn);
     }

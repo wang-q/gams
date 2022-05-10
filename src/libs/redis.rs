@@ -323,7 +323,7 @@ pub fn cache_gc_stat(
 }
 
 pub fn get_rg_seq(conn: &mut redis::Connection, rg: &Range) -> String {
-    let ctg_id = find_one_z(conn, rg);
+    let ctg_id = find_one_l(conn, rg);
 
     if ctg_id.is_empty() {
         return "".to_string();

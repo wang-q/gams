@@ -101,12 +101,12 @@ fn command_gen() -> Result<(), Box<dyn std::error::Error>> {
         .arg("100000")
         .output()
         .unwrap();
-    let stdout = String::from_utf8(output.stdout).unwrap();
+    let stderr = String::from_utf8(output.stderr).unwrap();
 
-    assert_eq!(stdout.lines().count(), 14);
-    assert!(stdout.contains("There are 3 contigs"));
+    assert_eq!(stderr.lines().count(), 16);
+    assert!(stderr.contains("There are 3 contigs"));
 
-    // find_one
+    // find_one_z
     let mut conn = gars::connect();
     let tests = vec![
         ("I", 1000, 1100, "ctg:I:1"),
@@ -116,6 +116,19 @@ fn command_gen() -> Result<(), Box<dyn std::error::Error>> {
     ];
     for (name, start, end, expected) in tests {
         let ctg = gars::find_one_z(&mut conn, &Range::from(name, start, end));
+        assert_eq!(ctg, expected.to_string());
+    }
+
+    // find_one_l
+    let mut conn = gars::connect();
+    let tests = vec![
+        ("I", 1000, 1100, "ctg:I:1"),
+        ("Mito", 1000, 1100, "ctg:Mito:1"),
+        ("I", -1000, 1100, ""),
+        ("II", 1000, 1100, ""),
+    ];
+    for (name, start, end, expected) in tests {
+        let ctg = gars::find_one_l(&mut conn, &Range::from(name, start, end));
         assert_eq!(ctg, expected.to_string());
     }
 
