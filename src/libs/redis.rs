@@ -165,6 +165,27 @@ pub fn build_idx_ctg(conn: &mut redis::Connection) {
     }
 }
 
+pub fn find_one_l(conn: &mut redis::Connection, rg: &Range) -> String {
+    let lapper_bytes: Vec<u8> = conn.hget("lapper", rg.chr()).unwrap();
+
+    if lapper_bytes.is_empty() {
+        return "".to_string();
+    }
+
+    let lapper: Lapper<u32, String> = bincode::deserialize(&lapper_bytes).unwrap();
+    let res = lapper
+        .find(*rg.start() as u32, *rg.end() as u32)
+        .next();
+
+    return match res {
+        Some(iv) => {
+            iv.val.clone()
+        }
+        None => {
+            "".to_string()
+        }
+    };
+}
 
 pub fn find_one_z(conn: &mut redis::Connection, rg: &Range) -> String {
     // MULTI
