@@ -192,54 +192,34 @@ gars tsv -s "range:*" |
 gars status dump && sync dump.rdb && cp dump.rdb dumps/range.dump.rdb
 
 # rsw
-time cat ctg.lst |
-    parallel -j 8 -k --line-buffer '
-        gars rsw --ctg {}
-        ' |
+time gars rsw |
     tsv-uniq |
     keep-header -- tsv-sort -k2,2 -k3,3n -k4,4n \
     > tsvs/rsw.tsv
-# CSHL
-# -j 1 redis-server CPU usage at ~70%
-# -j 8
-#real    0m16.859s
-#user    0m21.268s
-#sys     0m15.039s
-# -j 4
-#real    0m18.056s
-#user    0m18.336s
-#sys     0m16.169s
-# -j 2
-#real    0m24.002s
-#user    0m17.420s
-#sys     0m16.665s
-# -j 1
-#real    0m53.605s
-#user    0m14.953s
-#sys     0m27.029s
+#real    0m33.137s
+#user    0m30.607s
+#sys     0m6.326s
 
 time cat genome/chr.sizes |
     cut -f 1 |
-    parallel -j 2 -k --line-buffer '
+    parallel -j 4 -k --line-buffer '
         gars rsw --ctg "ctg:{}:*"
         ' |
     tsv-uniq |
     keep-header -- tsv-sort -k2,2 -k3,3n -k4,4n \
     > tsvs/rsw.tsv
-# CSHL
-# -j 1 redis-server CPU usage at ~77%
 # -j 4
-#real    0m12.751s
-#user    0m14.226s
-#sys     0m7.712s
+#real    0m17.195s
+#user    0m34.398s
+#sys     0m7.253s
 # -j 2
-#real    0m19.262s
-#user    0m14.675s
-#sys     0m10.642s
+#real    0m22.259s
+#user    0m35.783s
+#sys     0m9.295s
 # -j 1
-#real    0m30.370s
-#user    0m12.987s
-#sys     0m14.410s
+#real    0m35.192s
+#user    0m38.095s
+#sys     0m12.298s
 
 gars status stop
 

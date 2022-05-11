@@ -106,9 +106,18 @@ pub fn execute(args: &ArgMatches) -> std::result::Result<(), Box<dyn std::error:
         let parent = IntSpan::from_pair(chr_start, chr_end);
         let seq: String = get_ctg_seq(&mut conn, &ctg_id);
 
-        let pattern = format!("range:{}:*", ctg_id);
-        let ranges: Vec<String> = gars::get_scan_vec(&mut conn, pattern);
-        eprintln!("\t{} ranges to be processed", ranges.len());
+        // All ranges in this ctg
+        let cnt = conn.get(format!("cnt:range:{}", ctg_id)).unwrap_or(0);
+        if cnt == 0 {
+            eprintln!("\tNo ranges");
+            continue;
+        }
+
+        let ranges: Vec<String> = (1..=cnt)
+            .into_iter()
+            .map(|i| format!("range:{}:{}", ctg_id, i))
+            .collect();
+        eprintln!("\tThere are {} peaks", ranges.len());
 
         for range_id in ranges {
             // eprintln!("\t{}", range_id);

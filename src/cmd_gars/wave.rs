@@ -11,9 +11,10 @@ pub fn make_subcommand<'a>() -> Command<'a> {
         .about("Add peaks of GC-waves")
         .after_help(
             r#"
-Left-/right- wave lengths may be negative
-
 Serial - format!("cnt:peak:{}", ctg_id)
+ID - format!("peak:{}:{}", ctg_id, serial)
+
+Left-/right- wave lengths may be negative
 
 "#,
         )
