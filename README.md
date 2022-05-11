@@ -106,11 +106,10 @@ brew install textql
 
 ```shell
 # start redis-server
-rm tests/S288c/dump.rdb
-redis-server --appendonly no --dir tests/S288c/
+redis-server
 
 # start with dump file
-# redis-server --appendonly no --dir ~/Scripts/rust/gars/tests/S288c/ --dbfilename dump.rdb
+# redis-server --appendonly no --dir ~/Scripts/rust/gars/tests/S288c/
 
 # create gars.env
 gars env
