@@ -144,9 +144,10 @@ gars status dump
 ### GC-wave
 
 ```shell
-rm tests/S288c/dump.rdb
-redis-server --appendonly no --dir tests/S288c/
+# start redis-server
+redis-server
 
+# gars
 gars env
 
 gars status drop

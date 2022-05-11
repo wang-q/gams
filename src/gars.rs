@@ -43,4 +43,5 @@ fn main() -> std::io::Result<()> {
 // TODO: sliding wave
 // TODO: `gars count`
 // TODO: `gars clear`
+// TODO: range => feature, rsw => fsw, pos => range
 // TODO: annotations - coding and repeats
