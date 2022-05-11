@@ -69,18 +69,18 @@ cat gars.md.tmp
 ## `gars locate`
 
 ```shell
-cd ~/gars
-
 # redis
+cd ~/gars
 rm dump.rdb
 redis-server
 
 # gars
+cd ~/gars
 gars env
 
 gars status drop
 
-gars gen genome.fa.gz --piece 500000;
+gars gen genome.fa.gz --piece 500000
 
 hyperfine -N --export-markdown locate.md.tmp \
     'gars locate -f T-DNA.CSHL.pos.txt' \
