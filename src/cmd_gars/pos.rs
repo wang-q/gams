@@ -8,6 +8,13 @@ use std::io::BufRead;
 pub fn make_subcommand<'a>() -> Command<'a> {
     Command::new("pos")
         .about("Add range files to positions")
+        .after_help(
+            r#"
+Serial - format!("cnt:pos:{}", ctg_id)
+ID - format!("pos:{}:{}", ctg_id, serial)
+
+"#,
+        )
         .arg(
             Arg::new("infiles")
                 .help("Sets the input file to use")
@@ -42,8 +49,7 @@ pub fn execute(args: &ArgMatches) -> std::result::Result<(), Box<dyn std::error:
             }
 
             // Redis counter
-            let counter = format!("cnt:pos:{}", ctg_id);
-            let serial: isize = conn.incr(counter.clone(), 1).unwrap();
+            let serial: isize = conn.incr(format!("cnt:pos:{}", ctg_id), 1).unwrap();
             let pos_id = format!("pos:{}:{}", ctg_id, serial);
 
             let _: () = redis::pipe()
