@@ -3,7 +3,7 @@
 pub mod env;
 pub mod gen;
 pub mod locate;
-pub mod pos;
+pub mod range;
 pub mod feature;
 pub mod fsw;
 pub mod sliding;

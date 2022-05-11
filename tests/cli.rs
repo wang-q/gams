@@ -162,7 +162,7 @@ fn command_gen() -> Result<(), Box<dyn std::error::Error>> {
 }
 
 #[test]
-fn command_pos() -> Result<(), Box<dyn std::error::Error>> {
+fn command_range() -> Result<(), Box<dyn std::error::Error>> {
     // env
     let mut cmd = Command::cargo_bin("gars")?;
     cmd.arg("env").unwrap();
@@ -179,10 +179,10 @@ fn command_pos() -> Result<(), Box<dyn std::error::Error>> {
         .arg("100000")
         .unwrap();
 
-    // pos
+    // range
     let mut cmd = Command::cargo_bin("gars")?;
     let output = cmd
-        .arg("pos")
+        .arg("range")
         .arg("tests/S288c/spo11_hot.ranges")
         .arg("tests/S288c/spo11_hot.ranges")
         .output()
@@ -190,8 +190,8 @@ fn command_pos() -> Result<(), Box<dyn std::error::Error>> {
     let stdout = String::from_utf8(output.stdout).unwrap();
 
     assert_eq!(stdout.lines().count(), 2);
-    assert!(stdout.contains("71 positions in total"));
-    assert!(stdout.contains("142 positions in total"));
+    assert!(stdout.contains("71 ranges in total"));
+    assert!(stdout.contains("142 ranges in total"));
 
     Ok(())
 }

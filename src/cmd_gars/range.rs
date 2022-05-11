@@ -6,12 +6,12 @@ use std::io::BufRead;
 
 // Create clap subcommand arguments
 pub fn make_subcommand<'a>() -> Command<'a> {
-    Command::new("pos")
-        .about("Add range files to positions")
+    Command::new("range")
+        .about("Add range files for counting")
         .after_help(
             r#"
-Serial - format!("cnt:pos:{}", ctg_id)
-ID - format!("pos:{}:{}", ctg_id, serial)
+Serial - format!("cnt:range:{}", ctg_id)
+ID - format!("range:{}:{}", ctg_id, serial)
 
 "#,
         )
@@ -49,23 +49,23 @@ pub fn execute(args: &ArgMatches) -> std::result::Result<(), Box<dyn std::error:
             }
 
             // Redis counter
-            let serial: isize = conn.incr(format!("cnt:pos:{}", ctg_id), 1).unwrap();
-            let pos_id = format!("pos:{}:{}", ctg_id, serial);
+            let serial: isize = conn.incr(format!("cnt:range:{}", ctg_id), 1).unwrap();
+            let range_id = format!("range:{}:{}", ctg_id, serial);
 
             let _: () = redis::pipe()
-                .hset(&pos_id, "chr_name", rg.chr())
+                .hset(&range_id, "chr_name", rg.chr())
                 .ignore()
-                .hset(&pos_id, "chr_start", *rg.start())
+                .hset(&range_id, "chr_start", *rg.start())
                 .ignore()
-                .hset(&pos_id, "chr_end", *rg.end())
+                .hset(&range_id, "chr_end", *rg.end())
                 .ignore()
                 .query(&mut conn)
                 .unwrap();
         }
 
-        // total number of pos
-        let pos_count = gars::get_scan_count(&mut conn, "pos:*".to_string());
-        println!("There are {} positions in total", pos_count);
+        // total number of ranges
+        let n_range = gars::get_scan_count(&mut conn, "range:*".to_string());
+        println!("There are {} ranges in total", n_range);
     }
 
     Ok(())

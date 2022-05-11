@@ -78,7 +78,7 @@ for name in CSHL FLAG MX RATM; do
         http://natural.salk.edu/database/tdnaexpress/T-DNA.${name}
 done
 
-# Convert to positions
+# Convert to ranges
 for name in CSHL FLAG MX RATM; do
     cat T-DNA.${name} |
          perl -nla -e '
@@ -131,20 +131,20 @@ cat tsvs/ctg.tsv |
     cut -f 1 \
     > ctg.lst
 
-# positions
+# ranges
 time parallel -j 4 -k --line-buffer '
     echo {}
-    gars pos features/T-DNA.{}.ranges
+    gars range features/T-DNA.{}.ranges
     ' ::: CSHL FLAG MX RATM
 #real    0m3.663s
 #user    0m2.096s
 #sys     0m2.666s
 
-gars tsv -s 'pos:*' |
+gars tsv -s 'range:*' |
     keep-header -- tsv-sort -k2,2 -k3,3n -k4,4n \
-    > tsvs/pos.tsv
+    > tsvs/range.tsv
 
-gars status dump && sync dump.rdb && cp dump.rdb dumps/pos.dump.rdb
+gars status dump && sync dump.rdb && cp dump.rdb dumps/range.dump.rdb
 
 # stop the server
 gars status stop
