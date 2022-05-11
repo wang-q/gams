@@ -6,15 +6,15 @@ use std::collections::HashMap;
 
 // Create clap subcommand arguments
 pub fn make_subcommand<'a>() -> Command<'a> {
-    Command::new("rsw")
-        .about("Sliding windows around a range")
+    Command::new("fsw")
+        .about("Sliding windows around a feature")
         .arg(
             Arg::new("ctg")
                 .long("ctg")
                 .takes_value(true)
                 .default_value("ctg:*")
                 .forbid_empty_values(true)
-                .help("Sets full name or prefix of contigs, `ctg:I:*` or `ctg:I:2`"),
+                .help("Sets the full ID or the prefix of ctgs, `ctg:I:*` or `ctg:I:2`"),
         )
         .arg(
             Arg::new("style")
@@ -107,22 +107,22 @@ pub fn execute(args: &ArgMatches) -> std::result::Result<(), Box<dyn std::error:
         let seq: String = get_ctg_seq(&mut conn, &ctg_id);
 
         // All ranges in this ctg
-        let cnt = conn.get(format!("cnt:range:{}", ctg_id)).unwrap_or(0);
+        let cnt = conn.get(format!("cnt:feature:{}", ctg_id)).unwrap_or(0);
         if cnt == 0 {
-            eprintln!("\tNo ranges");
+            eprintln!("\tNo features");
             continue;
         }
 
-        let ranges: Vec<String> = (1..=cnt)
+        let features: Vec<String> = (1..=cnt)
             .into_iter()
             .map(|i| format!("range:{}:{}", ctg_id, i))
             .collect();
-        eprintln!("\tThere are {} peaks", ranges.len());
+        eprintln!("\tThere are {} features", features.len());
 
-        for range_id in ranges {
+        for feature_id in features {
             // eprintln!("\t{}", range_id);
-            let (_, range_start, range_end) = gars::get_key_pos(&mut conn, &range_id);
-            let tag: String = conn.hget(&range_id, "tag").unwrap();
+            let (_, range_start, range_end) = gars::get_key_pos(&mut conn, &feature_id);
+            let tag: String = conn.hget(&feature_id, "tag").unwrap();
 
             // No need to use Redis counters
             let mut serial: isize = 1;
@@ -130,7 +130,7 @@ pub fn execute(args: &ArgMatches) -> std::result::Result<(), Box<dyn std::error:
             let windows = center_sw(&parent, range_start, range_end, size, max);
 
             for (sw_intspan, sw_type, sw_distance) in windows {
-                let rsw_id = format!("rsw:{}:{}", range_id, serial);
+                let fsw_id = format!("fsw:{}:{}", feature_id, serial);
 
                 let gc_content = cache_gc_content(
                     &Range::from(&chr_name, sw_intspan.min(), sw_intspan.max()),
@@ -160,7 +160,7 @@ pub fn execute(args: &ArgMatches) -> std::result::Result<(), Box<dyn std::error:
                 values.push(format!("{:.5}", gc_snr));
 
                 let line = values.join("\t");
-                writer.write_all(format!("{}\t{}\n", rsw_id, line).as_ref())?;
+                writer.write_all(format!("{}\t{}\n", fsw_id, line).as_ref())?;
 
                 serial += 1;
             }

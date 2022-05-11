@@ -6,12 +6,12 @@ use std::io::BufRead;
 
 // Create clap subcommand arguments
 pub fn make_subcommand<'a>() -> Command<'a> {
-    Command::new("range")
-        .about("Add ranges")
+    Command::new("feature")
+        .about("Add genomic features from range files")
         .after_help(
             r#"
-Serial - format!("cnt:range:{}", ctg_id)
-ID - format!("range:{}:{}", ctg_id, serial)
+Serial - format!("cnt:feature:{}", ctg_id)
+ID - format!("feature:{}:{}", ctg_id, serial)
 
 "#,
         )
@@ -26,9 +26,9 @@ ID - format!("range:{}:{}", ctg_id, serial)
                 .long("tag")
                 .short('t')
                 .takes_value(true)
-                .default_value("range")
+                .default_value("feature")
                 .forbid_empty_values(true)
-                .help("Range tags"),
+                .help("Feature tags"),
         )
 }
 
@@ -59,8 +59,8 @@ pub fn execute(args: &ArgMatches) -> std::result::Result<(), Box<dyn std::error:
         }
 
         // Redis counter
-        let serial: isize = conn.incr(format!("cnt:range:{}", ctg_id), 1).unwrap();
-        let range_id = format!("range:{}:{}", ctg_id, serial);
+        let serial: isize = conn.incr(format!("cnt:feature:{}", ctg_id), 1).unwrap();
+        let range_id = format!("feature:{}:{}", ctg_id, serial);
 
         let length = rg.end() - rg.start() + 1;
 
@@ -80,8 +80,8 @@ pub fn execute(args: &ArgMatches) -> std::result::Result<(), Box<dyn std::error:
     }
 
     // number of ranges
-    let n_range = gars::get_scan_count(&mut conn, "range:*".to_string());
-    println!("There are {} ranges", n_range);
+    let n_feature = gars::get_scan_count(&mut conn, "feature:*".to_string());
+    println!("There are {} features", n_feature);
 
     Ok(())
 }

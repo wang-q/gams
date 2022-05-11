@@ -5,7 +5,7 @@ SELECT `distance`,
        round(avg(gc_cv), 4)      AVG_gc_cv,
        round(avg(gc_snr), 4)     AVG_gc_snr,
        count(ID)                 COUNT
-FROM rsw
+FROM fsw
 GROUP BY distance
 ORDER BY distance
     FORMAT TSVWithNames

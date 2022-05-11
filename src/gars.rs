@@ -15,9 +15,9 @@ fn main() -> std::io::Result<()> {
         .subcommand(cmd_gars::gen::make_subcommand())
         .subcommand(cmd_gars::locate::make_subcommand())
         .subcommand(cmd_gars::pos::make_subcommand())
-        .subcommand(cmd_gars::range::make_subcommand())
+        .subcommand(cmd_gars::feature::make_subcommand())
         .subcommand(cmd_gars::sliding::make_subcommand())
-        .subcommand(cmd_gars::rsw::make_subcommand())
+        .subcommand(cmd_gars::fsw::make_subcommand())
         .subcommand(cmd_gars::tsv::make_subcommand())
         .subcommand(cmd_gars::wave::make_subcommand());
 
@@ -28,8 +28,8 @@ fn main() -> std::io::Result<()> {
         Some(("gen", sub_matches)) => cmd_gars::gen::execute(sub_matches),
         Some(("locate", sub_matches)) => cmd_gars::locate::execute(sub_matches),
         Some(("pos", sub_matches)) => cmd_gars::pos::execute(sub_matches),
-        Some(("range", sub_matches)) => cmd_gars::range::execute(sub_matches),
-        Some(("rsw", sub_matches)) => cmd_gars::rsw::execute(sub_matches),
+        Some(("feature", sub_matches)) => cmd_gars::feature::execute(sub_matches),
+        Some(("rsw", sub_matches)) => cmd_gars::fsw::execute(sub_matches),
         Some(("sliding", sub_matches)) => cmd_gars::sliding::execute(sub_matches),
         Some(("tsv", sub_matches)) => cmd_gars::tsv::execute(sub_matches),
         Some(("wave", sub_matches)) => cmd_gars::wave::execute(sub_matches),
@@ -43,5 +43,5 @@ fn main() -> std::io::Result<()> {
 // TODO: sliding wave
 // TODO: `gars count`
 // TODO: `gars clear`
-// TODO: range => feature, rsw => fsw, pos => range
+// TODO: pos => range
 // TODO: annotations - coding and repeats

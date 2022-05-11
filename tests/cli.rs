@@ -197,7 +197,7 @@ fn command_pos() -> Result<(), Box<dyn std::error::Error>> {
 }
 
 #[test]
-fn command_range() -> Result<(), Box<dyn std::error::Error>> {
+fn command_feature() -> Result<(), Box<dyn std::error::Error>> {
     // env
     let mut cmd = Command::cargo_bin("gars")?;
     cmd.arg("env").unwrap();
@@ -214,10 +214,10 @@ fn command_range() -> Result<(), Box<dyn std::error::Error>> {
         .arg("100000")
         .unwrap();
 
-    // range
+    // feature
     let mut cmd = Command::cargo_bin("gars")?;
     let output = cmd
-        .arg("range")
+        .arg("feature")
         .arg("tests/S288c/spo11_hot.pos.txt")
         .arg("--tag")
         .arg("spo11")

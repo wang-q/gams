@@ -151,9 +151,9 @@ gars status stop
 
 ```
 
-### Ranges and rsw
+### Features and fsw
 
-```shell script
+```shell
 cd ~/data/gars/Atha/
 
 rm ./dump.rdb
@@ -169,7 +169,7 @@ gars gen genome/genome.fa.gz --piece 500000
 
 time parallel -j 4 -k --line-buffer '
     echo {}
-    gars range features/T-DNA.{}.pos.txt --tag {}
+    gars feature features/T-DNA.{}.pos.txt --tag {}
     ' ::: CSHL FLAG MX RATM
 # redis
 # CSHL
@@ -185,17 +185,17 @@ time parallel -j 4 -k --line-buffer '
 #user    0m2.606s
 #sys     0m2.362s
 
-gars tsv -s "range:*" |
+gars tsv -s "feature:*" |
     keep-header -- tsv-sort -k2,2 -k3,3n -k4,4n \
-    > tsvs/range.tsv
+    > tsvs/feature.tsv
 
-gars status dump && sync dump.rdb && cp dump.rdb dumps/range.dump.rdb
+gars status dump && sync dump.rdb && cp dump.rdb dumps/feature.dump.rdb
 
-# rsw
-time gars rsw |
+# fsw
+time gars fsw |
     tsv-uniq |
     keep-header -- tsv-sort -k2,2 -k3,3n -k4,4n \
-    > tsvs/rsw.tsv
+    > tsvs/fsw.tsv
 #real    0m33.137s
 #user    0m30.607s
 #sys     0m6.326s
@@ -203,11 +203,11 @@ time gars rsw |
 time cat genome/chr.sizes |
     cut -f 1 |
     parallel -j 4 -k --line-buffer '
-        gars rsw --ctg "ctg:{}:*"
+        gars fsw --ctg "ctg:{}:*"
         ' |
     tsv-uniq |
     keep-header -- tsv-sort -k2,2 -k3,3n -k4,4n \
-    > tsvs/rsw.tsv
+    > tsvs/fsw.tsv
 # -j 4
 #real    0m17.195s
 #user    0m34.398s
@@ -329,12 +329,12 @@ clickhouse server
 ```shell script
 cd ~/data/gars/Atha/
 
-for q in ctg rsw; do
+for q in ctg fsw; do
     clickhouse client --query "DROP TABLE IF EXISTS ${q}"
     clickhouse client --query "$(cat sqls/ddl/${q}.sql)"
 done
 
-for q in ctg rsw; do
+for q in ctg fsw; do
     echo ${q}
     cat tsvs/${q}.tsv |
         clickhouse client --query "INSERT INTO ${q} FORMAT TSVWithNames"
@@ -352,7 +352,7 @@ mkdir -p stats
 # summary
 ARRAY=(
     'ctg::length'
-    'rsw::gc_content'
+    'fsw::gc_content'
 )
 
 for item in "${ARRAY[@]}"; do
@@ -367,15 +367,15 @@ done |
     tsv-uniq \
     > stats/summary.tsv
 
-for t in rsw; do
+for t in fsw; do
     echo ${t} 1>&2
     clickhouse client --query "$(cat sqls/summary-type.sql | sed "s/_TABLE_/${t}/")"
 done |
     tsv-uniq \
     > stats/summary-type.tsv
 
-# rsw
-for q in rsw-distance rsw-distance-tag; do
+# fsw
+for q in fsw-distance fsw-distance-tag; do
     echo ${q}
     clickhouse client --query "$(cat sqls/${q}.sql)" > stats/${q}.tsv
 done
@@ -384,14 +384,14 @@ done
 
 ## plots
 
-* rsw-distance-tag
+* fsw-distance-tag
 
 ```shell script
 cd ~/data/gars/Atha/
 
 mkdir -p plots
 
-cat stats/rsw-distance-tag.tsv |
+cat stats/fsw-distance-tag.tsv |
     cut -f 1 |
     grep -v "^tag$" |
     tsv-uniq \
@@ -399,9 +399,9 @@ cat stats/rsw-distance-tag.tsv |
 
 for tag in $(cat plots/tag.lst); do
     echo ${tag}
-    base="rsw-distance-tag.${tag}"
+    base="fsw-distance-tag.${tag}"
 
-    cat stats/rsw-distance-tag.tsv |
+    cat stats/fsw-distance-tag.tsv |
         tsv-filter -H --str-eq tag:${tag} |
         tsv-select -H --exclude tag \
         > plots/${base}.tsv

@@ -26,19 +26,24 @@ cd ~/gars
 gars env
 
 hyperfine --warmup 1 --export-markdown gars.md.tmp \
-    'gars status drop; gars gen genome.fa.gz --piece 500000;
+    '
+    gars status drop; gars gen genome.fa.gz --piece 500000;
     ' \
-    'gars status drop; gars gen genome.fa.gz --piece 500000;
+    '
+    gars status drop; gars gen genome.fa.gz --piece 500000;
     gars pos T-DNA.CSHL.pos.txt;
     ' \
-    'gars status drop; gars gen genome.fa.gz --piece 500000;
-    gars range T-DNA.CSHL.pos.txt --tag CSHL;
+    '
+    gars status drop; gars gen genome.fa.gz --piece 500000;
+    gars feature T-DNA.CSHL.pos.txt --tag CSHL;
     ' \
-    'gars status drop; gars gen genome.fa.gz --piece 500000;
-    gars range T-DNA.CSHL.pos.txt --tag CSHL;
-    gars rsw;
+    '
+    gars status drop; gars gen genome.fa.gz --piece 500000;
+    gars feature T-DNA.CSHL.pos.txt --tag CSHL;
+    gars fsw;
     ' \
-    'gars status drop;gars gen genome.fa.gz --piece 500000;
+    '
+    gars status drop;gars gen genome.fa.gz --piece 500000;
     gars sliding --size 100 --step 20 --lag 50 > /dev/null;
     '
 
@@ -48,23 +53,23 @@ cat gars.md.tmp
 
 ### R7 5800 Windows 11
 
-| Command          |      Mean [s] | Min [s] | Max [s] |    Relative |
-|:-----------------|--------------:|--------:|--------:|------------:|
-| drop; gen;       | 1.104 ± 0.009 |   1.085 |   1.116 |        1.00 |
-| d-g; pos;        | 2.949 ± 0.031 |   2.898 |   2.990 | 2.67 ± 0.04 |
-| d-g; range;      | 3.418 ± 0.537 |   2.992 |   4.264 | 3.10 ± 0.49 |
-| d-g; range; rsw; | 8.878 ± 0.141 |   8.662 |   9.132 | 8.04 ± 0.14 |
-| d-g; sliding;    | 5.555 ± 0.016 |   5.530 |   5.582 | 5.03 ± 0.04 |
+| Command            |      Mean [s] | Min [s] | Max [s] |    Relative |
+|:-------------------|--------------:|--------:|--------:|------------:|
+| drop; gen;         | 1.104 ± 0.009 |   1.085 |   1.116 |        1.00 |
+| d-g; pos;          | 2.949 ± 0.031 |   2.898 |   2.990 | 2.67 ± 0.04 |
+| d-g; feature;      | 3.418 ± 0.537 |   2.992 |   4.264 | 3.10 ± 0.49 |
+| d-g; feature; fsw; | 8.878 ± 0.141 |   8.662 |   9.132 | 8.04 ± 0.14 |
+| d-g; sliding;      | 5.555 ± 0.016 |   5.530 |   5.582 | 5.03 ± 0.04 |
 
 ## i7 8700K macOS Big Sur
 
-| Command          |       Mean [s] | Min [s] | Max [s] |     Relative |
-|:-----------------|---------------:|--------:|--------:|-------------:|
-| drop; gen;       |  1.696 ± 0.018 |   1.664 |   1.717 |         1.00 |
-| d-g; pos;        |  3.449 ± 0.090 |   3.348 |   3.653 |  2.03 ± 0.06 |
-| d-g; range;      |  3.619 ± 0.075 |   3.496 |   3.769 |  2.13 ± 0.05 |
-| d-g; range; rsw; | 18.258 ± 0.159 |  18.056 |  18.531 | 10.77 ± 0.15 |
-| d-g; sliding;    | 11.186 ± 0.141 |  11.011 |  11.373 |  6.60 ± 0.11 |
+| Command            |       Mean [s] | Min [s] | Max [s] |     Relative |
+|:-------------------|---------------:|--------:|--------:|-------------:|
+| drop; gen;         |  1.696 ± 0.018 |   1.664 |   1.717 |         1.00 |
+| d-g; pos;          |  3.449 ± 0.090 |   3.348 |   3.653 |  2.03 ± 0.06 |
+| d-g; feature;      |  3.619 ± 0.075 |   3.496 |   3.769 |  2.13 ± 0.05 |
+| d-g; feature; fsw; | 18.258 ± 0.159 |  18.056 |  18.531 | 10.77 ± 0.15 |
+| d-g; sliding;      | 11.186 ± 0.141 |  11.011 |  11.373 |  6.60 ± 0.11 |
 
 
 ## `gars locate`
@@ -106,4 +111,4 @@ cat locate.md.tmp
 |:--------|---------------:|---------:|---------:|-------------:|
 | lapper  |   982.3 ± 72.0 |    930.0 |   1153.7 | 15.87 ± 1.19 |
 | idx     |     61.9 ± 1.0 |     60.0 |     64.7 |         1.00 |
-| range   | 3596.2 ± 281.7 |   3205.8 |   4031.0 | 58.11 ± 4.64 |
+| zrange  | 3596.2 ± 281.7 |   3205.8 |   4031.0 | 58.11 ± 4.64 |

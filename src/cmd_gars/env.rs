@@ -72,10 +72,10 @@ pub fn execute(args: &ArgMatches) -> std::result::Result<(), Box<dyn std::error:
         gen_plot_xy(&context)?;
 
         gen_ddl_ctg(&context)?;
-        gen_ddl_rsw(&context)?;
+        gen_ddl_fsw(&context)?;
 
         gen_dql_summary(&context)?;
-        gen_dql_rsw(&context)?;
+        gen_dql_fsw(&context)?;
 
         // TODO: plots
     }
@@ -128,14 +128,14 @@ fn gen_ddl_ctg(context: &Context) -> std::result::Result<(), std::io::Error> {
     Ok(())
 }
 
-fn gen_ddl_rsw(context: &Context) -> std::result::Result<(), std::io::Error> {
-    let outname = "sqls/ddl/rsw.sql";
+fn gen_ddl_fsw(context: &Context) -> std::result::Result<(), std::io::Error> {
+    let outname = "sqls/ddl/fsw.sql";
     eprintln!("Create {}", outname);
 
     let mut tera = Tera::default();
     tera.add_raw_templates(vec![(
         "t",
-        include_str!("../../templates/ddl/rsw.tera.sql"),
+        include_str!("../../templates/ddl/fsw.tera.sql"),
     )])
     .unwrap();
 
@@ -177,29 +177,29 @@ fn gen_dql_summary(context: &Context) -> std::result::Result<(), std::io::Error>
     Ok(())
 }
 
-fn gen_dql_rsw(context: &Context) -> std::result::Result<(), std::io::Error> {
-    // rsw-distance
-    let outname = "sqls/rsw-distance.sql";
+fn gen_dql_fsw(context: &Context) -> std::result::Result<(), std::io::Error> {
+    // fsw-distance
+    let outname = "sqls/fsw-distance.sql";
     eprintln!("Create {}", outname);
 
     let mut tera = Tera::default();
     tera.add_raw_templates(vec![(
         "t",
-        include_str!("../../templates/dql/rsw-distance.tera.sql"),
+        include_str!("../../templates/dql/fsw-distance.tera.sql"),
     )])
     .unwrap();
 
     let rendered = tera.render("t", &context).unwrap();
     intspan::write_lines(outname, &vec![rendered.as_str()])?;
 
-    // rsw-distance-tag
-    let outname = "sqls/rsw-distance-tag.sql";
+    // fsw-distance-tag
+    let outname = "sqls/fsw-distance-tag.sql";
     eprintln!("Create {}", outname);
 
     let mut tera = Tera::default();
     tera.add_raw_templates(vec![(
         "t",
-        include_str!("../../templates/dql/rsw-distance-tag.tera.sql"),
+        include_str!("../../templates/dql/fsw-distance-tag.tera.sql"),
     )])
     .unwrap();
 

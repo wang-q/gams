@@ -1,4 +1,4 @@
-CREATE TABLE rsw
+CREATE TABLE fsw
 (
     `ID`         String,
     `chr_name`   String,

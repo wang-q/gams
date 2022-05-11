@@ -41,7 +41,7 @@ SUBCOMMANDS:
     help       Print this message or the help of the given subcommand(s)
     pos        Add range files to positions
     range      Add ranges
-    rsw        Sliding windows around a range
+    fsw        Sliding windows around a range
     sliding    Sliding windows along a chromosome
     status     Test Redis config and connection
     tsv        Exports Redis hashes to a tsv file
@@ -102,7 +102,7 @@ brew install textql
 
 ## EXAMPLES
 
-### `gen` and `rsw`
+### Genomic features and sliding windows
 
 ```shell
 # start redis-server
@@ -130,11 +130,11 @@ gars-stat tests/S288c/ctg.tsv ctg
 # locate an range
 gars locate "I(+):1000-1100"
 
-# add ranges
-gars range tests/S288c/spo11_hot.pos.txt
+# add features
+gars feature tests/S288c/spo11_hot.pos.txt
 
 # sliding windows around ranges
-gars rsw
+gars fsw
 
 # dump DB to redis-server start dir as dump.rdb
 gars status dump
