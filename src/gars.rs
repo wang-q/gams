@@ -29,7 +29,7 @@ fn main() -> std::io::Result<()> {
         Some(("locate", sub_matches)) => cmd_gars::locate::execute(sub_matches),
         Some(("pos", sub_matches)) => cmd_gars::pos::execute(sub_matches),
         Some(("feature", sub_matches)) => cmd_gars::feature::execute(sub_matches),
-        Some(("rsw", sub_matches)) => cmd_gars::fsw::execute(sub_matches),
+        Some(("fsw", sub_matches)) => cmd_gars::fsw::execute(sub_matches),
         Some(("sliding", sub_matches)) => cmd_gars::sliding::execute(sub_matches),
         Some(("tsv", sub_matches)) => cmd_gars::tsv::execute(sub_matches),
         Some(("wave", sub_matches)) => cmd_gars::wave::execute(sub_matches),

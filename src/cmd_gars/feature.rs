@@ -60,20 +60,20 @@ pub fn execute(args: &ArgMatches) -> std::result::Result<(), Box<dyn std::error:
 
         // Redis counter
         let serial: isize = conn.incr(format!("cnt:feature:{}", ctg_id), 1).unwrap();
-        let range_id = format!("feature:{}:{}", ctg_id, serial);
+        let feature_id = format!("feature:{}:{}", ctg_id, serial);
 
         let length = rg.end() - rg.start() + 1;
 
         let _: () = redis::pipe()
-            .hset(&range_id, "chr_name", rg.chr())
+            .hset(&feature_id, "chr_name", rg.chr())
             .ignore()
-            .hset(&range_id, "chr_start", *rg.start())
+            .hset(&feature_id, "chr_start", *rg.start())
             .ignore()
-            .hset(&range_id, "chr_end", *rg.end())
+            .hset(&feature_id, "chr_end", *rg.end())
             .ignore()
-            .hset(&range_id, "length", length)
+            .hset(&feature_id, "length", length)
             .ignore()
-            .hset(&range_id, "tag", tag)
+            .hset(&feature_id, "tag", tag)
             .ignore()
             .query(&mut conn)
             .unwrap();

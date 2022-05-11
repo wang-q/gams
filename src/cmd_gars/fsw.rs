@@ -115,12 +115,11 @@ pub fn execute(args: &ArgMatches) -> std::result::Result<(), Box<dyn std::error:
 
         let features: Vec<String> = (1..=cnt)
             .into_iter()
-            .map(|i| format!("range:{}:{}", ctg_id, i))
+            .map(|i| format!("feature:{}:{}", ctg_id, i))
             .collect();
         eprintln!("\tThere are {} features", features.len());
 
         for feature_id in features {
-            // eprintln!("\t{}", range_id);
             let (_, range_start, range_end) = gars::get_key_pos(&mut conn, &feature_id);
             let tag: String = conn.hget(&feature_id, "tag").unwrap();
 
