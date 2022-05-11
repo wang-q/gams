@@ -139,20 +139,22 @@ pub fn execute(args: &ArgMatches) -> std::result::Result<(), Box<dyn std::error:
                 .hget(&peaks[i], &["signal", "chr_start", "chr_end", "gc"])
                 .unwrap();
 
-            // hset_multiple cannot be used because of the different value types
-            let _: () = conn.hset(&peaks[i], "left_signal", prev_signal).unwrap();
-            prev_signal = cur_signal.clone();
-
             let left_wave_length = cur_start - prev_end + 1;
-            let _: () = conn
-                .hset(&peaks[i], "left_wave_length", left_wave_length)
-                .unwrap();
-            prev_end = cur_end;
-
             let left_amplitude: f32 = (cur_gc - prev_gc).abs();
-            let _: () = conn
+
+            // hset_multiple cannot be used because of the different value types
+            let _: () = redis::pipe()
+                .hset(&peaks[i], "left_signal", &prev_signal)
+                .ignore()
+                .hset(&peaks[i], "left_wave_length", left_wave_length)
+                .ignore()
                 .hset(&peaks[i], "left_amplitude", left_amplitude)
+                .ignore()
+                .query(&mut conn)
                 .unwrap();
+
+            prev_signal = cur_signal.clone();
+            prev_end = cur_end;
             prev_gc = cur_gc;
         }
 
@@ -165,19 +167,21 @@ pub fn execute(args: &ArgMatches) -> std::result::Result<(), Box<dyn std::error:
                 .hget(&peaks[i], &["signal", "chr_start", "chr_end", "gc"])
                 .unwrap();
 
-            let _: () = conn.hset(&peaks[i], "right_signal", next_signal).unwrap();
-            next_signal = cur_signal.clone();
-
             let right_wave_length = next_start - cur_end + 1;
-            let _: () = conn
-                .hset(&peaks[i], "right_wave_length", right_wave_length)
-                .unwrap();
-            next_start = cur_start;
-
             let right_amplitude: f32 = (cur_gc - next_gc).abs();
-            let _: () = conn
+
+            let _: () = redis::pipe()
+                .hset(&peaks[i], "right_signal", &next_signal)
+                .ignore()
+                .hset(&peaks[i], "right_wave_length", right_wave_length)
+                .ignore()
                 .hset(&peaks[i], "right_amplitude", right_amplitude)
+                .ignore()
+                .query(&mut conn)
                 .unwrap();
+
+            next_signal = cur_signal.clone();
+            next_start = cur_start;
             next_gc = cur_gc;
         }
     }
