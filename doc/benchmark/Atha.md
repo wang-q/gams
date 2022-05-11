@@ -9,7 +9,7 @@ mkdir -p ~/gars
 cd ~/gars
 
 cp ~/data/gars/Atha/genome/genome.fa.gz .
-cp ~/data/gars/Atha/features/T-DNA.CSHL.pos.txt .
+cp ~/data/gars/Atha/features/T-DNA.CSHL.ranges .
 
 ```
 
@@ -31,15 +31,15 @@ hyperfine --warmup 1 --export-markdown gars.md.tmp \
     ' \
     '
     gars status drop; gars gen genome.fa.gz --piece 500000;
-    gars pos T-DNA.CSHL.pos.txt;
+    gars pos T-DNA.CSHL.ranges;
     ' \
     '
     gars status drop; gars gen genome.fa.gz --piece 500000;
-    gars feature T-DNA.CSHL.pos.txt --tag CSHL;
+    gars feature T-DNA.CSHL.ranges --tag CSHL;
     ' \
     '
     gars status drop; gars gen genome.fa.gz --piece 500000;
-    gars feature T-DNA.CSHL.pos.txt --tag CSHL;
+    gars feature T-DNA.CSHL.ranges --tag CSHL;
     gars fsw;
     ' \
     '
@@ -89,9 +89,9 @@ gars status drop
 gars gen genome.fa.gz --piece 500000
 
 hyperfine -N --export-markdown locate.md.tmp \
-    'gars locate -f T-DNA.CSHL.pos.txt' \
-    'gars locate --idx -f T-DNA.CSHL.pos.txt' \
-    'gars locate --zrange -f T-DNA.CSHL.pos.txt'
+    'gars locate -f T-DNA.CSHL.ranges' \
+    'gars locate --idx -f T-DNA.CSHL.ranges' \
+    'gars locate --zrange -f T-DNA.CSHL.ranges'
 
 cat locate.md.tmp
 
