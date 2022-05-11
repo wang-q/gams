@@ -13,6 +13,8 @@ pub fn make_subcommand<'a>() -> Command<'a> {
             r#"
 Left-/right- wave lengths may be negative
 
+Serial - format!("cnt:peak:{}", ctg_id)
+
 "#,
         )
         .arg(
@@ -54,12 +56,12 @@ pub fn execute(args: &ArgMatches) -> std::result::Result<(), Box<dyn std::error:
         }
 
         // Redis counter
-        let counter = format!("cnt:peak:{}", ctg_id);
-        let serial: isize = conn.incr(counter.clone(), 1).unwrap();
+        let serial: i32 = conn.incr(format!("cnt:peak:{}", ctg_id), 1).unwrap();
         let peak_id = format!("peak:{}:{}", ctg_id, serial);
 
         let length = rg.end() - rg.start() + 1;
 
+        // hset_multiple cannot be used because of the different value types
         let _: () = redis::pipe()
             .hset(&peak_id, "chr_name", rg.chr())
             .ignore()
@@ -77,14 +79,13 @@ pub fn execute(args: &ArgMatches) -> std::result::Result<(), Box<dyn std::error:
 
     // number of peaks
     let n_peak = gars::get_scan_count(&mut conn, "peak:*".to_string());
-    eprintln!("There are {} peaks", n_peak);
+    eprintln!("There are {} peaks\n", n_peak);
 
     // each ctg
     let ctgs: Vec<String> = gars::get_scan_vec(&mut conn, "ctg:*".to_string());
     eprintln!("Updating GC-content of peaks...");
     for ctg_id in &ctgs {
         let (chr_name, chr_start, chr_end) = gars::get_key_pos(&mut conn, ctg_id);
-        eprintln!("Process {} {}:{}-{}", ctg_id, chr_name, chr_start, chr_end);
 
         // local caches of GC-content for each ctg
         let mut cache: HashMap<String, f32> = HashMap::new();
@@ -92,8 +93,22 @@ pub fn execute(args: &ArgMatches) -> std::result::Result<(), Box<dyn std::error:
         let parent = IntSpan::from_pair(chr_start, chr_end);
         let seq: String = get_ctg_seq(&mut conn, ctg_id);
 
-        let pattern = format!("peak:{}:*", ctg_id);
-        let peaks: Vec<String> = gars::get_scan_vec(&mut conn, pattern);
+        // scan_match() is an expensive op. Replace with cnt
+        // let pattern = format!("peak:{}:*", ctg_id);
+        // let peaks: Vec<String> = gars::get_scan_vec(&mut conn, pattern);
+        let cnt = conn.get(format!("cnt:peak:{}", ctg_id)).unwrap_or(0);
+        if cnt == 0 {
+            eprintln!(
+                "    No peaks in {} {}:{}-{}",
+                ctg_id, chr_name, chr_start, chr_end
+            );
+            continue;
+        }
+
+        let peaks: Vec<String> = (1..=cnt)
+            .into_iter()
+            .map(|i| format!("peak:{}:{}", ctg_id, i))
+            .collect();
 
         for peak_id in peaks {
             let (_, peak_start, peak_end) = gars::get_key_pos(&mut conn, &peak_id);
@@ -115,19 +130,27 @@ pub fn execute(args: &ArgMatches) -> std::result::Result<(), Box<dyn std::error:
         let (chr_name, chr_start, chr_end) = gars::get_key_pos(&mut conn, &ctg_id);
         eprintln!("Process {} {}:{}-{}", ctg_id, chr_name, chr_start, chr_end);
 
-        let hash = gars::get_scan_int(
-            &mut conn,
-            format!("peak:{}:*", ctg_id),
-            "chr_start".to_string(),
-        );
-        let mut peaks = hash.keys().cloned().collect::<Vec<String>>();
-        eprintln!("\tThere are {} peaks", peaks.len());
-        peaks.sort_by_key(|k| hash.get(k).unwrap());
-        // eprintln!("{}\t{:#?}", ctg_id, peaks);
-
-        if peaks.is_empty() {
+        // All peaks in this ctg
+        let cnt = conn.get(format!("cnt:peak:{}", ctg_id)).unwrap_or(0);
+        if cnt == 0 {
+            eprintln!("\tNo peaks");
             continue;
         }
+
+        let mut peaks: Vec<String> = (1..=cnt)
+            .into_iter()
+            .map(|i| format!("peak:{}:{}", ctg_id, i))
+            .collect();
+        eprintln!("\tThere are {} peaks", peaks.len());
+
+        // sort peaks
+        let mut chr_start_of: HashMap<String, i32> = HashMap::new();
+        for key in &peaks {
+            let val: i32 = conn.hget(key, "chr_start".to_string()).unwrap();
+            chr_start_of.insert(key.clone(), val);
+        }
+        peaks.sort_by_key(|k| chr_start_of.get(k).unwrap());
+        // eprintln!("{}\t{:#?}", ctg_id, peaks);
 
         // left
         let (mut prev_signal, mut prev_gc): (String, f32) = conn

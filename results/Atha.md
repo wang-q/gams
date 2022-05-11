@@ -302,9 +302,9 @@ tsv-summarize tsvs/peak.tsv \
 
 # Loading peaks
 time gars wave tsvs/peak.tsv
-#real    2m21.534s
-#user    0m30.389s
-#sys     1m18.400s
+#real    0m23.482s
+#user    0m5.295s
+#sys     0m13.237s
 
 gars tsv -s "peak:*" |
     keep-header -- tsv-sort -k2,2 -k3,3n -k4,4n \
