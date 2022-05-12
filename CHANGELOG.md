@@ -2,6 +2,28 @@
 
 ## Unreleased - ReleaseDate
 
+* Rename `gars range` to `gars feature`
+* Rename `gars rsw` to `gars fsw`
+* Rename `gars pos` to `gars range`
+* Rename `gars wave` to `gars peak`
+* Add `gars locate`
+* Add `gars clear`
+
+* Avoid get_scan_vec() inside loops
+    * Speedup `gars feature`
+    * Speedup `gars fsw`
+    * Speedup `gars range`
+    * Speedup `gars peak`
+
+* Rename .pos.txt to .ranges
+
+* `redis.rs`
+    * Rename find_one() to find_one_z()
+    * Add find_one_l()
+    * Add build_idx_ctg()
+    * Add get_idx_ctg()
+    * Add find_one_idx()
+
 ## 0.2.1 - 2022-05-10
 
 * Separate gars-stat
