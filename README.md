@@ -42,7 +42,7 @@ SUBCOMMANDS:
     gen        Generate the database from (gzipped) fasta files
     help       Print this message or the help of the given subcommand(s)
     locate     Locate the given ranges to the corresponding ctgs
-    pos        Add range files to positions
+    range      Add range files for counting
     sliding    Sliding windows along a chromosome
     status     Test Redis config and connection
     tsv        Exports Redis hashes to a tsv file

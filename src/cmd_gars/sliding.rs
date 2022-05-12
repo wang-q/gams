@@ -7,9 +7,10 @@ pub fn make_subcommand<'a>() -> Command<'a> {
     Command::new("sliding")
         .about("Sliding windows along a chromosome")
         .after_help(
-            "\
-    --step and --lag should be adjust simultaneously. \
-             ",
+            r#"
+--step and --lag should be adjust simultaneously.
+
+"#,
         )
         .arg(
             Arg::new("ctg")

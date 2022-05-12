@@ -9,10 +9,11 @@ pub fn make_subcommand<'a>() -> Command<'a> {
     Command::new("tsv")
         .about("Exports Redis hashes to a tsv file")
         .after_help(
-            "\
-    All hashes should have the same structure. \
-    ID, chr_name, chr_start, chr_end will always be included. \
-             ",
+            r#"
+All hashes should have the same structure.
+ID, chr_name, chr_start, chr_end will always be included.
+
+"#,
         )
         .arg(
             Arg::new("scan")
