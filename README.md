@@ -1,7 +1,10 @@
 # `gars`
 
-![Publish](https://github.com/wang-q/gars/workflows/Publish/badge.svg)
-![Build](https://github.com/wang-q/gars/workflows/Build/badge.svg)
+[![Publish](https://github.com/wang-q/gars/actions/workflows/publish.yml/badge.svg)](https://github.com/wang-q/gars/actions)
+[![Build](https://github.com/wang-q/gars/actions/workflows/build.yml/badge.svg)](https://github.com/wang-q/gars/actions)
+[![Codecov](https://img.shields.io/codecov/c/github/wang-q/gars/main.svg)](https://codecov.io/github/wang-q/gars?branch=main)
+[![Lines of code](https://tokei.rs/b1/github/wang-q/gars?category=code)](https://github.com//wang-q/gars)
+
 
 `gars` - **G**enome **A**nalyst with **R**ust and redi**S**
 
