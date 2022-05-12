@@ -34,6 +34,10 @@ hyperfine --warmup 1 --export-markdown gars.md.tmp \
     gars range T-DNA.CSHL.ranges;
     ' \
     '
+    gars clear range;
+    gars range T-DNA.CSHL.ranges;
+    ' \
+    '
     gars status drop; gars gen genome.fa.gz --piece 500000;
     gars feature T-DNA.CSHL.ranges --tag CSHL;
     ' \
@@ -65,12 +69,12 @@ cat gars.md.tmp
 
 | Command            |       Mean [s] | Min [s] | Max [s] |     Relative |
 |:-------------------|---------------:|--------:|--------:|-------------:|
-| drop; gen;         |  1.696 ± 0.018 |   1.664 |   1.717 |         1.00 |
-| d-g; range;        |  3.449 ± 0.090 |   3.348 |   3.653 |  2.03 ± 0.06 |
-| d-g; feature;      |  3.619 ± 0.075 |   3.496 |   3.769 |  2.13 ± 0.05 |
-| d-g; feature; fsw; | 18.258 ± 0.159 |  18.056 |  18.531 | 10.77 ± 0.15 |
-| d-g; sliding;      | 11.186 ± 0.141 |  11.011 |  11.373 |  6.60 ± 0.11 |
-
+| drop; gen;         |  1.713 ± 0.023 |   1.695 |   1.776 |         1.00 |
+| d-g; range;        |  3.459 ± 0.051 |   3.394 |   3.523 |  2.02 ± 0.04 |
+| clear; range;      |  2.510 ± 0.051 |   2.468 |   2.649 |  1.47 ± 0.04 |
+| d-g; feature;      |  3.528 ± 0.048 |   3.488 |   3.638 |  2.06 ± 0.04 |
+| d-g; feature; fsw; | 18.214 ± 0.235 |  18.061 |  18.860 | 10.63 ± 0.20 |
+| d-g; sliding;      | 10.943 ± 0.119 |  10.823 |  11.146 |  6.39 ± 0.11 |
 
 ## `gars locate`
 

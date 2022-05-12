@@ -1,5 +1,6 @@
 //! Subcommand modules for the `gars` binary.
 
+pub mod clear;
 pub mod env;
 pub mod feature;
 pub mod fsw;
