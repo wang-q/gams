@@ -28,15 +28,6 @@ List of actions:
                 .default_value("test")
                 .index(1),
         )
-        .arg(
-            Arg::new("outfile")
-                .short('o')
-                .long("outfile")
-                .takes_value(true)
-                .default_value("stdout")
-                .forbid_empty_values(true)
-                .help("Output filename. [stdout] for screen"),
-        )
 }
 
 // command implementation
