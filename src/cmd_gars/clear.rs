@@ -58,7 +58,7 @@ fn clear(pattern: &str) {
     let mut conn2 = connect(); // can't use one same `conn` inside an iter
 
     let iter: redis::Iter<'_, String> = conn.scan_match(pattern).unwrap();
-    let mut i : isize = 0;
+    let mut i: isize = 0;
     for x in iter {
         let _: () = conn2.del(&x).unwrap();
         i += 1;

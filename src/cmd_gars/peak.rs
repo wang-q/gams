@@ -7,7 +7,7 @@ use std::io::BufRead;
 
 // Create clap subcommand arguments
 pub fn make_subcommand<'a>() -> Command<'a> {
-    Command::new("wave")
+    Command::new("peak")
         .about("Add peaks of GC-waves")
         .after_help(
             r#"

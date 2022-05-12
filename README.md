@@ -189,7 +189,7 @@ tsv-summarize tests/S288c/I.peaks.tsv \
 #-1      94
 #1       61
 
-gars wave tests/S288c/I.peaks.tsv
+gars peak tests/S288c/I.peaks.tsv
 
 ```
 

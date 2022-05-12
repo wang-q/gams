@@ -187,11 +187,11 @@ fn command_range() -> Result<(), Box<dyn std::error::Error>> {
         .arg("tests/S288c/spo11_hot.ranges")
         .output()
         .unwrap();
-    let stdout = String::from_utf8(output.stdout).unwrap();
+    let stderr = String::from_utf8(output.stderr).unwrap();
 
-    assert_eq!(stdout.lines().count(), 2);
-    assert!(stdout.contains("71 ranges in total"));
-    assert!(stdout.contains("142 ranges in total"));
+    assert_eq!(stderr.lines().count(), 2);
+    assert!(stderr.contains("71 ranges in total"));
+    assert!(stderr.contains("142 ranges in total"));
 
     Ok(())
 }
@@ -223,16 +223,16 @@ fn command_feature() -> Result<(), Box<dyn std::error::Error>> {
         .arg("spo11")
         .output()
         .unwrap();
-    let stdout = String::from_utf8(output.stdout).unwrap();
+    let stderr = String::from_utf8(output.stderr).unwrap();
 
-    assert_eq!(stdout.lines().count(), 1);
-    assert!(stdout.contains("There are 71 features"));
+    assert_eq!(stderr.lines().count(), 1);
+    assert!(stderr.contains("There are 71 features"));
 
     Ok(())
 }
 
 #[test]
-fn command_wave() -> Result<(), Box<dyn std::error::Error>> {
+fn command_peak() -> Result<(), Box<dyn std::error::Error>> {
     // env
     let mut cmd = Command::cargo_bin("gars")?;
     cmd.arg("env").unwrap();
@@ -249,10 +249,10 @@ fn command_wave() -> Result<(), Box<dyn std::error::Error>> {
         .arg("500000")
         .unwrap();
 
-    // wave
+    // peak
     let mut cmd = Command::cargo_bin("gars")?;
     let output = cmd
-        .arg("wave")
+        .arg("peak")
         .arg("tests/S288c/I.peaks.tsv")
         .output()
         .unwrap();

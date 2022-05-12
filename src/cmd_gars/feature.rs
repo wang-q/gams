@@ -81,7 +81,7 @@ pub fn execute(args: &ArgMatches) -> std::result::Result<(), Box<dyn std::error:
 
     // number of ranges
     let n_feature = gars::get_scan_count(&mut conn, "feature:*".to_string());
-    println!("There are {} features", n_feature);
+    eprintln!("There are {} features", n_feature);
 
     Ok(())
 }

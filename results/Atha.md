@@ -281,7 +281,7 @@ tsv-summarize tsvs/peak.tsv \
 #-1      26944
 
 # Loading peaks
-time gars wave tsvs/peak.tsv
+time gars peak tsvs/peak.tsv
 #real    0m23.482s
 #user    0m5.295s
 #sys     0m13.237s

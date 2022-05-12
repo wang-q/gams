@@ -65,7 +65,7 @@ pub fn execute(args: &ArgMatches) -> std::result::Result<(), Box<dyn std::error:
 
         // total number of ranges
         let n_range = gars::get_scan_count(&mut conn, "range:*".to_string());
-        println!("There are {} ranges in total", n_range);
+        eprintln!("There are {} ranges in total", n_range);
     }
 
     Ok(())
