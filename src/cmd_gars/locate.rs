@@ -36,10 +36,10 @@ It can also be used as a benchmark program.
                 .help("Rebuild the index of ctgs"),
         )
         .arg(
-            Arg::new("idx")
-                .long("idx")
+            Arg::new("lapper")
+                .long("lapper")
                 .takes_value(false)
-                .help("Use the cached index"),
+                .help("Deserialize the index on request"),
         )
         .arg(
             Arg::new("zrange")
@@ -91,7 +91,7 @@ pub fn execute(args: &ArgMatches) -> std::result::Result<(), Box<dyn std::error:
 
     // index of ctgs
     let mut lapper_of = BTreeMap::new();
-    if args.is_present("idx") {
+    if !args.is_present("lapper") || !args.is_present("zrange") {
         lapper_of = gars::get_idx_ctg(&mut conn);
     }
 
@@ -103,12 +103,12 @@ pub fn execute(args: &ArgMatches) -> std::result::Result<(), Box<dyn std::error:
         }
         *rg.strand_mut() = "".to_string();
 
-        let ctg_id = if args.is_present("idx") {
-            gars::find_one_idx(&lapper_of, &rg)
+        let ctg_id = if args.is_present("lapper") {
+            gars::find_one_l(&mut conn, &rg)
         } else if args.is_present("zrange") {
             gars::find_one_z(&mut conn, &rg)
         } else {
-            gars::find_one_l(&mut conn, &rg)
+            gars::find_one_idx(&lapper_of, &rg)
         };
 
         if ctg_id.is_empty() {

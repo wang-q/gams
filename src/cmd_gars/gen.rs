@@ -14,6 +14,14 @@ use std::iter::FromIterator;
 pub fn make_subcommand<'a>() -> Command<'a> {
     Command::new("gen")
         .about("Generate the database from (gzipped) fasta files")
+        .after_help(
+            r#"
+Serial - format!("cnt:ctg:{}", chr_id)
+ID - format!("ctg:{}:{}", chr_id, serial)
+Index - format!("idx:ctg:{}", chr_id)
+
+"#,
+        )
         .arg(
             Arg::new("infiles")
                 .help("Sets the input files to use")
@@ -107,7 +115,7 @@ pub fn execute(args: &ArgMatches) -> std::result::Result<(), Box<dyn std::error:
                 }
             }
             eprintln!(
-                "Ambiguous region for {}:\n    {}\n",
+                "Ambiguous region for {}:\n{}\n",
                 chr_id,
                 ambiguous_set.runlist()
             );
@@ -117,11 +125,7 @@ pub fn execute(args: &ArgMatches) -> std::result::Result<(), Box<dyn std::error:
             valid_set.subtract(&ambiguous_set);
             valid_set = valid_set.fill(fill - 1);
             valid_set = valid_set.excise(min);
-            eprintln!(
-                "Valid region for {}:\n    {}\n",
-                chr_id,
-                valid_set.runlist()
-            );
+            eprintln!("Valid region for {}:\n{}\n", chr_id, valid_set.runlist());
 
             // ([start, end], [start, end], ...)
             let mut regions = vec![];
@@ -147,18 +151,21 @@ pub fn execute(args: &ArgMatches) -> std::result::Result<(), Box<dyn std::error:
             }
             let mut regions = VecDeque::from_iter(regions);
 
-            // contigs in each chr
-            let mut ctg_serial = 1;
+            // ctgs in each chr
             while !regions.is_empty() {
-                let ctg_id = format!("ctg:{}:{}", chr_id, ctg_serial);
+                // Redis counter
+                let serial: isize = conn.incr(format!("cnt:ctg:{}", chr_id), 1).unwrap();
+                let ctg_id = format!("ctg:{}:{}", chr_id, serial);
+
                 let start = regions.pop_front().unwrap() as usize;
                 let end = regions.pop_front().unwrap() as usize;
 
-                let _: () = conn.hset(&ctg_id, "chr_name", chr_id).unwrap();
+                let _: () = conn.hset(&ctg_id, "chr_id", chr_id).unwrap();
                 let _: () = conn.hset(&ctg_id, "chr_start", start).unwrap();
                 let _: () = conn.hset(&ctg_id, "chr_end", end).unwrap();
                 let _: () = conn.hset(&ctg_id, "chr_strand", "+").unwrap();
                 let _: () = conn.hset(&ctg_id, "length", end - start + 1).unwrap();
+
                 let seq: &[u8] = &chr_seq[start - 1..end];
                 let bytes = encode_gz(seq).unwrap();
                 let _: () = conn.set(format!("seq:{}", ctg_id), &bytes).unwrap();
@@ -170,8 +177,6 @@ pub fn execute(args: &ArgMatches) -> std::result::Result<(), Box<dyn std::error:
                 let _: () = conn
                     .zadd(format!("ctg-e:{}", chr_id), &ctg_id, end)
                     .unwrap();
-
-                ctg_serial += 1;
             }
         }
     }
