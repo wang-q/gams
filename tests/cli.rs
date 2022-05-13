@@ -1,8 +1,9 @@
-use std::env;
 use approx::assert_relative_eq;
 use assert_cmd::prelude::*; // Add methods on commands
 use intspan::*;
 use predicates::prelude::*; // Used for writing assertions
+use std::collections::HashMap;
+use std::env;
 use std::process::Command; // Run programs
 use tempfile::TempDir;
 
@@ -136,6 +137,30 @@ fn command_gen() -> Result<(), Box<dyn std::error::Error>> {
     assert_eq!(stderr.lines().count(), 16);
     assert!(stderr.contains("There are 3 contigs"));
 
+    // get_scan_str
+    let mut conn = gars::connect();
+    let exp:HashMap<String, String> = HashMap::from([
+        ("ctg:I:1".to_string(), "I".to_string()),
+        ("ctg:I:2".to_string(), "I".to_string()),
+        ("ctg:Mito:1".to_string(), "Mito".to_string()),
+    ]);
+    let res = gars::get_scan_str(&mut conn, "ctg:*".to_string(), "chr_id".to_string());
+    assert_eq!(res.len(), exp.len());
+    assert!(res.keys().all(|k| exp.contains_key(k)));
+    assert!(res.keys().all(|k| res.get(k).unwrap() == exp.get(k).unwrap() ));
+
+    // get_scan_int
+    let mut conn = gars::connect();
+    let exp:HashMap<String, i32> = HashMap::from([
+        ("ctg:I:1".to_string(), 100000),
+        ("ctg:I:2".to_string(), 230218),
+        ("ctg:Mito:1".to_string(), 85779),
+    ]);
+    let res = gars::get_scan_int(&mut conn, "ctg:*".to_string(), "chr_end".to_string());
+    assert_eq!(res.len(), exp.len());
+    assert!(res.keys().all(|k| exp.contains_key(k)));
+    assert!(res.keys().all(|k| res.get(k).unwrap() == exp.get(k).unwrap() ));
+
     // find_one_z
     let mut conn = gars::connect();
     let tests = vec![
@@ -211,12 +236,7 @@ fn command_tsv() -> Result<(), Box<dyn std::error::Error>> {
 
     // tsv
     let mut cmd = Command::cargo_bin("gars")?;
-    let output = cmd
-        .arg("tsv")
-        .arg("-s")
-        .arg("ctg:*")
-        .output()
-        .unwrap();
+    let output = cmd.arg("tsv").arg("-s").arg("ctg:*").output().unwrap();
     let stdout = String::from_utf8(output.stdout).unwrap();
 
     assert_eq!(stdout.lines().count(), 4);
@@ -308,8 +328,7 @@ fn command_clear() -> Result<(), Box<dyn std::error::Error>> {
 
     // range
     let mut cmd = Command::cargo_bin("gars")?;
-    cmd
-        .arg("range")
+    cmd.arg("range")
         .arg("tests/S288c/spo11_hot.ranges")
         .arg("tests/S288c/spo11_hot.ranges")
         .output()
@@ -317,11 +336,7 @@ fn command_clear() -> Result<(), Box<dyn std::error::Error>> {
 
     // clear
     let mut cmd = Command::cargo_bin("gars")?;
-    let output = cmd
-        .arg("clear")
-        .arg("range")
-        .output()
-        .unwrap();
+    let output = cmd.arg("clear").arg("range").output().unwrap();
     let stderr = String::from_utf8(output.stderr).unwrap();
 
     assert_eq!(stderr.lines().count(), 4);
@@ -386,8 +401,7 @@ fn command_fsw() -> Result<(), Box<dyn std::error::Error>> {
 
     // feature
     let mut cmd = Command::cargo_bin("gars")?;
-    cmd
-        .arg("feature")
+    cmd.arg("feature")
         .arg("tests/S288c/spo11_hot.ranges")
         .arg("--tag")
         .arg("spo11")
@@ -396,10 +410,7 @@ fn command_fsw() -> Result<(), Box<dyn std::error::Error>> {
 
     // fsw
     let mut cmd = Command::cargo_bin("gars")?;
-    let output = cmd
-        .arg("fsw")
-        .output()
-        .unwrap();
+    let output = cmd.arg("fsw").output().unwrap();
     let stdout = String::from_utf8(output.stdout).unwrap();
     assert_eq!(stdout.lines().count(), 2867);
     assert!(stdout.contains("fsw:feature:ctg:I:2:32:1"));
