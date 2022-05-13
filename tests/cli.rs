@@ -192,6 +192,68 @@ fn command_gen() -> Result<(), Box<dyn std::error::Error>> {
 }
 
 #[test]
+fn command_tsv() -> Result<(), Box<dyn std::error::Error>> {
+    // env
+    let mut cmd = Command::cargo_bin("gars")?;
+    cmd.arg("env").unwrap();
+
+    // drop
+    let mut cmd = Command::cargo_bin("gars")?;
+    cmd.arg("status").arg("drop").unwrap();
+
+    // gen
+    let mut cmd = Command::cargo_bin("gars")?;
+    cmd.arg("gen")
+        .arg("tests/S288c/genome.fa.gz")
+        .arg("--piece")
+        .arg("100000")
+        .unwrap();
+
+    // tsv
+    let mut cmd = Command::cargo_bin("gars")?;
+    let output = cmd
+        .arg("tsv")
+        .arg("-s")
+        .arg("ctg:*")
+        .output()
+        .unwrap();
+    let stdout = String::from_utf8(output.stdout).unwrap();
+
+    assert_eq!(stdout.lines().count(), 4);
+    assert_eq!(
+        stdout.lines().next().unwrap().split('\t').count(),
+        6,
+        "field count"
+    );
+    assert!(stdout.contains("chr_strand\tlength"));
+    assert!(stdout.contains("ctg:I:2"));
+
+    // tsv -f length
+    let mut cmd = Command::cargo_bin("gars")?;
+    let output = cmd
+        .arg("tsv")
+        .arg("-s")
+        .arg("ctg:*")
+        .arg("-f")
+        .arg("length")
+        .output()
+        .unwrap();
+    let stdout = String::from_utf8(output.stdout).unwrap();
+
+    assert_eq!(stdout.lines().count(), 4);
+    assert_eq!(
+        stdout.lines().next().unwrap().split('\t').count(),
+        5,
+        "field count"
+    );
+    assert!(!stdout.contains("chr_strand\tlength"));
+    assert!(stdout.contains("chr_end\tlength"));
+    assert!(stdout.contains("ctg:I:2"));
+
+    Ok(())
+}
+
+#[test]
 fn command_range() -> Result<(), Box<dyn std::error::Error>> {
     // env
     let mut cmd = Command::cargo_bin("gars")?;
