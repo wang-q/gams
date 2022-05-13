@@ -16,6 +16,7 @@
     * Speedup `gars peak`
 
 * Rename .pos.txt to .ranges
+* Rename chr_name to chr_id
 
 * `redis.rs`
     * Rename find_one() to find_one_z()
@@ -23,6 +24,8 @@
     * Add build_idx_ctg()
     * Add get_idx_ctg()
     * Add find_one_idx()
+    * Add get_vec_chr()
+    * Add get_vec_ctg()
 
 ## 0.2.1 - 2022-05-10
 
