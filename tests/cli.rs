@@ -294,6 +294,88 @@ fn command_peak() -> Result<(), Box<dyn std::error::Error>> {
 }
 
 #[test]
+fn command_locate() -> Result<(), Box<dyn std::error::Error>> {
+    // env
+    let mut cmd = Command::cargo_bin("gars")?;
+    cmd.arg("env").unwrap();
+
+    // drop
+    let mut cmd = Command::cargo_bin("gars")?;
+    cmd.arg("status").arg("drop").unwrap();
+
+    // gen
+    let mut cmd = Command::cargo_bin("gars")?;
+    cmd.arg("gen")
+        .arg("tests/S288c/genome.fa.gz")
+        .arg("--piece")
+        .arg("500000")
+        .unwrap();
+
+    // locate
+    let mut cmd = Command::cargo_bin("gars")?;
+    let output = cmd
+        .arg("locate")
+        .arg("I:1000-1100")
+        .arg("II:1000-1100")
+        .arg("Mito:1000-1100")
+        .output()
+        .unwrap();
+    let stdout = String::from_utf8(output.stdout).unwrap();
+
+    assert_eq!(stdout.lines().count(), 2);
+    assert!(stdout.contains("ctg:I:1"));
+    assert!(!stdout.contains("II:1000-1100"));
+
+    // locate --lapper
+    let mut cmd = Command::cargo_bin("gars")?;
+    let output = cmd
+        .arg("locate")
+        .arg("--lapper")
+        .arg("I:1000-1100")
+        .arg("II:1000-1100")
+        .arg("Mito:1000-1100")
+        .output()
+        .unwrap();
+    let stdout = String::from_utf8(output.stdout).unwrap();
+
+    assert_eq!(stdout.lines().count(), 2);
+    assert!(stdout.contains("ctg:I:1"));
+    assert!(!stdout.contains("II:1000-1100"));
+
+    // locate --zrange
+    let mut cmd = Command::cargo_bin("gars")?;
+    let output = cmd
+        .arg("locate")
+        .arg("--zrange")
+        .arg("I:1000-1100")
+        .arg("II:1000-1100")
+        .arg("Mito:1000-1100")
+        .output()
+        .unwrap();
+    let stdout = String::from_utf8(output.stdout).unwrap();
+
+    assert_eq!(stdout.lines().count(), 2);
+    assert!(stdout.contains("ctg:I:1"));
+    assert!(!stdout.contains("II:1000-1100"));
+
+    // locate -f
+    let mut cmd = Command::cargo_bin("gars")?;
+    let output = cmd
+        .arg("locate")
+        .arg("-f")
+        .arg("tests/S288c/spo11_hot.ranges")
+        .output()
+        .unwrap();
+    let stdout = String::from_utf8(output.stdout).unwrap();
+
+    assert_eq!(stdout.lines().count(), 71);
+    assert!(stdout.contains("ctg:I:1"));
+    assert!(!stdout.contains("ctg:Mito:1"));
+
+    Ok(())
+}
+
+#[test]
 fn test_gc_stat() {
     let tests = vec![
         (vec![0.5, 0.5], (0.5, 0., 0., 0.)),
