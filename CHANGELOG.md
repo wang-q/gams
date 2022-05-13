@@ -26,6 +26,8 @@
     * Add find_one_idx()
     * Add get_vec_chr()
     * Add get_vec_ctg()
+    * Add get_vec_feature()
+    * Add get_vec_peak()
 
 ## 0.2.1 - 2022-05-10
 
