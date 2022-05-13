@@ -17,10 +17,10 @@ fn main() -> std::io::Result<()> {
         .subcommand(cmd_gars::range::make_subcommand())
         .subcommand(cmd_gars::clear::make_subcommand())
         .subcommand(cmd_gars::feature::make_subcommand())
-        .subcommand(cmd_gars::sliding::make_subcommand())
         .subcommand(cmd_gars::fsw::make_subcommand())
-        .subcommand(cmd_gars::tsv::make_subcommand())
-        .subcommand(cmd_gars::peak::make_subcommand());
+        .subcommand(cmd_gars::sliding::make_subcommand())
+        .subcommand(cmd_gars::peak::make_subcommand())
+        .subcommand(cmd_gars::tsv::make_subcommand());
 
     // Check which subcomamnd the user ran...
     match app.get_matches().subcommand() {
@@ -33,8 +33,8 @@ fn main() -> std::io::Result<()> {
         Some(("feature", sub_matches)) => cmd_gars::feature::execute(sub_matches),
         Some(("fsw", sub_matches)) => cmd_gars::fsw::execute(sub_matches),
         Some(("sliding", sub_matches)) => cmd_gars::sliding::execute(sub_matches),
-        Some(("tsv", sub_matches)) => cmd_gars::tsv::execute(sub_matches),
         Some(("peak", sub_matches)) => cmd_gars::peak::execute(sub_matches),
+        Some(("tsv", sub_matches)) => cmd_gars::tsv::execute(sub_matches),
         _ => unreachable!(),
     }
     .unwrap();

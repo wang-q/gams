@@ -96,8 +96,8 @@ pub fn execute(args: &ArgMatches) -> std::result::Result<(), Box<dyn std::error:
     let ctgs: Vec<String> =
         gars::get_scan_vec(&mut conn, args.value_of("ctg").unwrap().to_string());
     eprintln!("{} contigs to be processed", ctgs.len());
-    for ctg_id in ctgs {
-        let (chr_id, chr_start, chr_end) = gars::get_key_pos(&mut conn, &ctg_id);
+    for ctg_id in &ctgs {
+        let (chr_id, chr_start, chr_end) = gars::get_key_pos(&mut conn, ctg_id);
         eprintln!("Process {} {}:{}-{}", ctg_id, chr_id, chr_start, chr_end);
 
         // local caches of GC-content for each ctg
@@ -106,17 +106,8 @@ pub fn execute(args: &ArgMatches) -> std::result::Result<(), Box<dyn std::error:
         let parent = IntSpan::from_pair(chr_start, chr_end);
         let seq: String = get_ctg_seq(&mut conn, &ctg_id);
 
-        // All ranges in this ctg
-        let cnt = conn.get(format!("cnt:feature:{}", ctg_id)).unwrap_or(0);
-        if cnt == 0 {
-            eprintln!("\tNo features");
-            continue;
-        }
-
-        let features: Vec<String> = (1..=cnt)
-            .into_iter()
-            .map(|i| format!("feature:{}:{}", ctg_id, i))
-            .collect();
+        // All features in this ctg
+        let features: Vec<String> = get_vec_feature(&mut conn, ctg_id);
         eprintln!("\tThere are {} features", features.len());
 
         for feature_id in features {

@@ -85,6 +85,38 @@ pub fn get_vec_ctg(conn: &mut redis::Connection, chr_id: &String) -> Vec<String>
     list
 }
 
+/// generated from cnt:feature:
+pub fn get_vec_feature(conn: &mut redis::Connection, ctg_id: &String) -> Vec<String> {
+    let cnt = conn.get(format!("cnt:feature:{}", ctg_id)).unwrap_or(0);
+
+    let list: Vec<String> = if cnt == 0 {
+        vec![]
+    } else {
+        (1..=cnt)
+            .into_iter()
+            .map(|i| format!("feature:{}:{}", ctg_id, i))
+            .collect()
+    };
+
+    list
+}
+
+/// generated from cnt:peak:
+pub fn get_vec_peak(conn: &mut redis::Connection, ctg_id: &String) -> Vec<String> {
+    let cnt = conn.get(format!("cnt:peak:{}", ctg_id)).unwrap_or(0);
+
+    let list: Vec<String> = if cnt == 0 {
+        vec![]
+    } else {
+        (1..=cnt)
+            .into_iter()
+            .map(|i| format!("peak:{}:{}", ctg_id, i))
+            .collect()
+    };
+
+    list
+}
+
 pub fn build_idx_ctg(conn: &mut redis::Connection) {
     let chrs: Vec<String> = get_vec_chr(conn);
 

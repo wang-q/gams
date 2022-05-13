@@ -97,20 +97,7 @@ pub fn execute(args: &ArgMatches) -> std::result::Result<(), Box<dyn std::error:
         // scan_match() is an expensive op. Replace with cnt
         // let pattern = format!("peak:{}:*", ctg_id);
         // let peaks: Vec<String> = gars::get_scan_vec(&mut conn, pattern);
-        let cnt = conn.get(format!("cnt:peak:{}", ctg_id)).unwrap_or(0);
-        if cnt == 0 {
-            eprintln!(
-                "    No peaks in {} {}:{}-{}",
-                ctg_id, chr_id, chr_start, chr_end
-            );
-            continue;
-        }
-
-        let peaks: Vec<String> = (1..=cnt)
-            .into_iter()
-            .map(|i| format!("peak:{}:{}", ctg_id, i))
-            .collect();
-
+        let peaks: Vec<String> = get_vec_feature(&mut conn, ctg_id);
         for peak_id in peaks {
             let (_, peak_start, peak_end) = gars::get_key_pos(&mut conn, &peak_id);
 
@@ -132,16 +119,7 @@ pub fn execute(args: &ArgMatches) -> std::result::Result<(), Box<dyn std::error:
         eprintln!("Process {} {}:{}-{}", ctg_id, chr_id, chr_start, chr_end);
 
         // All peaks in this ctg
-        let cnt = conn.get(format!("cnt:peak:{}", ctg_id)).unwrap_or(0);
-        if cnt == 0 {
-            eprintln!("\tNo peaks");
-            continue;
-        }
-
-        let mut peaks: Vec<String> = (1..=cnt)
-            .into_iter()
-            .map(|i| format!("peak:{}:{}", ctg_id, i))
-            .collect();
+        let mut peaks: Vec<String> = get_vec_feature(&mut conn, ctg_id);
         eprintln!("\tThere are {} peaks", peaks.len());
 
         // sort peaks
