@@ -85,12 +85,53 @@ pub fn get_vec_ctg(conn: &mut redis::Connection, chr_id: &String) -> Vec<String>
     list
 }
 
-pub fn get_key_pos(conn: &mut redis::Connection, key: &str) -> (String, i32, i32) {
-    let (chr_name, chr_start, chr_end): (String, i32, i32) = conn
-        .hget(key, &["chr_name", "chr_start", "chr_end"])
-        .unwrap();
+pub fn build_idx_ctg(conn: &mut redis::Connection) {
+    let chrs: Vec<String> = get_vec_chr(conn);
 
-    (chr_name, chr_start, chr_end)
+    for chr_id in &chrs {
+        let ctgs = get_vec_ctg(conn, chr_id);
+        let mut ivs: Vec<Iv> = vec![];
+
+        for ctg_id in &ctgs {
+            let (_, chr_start, chr_end) = get_key_pos(conn, ctg_id);
+            let iv = Iv {
+                start: chr_start as u32,
+                stop: chr_end as u32 + 1,
+                val: ctg_id.to_string(),
+            };
+            ivs.push(iv);
+        }
+
+        let lapper = Lapper::new(ivs);
+        let serialized = bincode::serialize(&lapper).unwrap();
+
+        let _: () = conn
+            .set(format!("idx:ctg:{}", chr_id), &serialized)
+            .unwrap();
+    }
+}
+
+/// seq_name => Lapper => ctg_id
+pub fn get_idx_ctg(conn: &mut redis::Connection) -> BTreeMap<String, Lapper<u32, String>> {
+    let chrs: Vec<String> = get_vec_chr(conn);
+
+    let mut lapper_of: BTreeMap<String, Lapper<u32, String>> = BTreeMap::new();
+
+    for chr_id in &chrs {
+        let lapper_bytes: Vec<u8> = conn.get(format!("idx:ctg:{}", chr_id)).unwrap();
+        let lapper: Lapper<u32, String> = bincode::deserialize(&lapper_bytes).unwrap();
+
+        lapper_of.insert(chr_id.clone(), lapper);
+    }
+
+    lapper_of
+}
+
+pub fn get_key_pos(conn: &mut redis::Connection, key: &str) -> (String, i32, i32) {
+    let (chr_id, chr_start, chr_end): (String, i32, i32) =
+        conn.hget(key, &["chr_id", "chr_start", "chr_end"]).unwrap();
+
+    (chr_id, chr_start, chr_end)
 }
 
 pub fn get_scan_count(conn: &mut redis::Connection, scan: String) -> i32 {
@@ -149,56 +190,6 @@ pub fn get_scan_int(
     hash
 }
 
-pub fn build_idx_ctg(conn: &mut redis::Connection) {
-    // seq_name => Vector of Intervals
-    let mut ivs_of: BTreeMap<String, Vec<Iv>> = BTreeMap::new();
-
-    // each ctg
-    let ctgs: Vec<String> = get_scan_vec(conn, "ctg:*".to_string());
-    for ctg_id in ctgs {
-        let (chr_name, chr_start, chr_end) = get_key_pos(conn, &ctg_id);
-
-        if !ivs_of.contains_key(chr_name.as_str()) {
-            let ivs: Vec<Iv> = vec![];
-            ivs_of.insert(chr_name.clone(), ivs);
-        }
-
-        let iv = Iv {
-            start: chr_start as u32,
-            stop: chr_end as u32 + 1,
-            val: ctg_id,
-        };
-
-        ivs_of
-            .entry(chr_name.to_string())
-            .and_modify(|e| e.push(iv));
-    }
-
-    for chr in ivs_of.keys() {
-        let lapper = Lapper::new(ivs_of.get(chr).unwrap().to_owned());
-        let serialized = bincode::serialize(&lapper).unwrap();
-
-        // hash lapper
-        let _: () = conn.hset("lapper", chr, &serialized).unwrap();
-    }
-}
-
-pub fn get_idx_ctg(conn: &mut redis::Connection) -> BTreeMap<String, Lapper<u32, String>> {
-    // seq_name => Lapper => ctg_id
-    let mut lapper_of: BTreeMap<String, Lapper<u32, String>> = BTreeMap::new();
-
-    let chrs: Vec<String> = conn.hkeys("lapper").unwrap();
-
-    for chr in chrs {
-        let lapper_bytes: Vec<u8> = conn.hget("lapper", chr.as_str()).unwrap();
-        let lapper: Lapper<u32, String> = bincode::deserialize(&lapper_bytes).unwrap();
-
-        lapper_of.insert(chr.clone(), lapper);
-    }
-
-    lapper_of
-}
-
 pub fn find_one_idx(lapper_of: &BTreeMap<String, Lapper<u32, String>>, rg: &Range) -> String {
     if !lapper_of.contains_key(rg.chr()) {
         return "".to_string();
@@ -214,7 +205,7 @@ pub fn find_one_idx(lapper_of: &BTreeMap<String, Lapper<u32, String>>, rg: &Rang
 }
 
 pub fn find_one_l(conn: &mut redis::Connection, rg: &Range) -> String {
-    let lapper_bytes: Vec<u8> = conn.hget("lapper", rg.chr()).unwrap();
+    let lapper_bytes: Vec<u8> = conn.get(format!("idx:ctg:{}", rg.chr())).unwrap();
 
     if lapper_bytes.is_empty() {
         return "".to_string();
