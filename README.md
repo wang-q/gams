@@ -26,7 +26,7 @@ cargo install --force --path . --features build-stat
 
 ```text
 $ gars help
-gars 0.2.1
+gars 0.3.0
 wang-q <wang-q@outlook.com>
 Genome Analyst with Rust and rediS
 
@@ -38,17 +38,18 @@ OPTIONS:
     -V, --version    Print version information
 
 SUBCOMMANDS:
+    clear      Clear some parts from Redis
     env        Create a .env file
     feature    Add genomic features from range files
     fsw        Sliding windows around a feature
     gen        Generate the database from (gzipped) fasta files
     help       Print this message or the help of the given subcommand(s)
     locate     Locate the given ranges to the corresponding ctgs
+    peak       Add peaks of GC-waves
     range      Add range files for counting
     sliding    Sliding windows along a chromosome
     status     Test Redis config and connection
     tsv        Exports Redis hashes to a tsv file
-    wave       Add peaks of GC-waves
 
 ```
 
