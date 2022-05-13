@@ -1,8 +1,10 @@
+use std::env;
 use approx::assert_relative_eq;
 use assert_cmd::prelude::*; // Add methods on commands
 use intspan::*;
 use predicates::prelude::*; // Used for writing assertions
 use std::process::Command; // Run programs
+use tempfile::TempDir;
 
 #[test]
 fn command_invalid() -> Result<(), Box<dyn std::error::Error>> {
@@ -28,6 +30,34 @@ fn command_env() -> Result<(), Box<dyn std::error::Error>> {
 
     assert_eq!(stdout.lines().count(), 6);
     assert!(stdout.contains("REDIS_PASSWORD=''"), "original values");
+
+    Ok(())
+}
+
+#[test]
+fn command_env_all() -> Result<(), Box<dyn std::error::Error>> {
+    let curdir = env::current_dir().unwrap();
+
+    let tempdir = TempDir::new().unwrap();
+    assert!(env::set_current_dir(&tempdir).is_ok());
+
+    let mut cmd = Command::cargo_bin("gars")?;
+    let output = cmd
+        .arg("env")
+        .arg("--all")
+        .arg("--outfile")
+        .arg("stdout")
+        .output()
+        .unwrap();
+    let stderr = String::from_utf8(output.stderr).unwrap();
+
+    assert_eq!(stderr.lines().count(), 9);
+    assert!(stderr.contains("Create plot_xy.R"));
+    assert!(stderr.contains("Create sqls/summary.sql"));
+
+    // cleanup
+    assert!(env::set_current_dir(&curdir).is_ok());
+    assert!(tempdir.close().is_ok());
 
     Ok(())
 }
