@@ -28,7 +28,7 @@ redis-cli --raw HLEN chr |
 
 cat tests/S288c/chr.sizes |
     parallel -k -r --col-sep '\t' '
-        redis-cli HSET ctg:{1}:1 chr_name {1} chr_start 1 chr_end {2} chr_strand "+" chr_runlist "1-{2}"
+        redis-cli HSET ctg:{1}:1 chr_id {1} chr_start 1 chr_end {2} chr_strand "+" chr_runlist "1-{2}"
         redis-cli ZADD ctg-s:{1} 1 ctg:{1}:1
         redis-cli ZADD ctg-e:{1} {2} ctg:{1}:1
     '

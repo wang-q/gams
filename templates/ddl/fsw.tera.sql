@@ -1,7 +1,7 @@
 CREATE TABLE fsw
 (
     `ID`         String,
-    `chr_name`   String,
+    `chr_id`     String,
     `chr_start`  UInt32,
     `chr_end`    UInt32,
     `type`       String,
@@ -15,4 +15,4 @@ CREATE TABLE fsw
 )
     ENGINE = MergeTree()
         PRIMARY KEY (`ID`)
-        ORDER BY (`ID`, `chr_name`, `chr_start`, `chr_end`);
+        ORDER BY (`ID`, `chr_id`, `chr_start`, `chr_end`);

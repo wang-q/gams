@@ -11,7 +11,7 @@ pub fn make_subcommand<'a>() -> Command<'a> {
         .after_help(
             r#"
 All hashes should have the same structure.
-ID, chr_name, chr_start, chr_end will always be included.
+ID, chr_id, chr_start, chr_end will always be included.
 
 "#,
         )
@@ -70,7 +70,7 @@ pub fn execute(args: &ArgMatches) -> std::result::Result<(), Box<dyn std::error:
         // need headers
         if headers.is_empty() {
             let mut keys: Vec<String> = conn2.hkeys(&x).unwrap();
-            for k in ["chr_name", "chr_start", "chr_end"]
+            for k in ["chr_id", "chr_start", "chr_end"]
                 .iter()
                 .map(|s| s.to_string())
             {

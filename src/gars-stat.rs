@@ -73,7 +73,7 @@ fn execute(args: &ArgMatches) -> std::result::Result<(), Box<dyn std::error::Err
 
 fn query_ctg(df: DataFrame) -> DataFrame {
     let res = df
-        .groupby(&["chr_name"])
+        .groupby(&["chr_id"])
         .unwrap()
         .agg(&[("length", &["count", "mean"])]);
 

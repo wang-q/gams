@@ -78,7 +78,7 @@ pub fn execute(args: &ArgMatches) -> std::result::Result<(), Box<dyn std::error:
     // headers
     let mut writer = writer(args.value_of("outfile").unwrap());
     let headers = vec![
-        "chr_name",
+        "chr_id",
         "chr_start",
         "chr_end",
         "type",
@@ -97,8 +97,8 @@ pub fn execute(args: &ArgMatches) -> std::result::Result<(), Box<dyn std::error:
         gars::get_scan_vec(&mut conn, args.value_of("ctg").unwrap().to_string());
     eprintln!("{} contigs to be processed", ctgs.len());
     for ctg_id in ctgs {
-        let (chr_name, chr_start, chr_end) = gars::get_key_pos(&mut conn, &ctg_id);
-        eprintln!("Process {} {}:{}-{}", ctg_id, chr_name, chr_start, chr_end);
+        let (chr_id, chr_start, chr_end) = gars::get_key_pos(&mut conn, &ctg_id);
+        eprintln!("Process {} {}:{}-{}", ctg_id, chr_id, chr_start, chr_end);
 
         // local caches of GC-content for each ctg
         let mut cache: HashMap<String, f32> = HashMap::new();
@@ -132,21 +132,21 @@ pub fn execute(args: &ArgMatches) -> std::result::Result<(), Box<dyn std::error:
                 let fsw_id = format!("fsw:{}:{}", feature_id, serial);
 
                 let gc_content = cache_gc_content(
-                    &Range::from(&chr_name, sw_intspan.min(), sw_intspan.max()),
+                    &Range::from(&chr_id, sw_intspan.min(), sw_intspan.max()),
                     &parent,
                     &seq,
                     &mut cache,
                 );
 
                 let resized = center_resize(&parent, &sw_intspan, resize);
-                let re_rg = Range::from(&chr_name, resized.min(), resized.max());
+                let re_rg = Range::from(&chr_id, resized.min(), resized.max());
                 let (gc_mean, gc_stddev, gc_cv, gc_snr) =
                     cache_gc_stat(&re_rg, &parent, &seq, &mut cache, size, size);
 
                 // prepare to output
                 let mut values: Vec<String> = vec![];
 
-                values.push(format!("{}", chr_name));
+                values.push(format!("{}", chr_id));
                 values.push(format!("{}", sw_intspan.min()));
                 values.push(format!("{}", sw_intspan.max()));
                 values.push(format!("{}", sw_type));

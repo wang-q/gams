@@ -53,7 +53,7 @@ pub fn execute(args: &ArgMatches) -> std::result::Result<(), Box<dyn std::error:
             let range_id = format!("range:{}:{}", ctg_id, serial);
 
             let _: () = redis::pipe()
-                .hset(&range_id, "chr_name", rg.chr())
+                .hset(&range_id, "chr_id", rg.chr())
                 .ignore()
                 .hset(&range_id, "chr_start", *rg.start())
                 .ignore()

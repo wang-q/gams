@@ -65,7 +65,7 @@ pub fn execute(args: &ArgMatches) -> std::result::Result<(), Box<dyn std::error:
         let length = rg.end() - rg.start() + 1;
 
         let _: () = redis::pipe()
-            .hset(&feature_id, "chr_name", rg.chr())
+            .hset(&feature_id, "chr_id", rg.chr())
             .ignore()
             .hset(&feature_id, "chr_start", *rg.start())
             .ignore()

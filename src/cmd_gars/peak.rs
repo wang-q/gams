@@ -64,7 +64,7 @@ pub fn execute(args: &ArgMatches) -> std::result::Result<(), Box<dyn std::error:
 
         // hset_multiple cannot be used because of the different value types
         let _: () = redis::pipe()
-            .hset(&peak_id, "chr_name", rg.chr())
+            .hset(&peak_id, "chr_id", rg.chr())
             .ignore()
             .hset(&peak_id, "chr_start", *rg.start())
             .ignore()
@@ -86,7 +86,7 @@ pub fn execute(args: &ArgMatches) -> std::result::Result<(), Box<dyn std::error:
     let ctgs: Vec<String> = gars::get_scan_vec(&mut conn, "ctg:*".to_string());
     eprintln!("Updating GC-content of peaks...");
     for ctg_id in &ctgs {
-        let (chr_name, chr_start, chr_end) = gars::get_key_pos(&mut conn, ctg_id);
+        let (chr_id, chr_start, chr_end) = gars::get_key_pos(&mut conn, ctg_id);
 
         // local caches of GC-content for each ctg
         let mut cache: HashMap<String, f32> = HashMap::new();
@@ -101,7 +101,7 @@ pub fn execute(args: &ArgMatches) -> std::result::Result<(), Box<dyn std::error:
         if cnt == 0 {
             eprintln!(
                 "    No peaks in {} {}:{}-{}",
-                ctg_id, chr_name, chr_start, chr_end
+                ctg_id, chr_id, chr_start, chr_end
             );
             continue;
         }
@@ -115,7 +115,7 @@ pub fn execute(args: &ArgMatches) -> std::result::Result<(), Box<dyn std::error:
             let (_, peak_start, peak_end) = gars::get_key_pos(&mut conn, &peak_id);
 
             let gc_content = cache_gc_content(
-                &Range::from(&chr_name, peak_start, peak_end),
+                &Range::from(&chr_id, peak_start, peak_end),
                 &parent,
                 &seq,
                 &mut cache,
@@ -128,8 +128,8 @@ pub fn execute(args: &ArgMatches) -> std::result::Result<(), Box<dyn std::error:
     eprintln!("Updating relationships of peaks...");
     eprintln!("{} contigs to be processed", ctgs.len());
     for ctg_id in &ctgs {
-        let (chr_name, chr_start, chr_end) = gars::get_key_pos(&mut conn, &ctg_id);
-        eprintln!("Process {} {}:{}-{}", ctg_id, chr_name, chr_start, chr_end);
+        let (chr_id, chr_start, chr_end) = gars::get_key_pos(&mut conn, &ctg_id);
+        eprintln!("Process {} {}:{}-{}", ctg_id, chr_id, chr_start, chr_end);
 
         // All peaks in this ctg
         let cnt = conn.get(format!("cnt:peak:{}", ctg_id)).unwrap_or(0);

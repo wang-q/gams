@@ -108,8 +108,8 @@ pub fn execute(args: &ArgMatches) -> std::result::Result<(), Box<dyn std::error:
         gars::get_scan_vec(&mut conn, args.value_of("ctg").unwrap().to_string());
     eprintln!("{} contigs to be processed", ctgs.len());
     for ctg_id in ctgs {
-        let (chr_name, chr_start, chr_end) = gars::get_key_pos(&mut conn, &ctg_id);
-        eprintln!("Process {} {}:{}-{}", ctg_id, chr_name, chr_start, chr_end);
+        let (chr_id, chr_start, chr_end) = gars::get_key_pos(&mut conn, &ctg_id);
+        eprintln!("Process {} {}:{}-{}", ctg_id, chr_id, chr_start, chr_end);
 
         let parent = IntSpan::from_pair(chr_start, chr_end);
         let windows = gars::sliding(&parent, size, step);
@@ -134,7 +134,7 @@ pub fn execute(args: &ArgMatches) -> std::result::Result<(), Box<dyn std::error:
         for i in 0..windows.len() {
             writer.write_fmt(format_args!(
                 "{}:{}\t{}\t{}\n",
-                chr_name,
+                chr_id,
                 windows[i].runlist(),
                 gcs[i],
                 signals[i],

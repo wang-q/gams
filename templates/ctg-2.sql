@@ -1,6 +1,6 @@
 SELECT
-    chr_name, COUNT(*), AVG(length)
+    chr_id, COUNT(*), AVG(length)
 FROM
     ctg
 GROUP BY
-    chr_name
+    chr_id
