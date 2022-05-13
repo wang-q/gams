@@ -64,6 +64,27 @@ pub fn connect() -> redis::Connection {
         .expect("Failed to connect to Redis")
 }
 
+/// get all chr_ids
+pub fn get_vec_chr(conn: &mut redis::Connection) -> Vec<String> {
+    conn.hkeys("chr").unwrap()
+}
+
+/// generated from cnt:ctg:
+pub fn get_vec_ctg(conn: &mut redis::Connection, chr_id: &String) -> Vec<String> {
+    let cnt = conn.get(format!("cnt:ctg:{}", chr_id)).unwrap_or(0);
+
+    let list: Vec<String> = if cnt == 0 {
+        vec![]
+    } else {
+        (1..=cnt)
+            .into_iter()
+            .map(|i| format!("ctg:{}:{}", chr_id, i))
+            .collect()
+    };
+
+    list
+}
+
 pub fn get_key_pos(conn: &mut redis::Connection, key: &str) -> (String, i32, i32) {
     let (chr_name, chr_start, chr_end): (String, i32, i32) = conn
         .hget(key, &["chr_name", "chr_start", "chr_end"])
