@@ -2,6 +2,8 @@
 
 ## Unreleased - ReleaseDate
 
+## 0.3.0 - 2022-05-13
+
 * Rename `gars range` to `gars feature`
 * Rename `gars rsw` to `gars fsw`
 * Rename `gars pos` to `gars range`
