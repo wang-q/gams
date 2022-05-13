@@ -139,6 +139,12 @@ gars feature tests/S288c/spo11_hot.ranges
 # sliding windows around ranges
 gars fsw
 
+# add ranges
+gars range tests/S288c/spo11_hot.ranges
+
+# clear
+gars clear range
+
 # dump DB to redis-server start dir as dump.rdb
 gars status dump
 

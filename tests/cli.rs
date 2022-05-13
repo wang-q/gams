@@ -289,6 +289,49 @@ fn command_range() -> Result<(), Box<dyn std::error::Error>> {
 }
 
 #[test]
+fn command_clear() -> Result<(), Box<dyn std::error::Error>> {
+    // env
+    let mut cmd = Command::cargo_bin("gars")?;
+    cmd.arg("env").unwrap();
+
+    // drop
+    let mut cmd = Command::cargo_bin("gars")?;
+    cmd.arg("status").arg("drop").unwrap();
+
+    // gen
+    let mut cmd = Command::cargo_bin("gars")?;
+    cmd.arg("gen")
+        .arg("tests/S288c/genome.fa.gz")
+        .arg("--piece")
+        .arg("100000")
+        .unwrap();
+
+    // range
+    let mut cmd = Command::cargo_bin("gars")?;
+    cmd
+        .arg("range")
+        .arg("tests/S288c/spo11_hot.ranges")
+        .arg("tests/S288c/spo11_hot.ranges")
+        .output()
+        .unwrap();
+
+    // clear
+    let mut cmd = Command::cargo_bin("gars")?;
+    let output = cmd
+        .arg("clear")
+        .arg("range")
+        .output()
+        .unwrap();
+    let stderr = String::from_utf8(output.stderr).unwrap();
+
+    assert_eq!(stderr.lines().count(), 4);
+    assert!(stderr.contains("Clearing pattern \"range:*\""));
+    assert!(stderr.contains("Clear 2 keys"));
+
+    Ok(())
+}
+
+#[test]
 fn command_feature() -> Result<(), Box<dyn std::error::Error>> {
     // env
     let mut cmd = Command::cargo_bin("gars")?;
