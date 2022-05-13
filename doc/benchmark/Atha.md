@@ -95,7 +95,7 @@ gars gen genome.fa.gz --piece 500000
 
 hyperfine -N --export-markdown locate.md.tmp \
     'gars locate -f T-DNA.CSHL.ranges' \
-    'gars locate --idx -f T-DNA.CSHL.ranges' \
+    'gars locate --lapper -f T-DNA.CSHL.ranges' \
     'gars locate --zrange -f T-DNA.CSHL.ranges'
 
 cat locate.md.tmp
@@ -104,16 +104,16 @@ cat locate.md.tmp
 
 ### R7 5800 Windows 11
 
-| Command |     Mean [ms] | Min [ms] | Max [ms] |     Relative |
-|:--------|--------------:|---------:|---------:|-------------:|
-| lapper  |  919.9 ± 19.7 |    890.5 |    946.6 | 41.85 ± 1.22 |
-| idx     |    22.0 ± 0.4 |     21.3 |     24.1 |         1.00 |
-| zrange  | 2048.7 ± 11.4 |   2037.8 |   2065.4 | 93.21 ± 1.89 |
+| Command |     Mean [ms] | Min [ms] | Max [ms] |      Relative |
+|:--------|--------------:|---------:|---------:|--------------:|
+| idx     |    22.8 ± 3.1 |     21.7 |     50.9 |          1.00 |
+| lapper  |  917.6 ± 16.6 |    892.2 |    938.9 |  40.25 ± 5.44 |
+| zrange  | 2064.1 ± 34.0 |   2022.3 |   2136.7 | 90.55 ± 12.21 |
 
 ### i7 8700K macOS Big Sur
 
 | Command |      Mean [ms] | Min [ms] | Max [ms] |     Relative |
 |:--------|---------------:|---------:|---------:|-------------:|
-| lapper  |   982.3 ± 72.0 |    930.0 |   1153.7 | 15.87 ± 1.19 |
 | idx     |     61.9 ± 1.0 |     60.0 |     64.7 |         1.00 |
+| lapper  |   982.3 ± 72.0 |    930.0 |   1153.7 | 15.87 ± 1.19 |
 | zrange  | 3596.2 ± 281.7 |   3205.8 |   4031.0 | 58.11 ± 4.64 |
