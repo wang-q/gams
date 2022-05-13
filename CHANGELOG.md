@@ -29,6 +29,8 @@
     * Add get_vec_feature()
     * Add get_vec_peak()
 
+* Add more tests
+
 ## 0.2.1 - 2022-05-10
 
 * Separate gars-stat
