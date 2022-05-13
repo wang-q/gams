@@ -367,6 +367,51 @@ fn command_feature() -> Result<(), Box<dyn std::error::Error>> {
 }
 
 #[test]
+fn command_fsw() -> Result<(), Box<dyn std::error::Error>> {
+    // env
+    let mut cmd = Command::cargo_bin("gars")?;
+    cmd.arg("env").unwrap();
+
+    // drop
+    let mut cmd = Command::cargo_bin("gars")?;
+    cmd.arg("status").arg("drop").unwrap();
+
+    // gen
+    let mut cmd = Command::cargo_bin("gars")?;
+    cmd.arg("gen")
+        .arg("tests/S288c/genome.fa.gz")
+        .arg("--piece")
+        .arg("100000")
+        .unwrap();
+
+    // feature
+    let mut cmd = Command::cargo_bin("gars")?;
+    cmd
+        .arg("feature")
+        .arg("tests/S288c/spo11_hot.ranges")
+        .arg("--tag")
+        .arg("spo11")
+        .output()
+        .unwrap();
+
+    // fsw
+    let mut cmd = Command::cargo_bin("gars")?;
+    let output = cmd
+        .arg("fsw")
+        .output()
+        .unwrap();
+    let stdout = String::from_utf8(output.stdout).unwrap();
+    assert_eq!(stdout.lines().count(), 2867);
+    assert!(stdout.contains("fsw:feature:ctg:I:2:32:1"));
+
+    let stderr = String::from_utf8(output.stderr).unwrap();
+    assert_eq!(stderr.lines().count(), 7);
+    assert!(stderr.contains("Process ctg:I:2"));
+
+    Ok(())
+}
+
+#[test]
 fn command_peak() -> Result<(), Box<dyn std::error::Error>> {
     // env
     let mut cmd = Command::cargo_bin("gars")?;
