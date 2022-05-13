@@ -2,7 +2,7 @@
 
 [![Publish](https://github.com/wang-q/gars/actions/workflows/publish.yml/badge.svg)](https://github.com/wang-q/gars/actions)
 [![Build](https://github.com/wang-q/gars/actions/workflows/build.yml/badge.svg)](https://github.com/wang-q/gars/actions)
-[![Codecov](https://img.shields.io/codecov/c/github/wang-q/gars/main.svg)](https://codecov.io/github/wang-q/gars?branch=main)
+[![codecov](https://codecov.io/gh/wang-q/gars/branch/main/graph/badge.svg?token=LtxYK5Fff0)](https://codecov.io/gh/wang-q/gars)
 [![Lines of code](https://tokei.rs/b1/github/wang-q/gars?category=code)](https://github.com//wang-q/gars)
 
 `gars` - **G**enome **A**nalyst with **R**ust and redi**S**
