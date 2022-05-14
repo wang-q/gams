@@ -2,6 +2,10 @@
 
 ## Unreleased - ReleaseDate
 
+* Rename .ranges to .rg
+
+* Add more tests
+
 ## 0.3.0 - 2022-05-13
 
 * Rename `gars range` to `gars feature`
