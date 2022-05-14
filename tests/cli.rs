@@ -295,8 +295,8 @@ fn command_range() -> Result<(), Box<dyn std::error::Error>> {
     let mut cmd = Command::cargo_bin("gars")?;
     let output = cmd
         .arg("range")
-        .arg("tests/S288c/spo11_hot.ranges")
-        .arg("tests/S288c/spo11_hot.ranges")
+        .arg("tests/S288c/spo11_hot.rg")
+        .arg("tests/S288c/spo11_hot.rg")
         .output()
         .unwrap();
     let stderr = String::from_utf8(output.stderr).unwrap();
@@ -329,8 +329,8 @@ fn command_clear() -> Result<(), Box<dyn std::error::Error>> {
     // range
     let mut cmd = Command::cargo_bin("gars")?;
     cmd.arg("range")
-        .arg("tests/S288c/spo11_hot.ranges")
-        .arg("tests/S288c/spo11_hot.ranges")
+        .arg("tests/S288c/spo11_hot.rg")
+        .arg("tests/S288c/spo11_hot.rg")
         .output()
         .unwrap();
 
@@ -368,7 +368,7 @@ fn command_feature() -> Result<(), Box<dyn std::error::Error>> {
     let mut cmd = Command::cargo_bin("gars")?;
     let output = cmd
         .arg("feature")
-        .arg("tests/S288c/spo11_hot.ranges")
+        .arg("tests/S288c/spo11_hot.rg")
         .arg("--tag")
         .arg("spo11")
         .output()
@@ -402,7 +402,7 @@ fn command_fsw() -> Result<(), Box<dyn std::error::Error>> {
     // feature
     let mut cmd = Command::cargo_bin("gars")?;
     cmd.arg("feature")
-        .arg("tests/S288c/spo11_hot.ranges")
+        .arg("tests/S288c/spo11_hot.rg")
         .arg("--tag")
         .arg("spo11")
         .output()
@@ -571,7 +571,7 @@ fn command_locate() -> Result<(), Box<dyn std::error::Error>> {
     let output = cmd
         .arg("locate")
         .arg("-f")
-        .arg("tests/S288c/spo11_hot.ranges")
+        .arg("tests/S288c/spo11_hot.rg")
         .output()
         .unwrap();
     let stdout = String::from_utf8(output.stdout).unwrap();

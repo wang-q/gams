@@ -135,13 +135,13 @@ gars-stat tests/S288c/ctg.tsv ctg
 gars locate "I(+):1000-1100"
 
 # add features
-gars feature tests/S288c/spo11_hot.ranges
+gars feature tests/S288c/spo11_hot.rg
 
 # sliding windows around ranges
 gars fsw
 
 # add ranges
-gars range tests/S288c/spo11_hot.ranges
+gars range tests/S288c/spo11_hot.rg
 
 # clear
 gars clear range

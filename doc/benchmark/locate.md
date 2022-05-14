@@ -16,7 +16,7 @@ gars gen tests/S288c/genome.fa.gz --piece 100000
 gars locate -r "I(+):1000-1100" "II:1000-1100" "Mito:1000-1100"
 
 # spo11
-gars locate -f tests/S288c/spo11_hot.ranges
+gars locate -f tests/S288c/spo11_hot.rg
 
 # cached index
 gars locate "I(+):1000-1100" "II:1000-1100" "Mito:1000-1100"
@@ -36,9 +36,9 @@ hyperfine -N --export-markdown locate.md.tmp \
 cat locate.md.tmp
 
 hyperfine -N --export-markdown locate.md.tmp \
-    'gars locate -f tests/S288c/spo11_hot.ranges' \
-    'gars locate --lapper -f tests/S288c/spo11_hot.ranges' \
-    'gars locate --zrange -f tests/S288c/spo11_hot.ranges'
+    'gars locate -f tests/S288c/spo11_hot.rg' \
+    'gars locate --lapper -f tests/S288c/spo11_hot.rg' \
+    'gars locate --zrange -f tests/S288c/spo11_hot.rg'
 
 cat locate.md.tmp
 

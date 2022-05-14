@@ -92,7 +92,7 @@ for name in CSHL FLAG MX RATM; do
 
             print "$chr:$pos";
         ' \
-        > T-DNA.${name}.ranges;
+        > T-DNA.${name}.rg;
 done
 
 ```
@@ -134,7 +134,7 @@ cat tsvs/ctg.tsv |
 # ranges
 time parallel -j 4 -k --line-buffer '
     echo {}
-    gars range features/T-DNA.{}.ranges
+    gars range features/T-DNA.{}.rg
     ' ::: CSHL FLAG MX RATM
 #real    0m3.663s
 #user    0m2.096s
@@ -169,7 +169,7 @@ gars gen genome/genome.fa.gz --piece 500000
 
 time parallel -j 4 -k --line-buffer '
     echo {}
-    gars feature features/T-DNA.{}.ranges --tag {}
+    gars feature features/T-DNA.{}.rg --tag {}
     ' ::: CSHL FLAG MX RATM
 # redis
 # CSHL
