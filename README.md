@@ -184,10 +184,10 @@ tsv-summarize tests/S288c/I.gc.tsv \
 # merge adjacent windows
 tsv-filter tests/S288c/I.gc.tsv -H --ne signal:0 |
     cut -f 1 |
-    linkr merge -c 0.8 stdin -o tests/S288c/I.replace.tsv
+    rgr merge -c 0.8 stdin -o tests/S288c/I.replace.tsv
 
 tsv-filter tests/S288c/I.gc.tsv -H --ne signal:0 |
-    ovlpr replace stdin tests/S288c/I.replace.tsv |
+    rgr replace stdin tests/S288c/I.replace.tsv |
     tsv-uniq -H -f 1 \
     > tests/S288c/I.peaks.tsv
 

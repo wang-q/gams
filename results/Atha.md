@@ -210,7 +210,7 @@ redis-server --appendonly no --dir ~/data/gars/Atha/
 
 gars env
 
-# can't use chr.sizes, which greatly reduces the speed of `linkr merge`
+# can't use chr.sizes, which greatly reduces the speed of `rgr merge`
 time cat ctg.lst |
     parallel -j 4 -k --line-buffer '
         gars sliding \
@@ -225,10 +225,10 @@ time cat ctg.lst |
 
         cat {.}.gc.tsv |
             cut -f 1 |
-            linkr merge -c 0.8 stdin -o {.}.replace.tsv
+            rgr merge -c 0.8 stdin -o {.}.replace.tsv
 
         cat {.}.gc.tsv |
-            ovlpr replace stdin {.}.replace.tsv |
+            rgr replace stdin {.}.replace.tsv |
             tsv-uniq -H -f 1 \
             > tsvs/{.}.peak.tsv
 
