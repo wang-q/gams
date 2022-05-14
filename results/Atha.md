@@ -112,10 +112,7 @@ gars env --all
 
 gars status drop
 
-time gars gen genome/genome.fa.gz --piece 500000
-#real    0m1.219s
-#user    0m0.980s
-#sys     0m0.123s
+gars gen genome/genome.fa.gz --piece 500000
 
 gars status dump && sync dump.rdb && cp dump.rdb dumps/ctg.dump.rdb
 
@@ -158,8 +155,6 @@ cd ~/data/gars/Atha/
 
 rm ./dump.rdb
 redis-server --appendonly no --dir ~/data/gars/Atha/
-#keydb-server --appendonly no --dir ~/data/gars/Atha/
-# keydb is as fast/slow as redis
 
 gars env
 
@@ -167,23 +162,10 @@ gars status drop
 
 gars gen genome/genome.fa.gz --piece 500000
 
-time parallel -j 4 -k --line-buffer '
+parallel -j 4 -k --line-buffer '
     echo {}
     gars feature features/T-DNA.{}.rg --tag {}
     ' ::: CSHL FLAG MX RATM
-# redis
-# CSHL
-#real    0m1.985s
-#user    0m0.344s
-#sys     0m1.049s
-# 4 files -j 1
-#real    0m9.261s
-#user    0m1.240s
-#sys     0m4.966s
-# 4 files -j 4
-#real    0m3.824s
-#user    0m2.606s
-#sys     0m2.362s
 
 gars tsv -s "feature:*" |
     keep-header -- tsv-sort -k2,2 -k3,3n -k4,4n \
@@ -208,18 +190,9 @@ time cat genome/chr.sizes |
     tsv-uniq |
     keep-header -- tsv-sort -k2,2 -k3,3n -k4,4n \
     > tsvs/fsw.tsv
-# -j 4
 #real    0m17.195s
 #user    0m34.398s
 #sys     0m7.253s
-# -j 2
-#real    0m22.259s
-#user    0m35.783s
-#sys     0m9.295s
-# -j 1
-#real    0m35.192s
-#user    0m38.095s
-#sys     0m12.298s
 
 gars status stop
 
