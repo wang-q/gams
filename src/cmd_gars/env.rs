@@ -91,7 +91,7 @@ fn gen_peak(context: &Context) -> std::result::Result<(), std::io::Error> {
     tera.add_raw_templates(vec![("t", include_str!("../../templates/peak.tera.R"))])
         .unwrap();
 
-    let rendered = tera.render("t", &context).unwrap();
+    let rendered = tera.render("t", context).unwrap();
     intspan::write_lines(outname, &vec![rendered.as_str()])?;
 
     Ok(())
@@ -105,7 +105,7 @@ fn gen_plot_xy(context: &Context) -> std::result::Result<(), std::io::Error> {
     tera.add_raw_templates(vec![("t", include_str!("../../templates/plot_xy.tera.R"))])
         .unwrap();
 
-    let rendered = tera.render("t", &context).unwrap();
+    let rendered = tera.render("t", context).unwrap();
     intspan::write_lines(outname, &vec![rendered.as_str()])?;
 
     Ok(())
@@ -122,7 +122,7 @@ fn gen_ddl_ctg(context: &Context) -> std::result::Result<(), std::io::Error> {
     )])
     .unwrap();
 
-    let rendered = tera.render("t", &context).unwrap();
+    let rendered = tera.render("t", context).unwrap();
     intspan::write_lines(outname, &vec![rendered.as_str()])?;
 
     Ok(())
@@ -139,7 +139,7 @@ fn gen_ddl_fsw(context: &Context) -> std::result::Result<(), std::io::Error> {
     )])
     .unwrap();
 
-    let rendered = tera.render("t", &context).unwrap();
+    let rendered = tera.render("t", context).unwrap();
     intspan::write_lines(outname, &vec![rendered.as_str()])?;
 
     Ok(())
@@ -157,7 +157,7 @@ fn gen_dql_summary(context: &Context) -> std::result::Result<(), std::io::Error>
     )])
     .unwrap();
 
-    let rendered = tera.render("t", &context).unwrap();
+    let rendered = tera.render("t", context).unwrap();
     intspan::write_lines(outname, &vec![rendered.as_str()])?;
 
     // summary-type
@@ -171,7 +171,7 @@ fn gen_dql_summary(context: &Context) -> std::result::Result<(), std::io::Error>
     )])
     .unwrap();
 
-    let rendered = tera.render("t", &context).unwrap();
+    let rendered = tera.render("t", context).unwrap();
     intspan::write_lines(outname, &vec![rendered.as_str()])?;
 
     Ok(())
@@ -189,7 +189,7 @@ fn gen_dql_fsw(context: &Context) -> std::result::Result<(), std::io::Error> {
     )])
     .unwrap();
 
-    let rendered = tera.render("t", &context).unwrap();
+    let rendered = tera.render("t", context).unwrap();
     intspan::write_lines(outname, &vec![rendered.as_str()])?;
 
     // fsw-distance-tag
@@ -203,7 +203,7 @@ fn gen_dql_fsw(context: &Context) -> std::result::Result<(), std::io::Error> {
     )])
     .unwrap();
 
-    let rendered = tera.render("t", &context).unwrap();
+    let rendered = tera.render("t", context).unwrap();
     intspan::write_lines(outname, &vec![rendered.as_str()])?;
 
     Ok(())

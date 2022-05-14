@@ -115,7 +115,7 @@ pub fn execute(args: &ArgMatches) -> std::result::Result<(), Box<dyn std::error:
     eprintln!("Updating relationships of peaks...");
     eprintln!("{} contigs to be processed", ctgs.len());
     for ctg_id in &ctgs {
-        let (chr_id, chr_start, chr_end) = gars::get_key_pos(&mut conn, &ctg_id);
+        let (chr_id, chr_start, chr_end) = gars::get_key_pos(&mut conn, ctg_id);
         eprintln!("Process {} {}:{}-{}", ctg_id, chr_id, chr_start, chr_end);
 
         // All peaks in this ctg

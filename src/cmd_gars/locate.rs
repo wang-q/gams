@@ -114,7 +114,7 @@ pub fn execute(args: &ArgMatches) -> std::result::Result<(), Box<dyn std::error:
         if ctg_id.is_empty() {
             continue;
         }
-        writer.write_fmt(format_args!("{}\t{}\t{}\n", range, rg.to_string(), ctg_id))?;
+        writer.write_fmt(format_args!("{}\t{}\t{}\n", range, rg, ctg_id))?;
     }
 
     Ok(())

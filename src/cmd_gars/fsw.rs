@@ -104,7 +104,7 @@ pub fn execute(args: &ArgMatches) -> std::result::Result<(), Box<dyn std::error:
         let mut cache: HashMap<String, f32> = HashMap::new();
 
         let parent = IntSpan::from_pair(chr_start, chr_end);
-        let seq: String = get_ctg_seq(&mut conn, &ctg_id);
+        let seq: String = get_ctg_seq(&mut conn, ctg_id);
 
         // All features in this ctg
         let features: Vec<String> = get_vec_feature(&mut conn, ctg_id);

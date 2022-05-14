@@ -230,10 +230,10 @@ pub fn find_one_idx(lapper_of: &BTreeMap<String, Lapper<u32, String>>, rg: &Rang
     let lapper = lapper_of.get(rg.chr()).unwrap();
     let res = lapper.find(*rg.start() as u32, *rg.end() as u32).next();
 
-    return match res {
+    match res {
         Some(iv) => iv.val.clone(),
         None => "".to_string(),
-    };
+    }
 }
 
 pub fn find_one_l(conn: &mut redis::Connection, rg: &Range) -> String {
@@ -246,10 +246,10 @@ pub fn find_one_l(conn: &mut redis::Connection, rg: &Range) -> String {
     let lapper: Lapper<u32, String> = bincode::deserialize(&lapper_bytes).unwrap();
     let res = lapper.find(*rg.start() as u32, *rg.end() as u32).next();
 
-    return match res {
+    match res {
         Some(iv) => iv.val.clone(),
         None => "".to_string(),
-    };
+    }
 }
 
 pub fn find_one_z(conn: &mut redis::Connection, rg: &Range) -> String {
@@ -315,9 +315,8 @@ pub fn decode_gz(bytes: &[u8]) -> io::Result<String> {
 
 pub fn get_ctg_seq(conn: &mut redis::Connection, ctg_id: &str) -> String {
     let ctg_bytes: Vec<u8> = conn.get(format!("seq:{}", ctg_id)).unwrap();
-    let ctg_seq = decode_gz(&ctg_bytes).unwrap();
 
-    ctg_seq
+    decode_gz(&ctg_bytes).unwrap()
 }
 
 /// GC-content within a ctg
