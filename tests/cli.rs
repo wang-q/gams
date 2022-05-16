@@ -139,7 +139,7 @@ fn command_gen() -> Result<(), Box<dyn std::error::Error>> {
 
     // get_scan_str
     let mut conn = gars::connect();
-    let exp:HashMap<String, String> = HashMap::from([
+    let exp: HashMap<String, String> = HashMap::from([
         ("ctg:I:1".to_string(), "I".to_string()),
         ("ctg:I:2".to_string(), "I".to_string()),
         ("ctg:Mito:1".to_string(), "Mito".to_string()),
@@ -147,11 +147,13 @@ fn command_gen() -> Result<(), Box<dyn std::error::Error>> {
     let res = gars::get_scan_str(&mut conn, "ctg:*".to_string(), "chr_id".to_string());
     assert_eq!(res.len(), exp.len());
     assert!(res.keys().all(|k| exp.contains_key(k)));
-    assert!(res.keys().all(|k| res.get(k).unwrap() == exp.get(k).unwrap() ));
+    assert!(res
+        .keys()
+        .all(|k| res.get(k).unwrap() == exp.get(k).unwrap()));
 
     // get_scan_int
     let mut conn = gars::connect();
-    let exp:HashMap<String, i32> = HashMap::from([
+    let exp: HashMap<String, i32> = HashMap::from([
         ("ctg:I:1".to_string(), 100000),
         ("ctg:I:2".to_string(), 230218),
         ("ctg:Mito:1".to_string(), 85779),
@@ -159,7 +161,9 @@ fn command_gen() -> Result<(), Box<dyn std::error::Error>> {
     let res = gars::get_scan_int(&mut conn, "ctg:*".to_string(), "chr_end".to_string());
     assert_eq!(res.len(), exp.len());
     assert!(res.keys().all(|k| exp.contains_key(k)));
-    assert!(res.keys().all(|k| res.get(k).unwrap() == exp.get(k).unwrap() ));
+    assert!(res
+        .keys()
+        .all(|k| res.get(k).unwrap() == exp.get(k).unwrap()));
 
     // find_one_z
     let mut conn = gars::connect();
