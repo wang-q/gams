@@ -58,7 +58,6 @@ faops masked genome.fa.gz |
     spanr cover stdin -o repeats.yml
 
 spanr merge repeats.yml cds.yml -o anno.yml
-rm repeats.yml cds.yml
 
 spanr stat chr.sizes anno.yml --all
 #key,chrLength,size,coverage
@@ -118,9 +117,12 @@ gars status dump && sync dump.rdb && cp dump.rdb dumps/ctg.dump.rdb
 
 # tsv exports
 gars tsv -s 'ctg:*' -f length | head
+gars tsv -s 'ctg:*' -f length --range | head
 
-gars tsv -s 'ctg:*' |
-    keep-header -- tsv-sort -k2,2 -k3,3n -k4,4n \
+gars tsv -s 'ctg:*' --range |
+    rgr sort -H -f 2 stdin |
+    rgr prop genome/cds.yml stdin -H -f 2 --prefix |
+    rgr prop genome/repeats.yml stdin -H -f 2 --prefix \
     > tsvs/ctg.tsv
 
 cat tsvs/ctg.tsv |
@@ -137,8 +139,8 @@ time parallel -j 4 -k --line-buffer '
 #user    0m2.096s
 #sys     0m2.666s
 
-gars tsv -s 'range:*' |
-    keep-header -- tsv-sort -k2,2 -k3,3n -k4,4n \
+gars tsv -s 'range:*' --range |
+    rgr sort -H -f 2 stdin  \
     > tsvs/range.tsv
 
 gars status dump && sync dump.rdb && cp dump.rdb dumps/range.dump.rdb

@@ -33,6 +33,13 @@ ID, chr_id, chr_start, chr_end will always be included.
                 .help("Sets the fields to output"),
         )
         .arg(
+            Arg::new("range")
+                .long("range")
+                .short('r')
+                .takes_value(false)
+                .help("Write a `range` fields instead of chr_id, chr_start, chr_end"),
+        )
+        .arg(
             Arg::new("outfile")
                 .short('o')
                 .long("outfile")
@@ -45,7 +52,9 @@ ID, chr_id, chr_start, chr_end will always be included.
 
 // command implementation
 pub fn execute(args: &ArgMatches) -> std::result::Result<(), Box<dyn std::error::Error>> {
-    // opts
+    //----------------------------
+    // Options
+    //----------------------------
     let pattern = args.value_of("scan").unwrap();
     let fields: Vec<String> = if args.is_present("field") {
         args.values_of("field")
@@ -55,6 +64,7 @@ pub fn execute(args: &ArgMatches) -> std::result::Result<(), Box<dyn std::error:
     } else {
         Vec::new()
     };
+    let is_range = args.is_present("range");
 
     // redis connection
     let mut conn = connect();
@@ -66,10 +76,10 @@ pub fn execute(args: &ArgMatches) -> std::result::Result<(), Box<dyn std::error:
     // scan
     let mut headers: Vec<String> = Vec::new();
     let iter: redis::Iter<'_, String> = conn.scan_match(pattern).unwrap();
-    for x in iter {
+    for id in iter {
         // need headers
         if headers.is_empty() {
-            let mut keys: Vec<String> = conn2.hkeys(&x).unwrap();
+            let mut keys: Vec<String> = conn2.hkeys(&id).unwrap();
             for k in ["chr_id", "chr_start", "chr_end"]
                 .iter()
                 .map(|s| s.to_string())
@@ -93,18 +103,40 @@ pub fn execute(args: &ArgMatches) -> std::result::Result<(), Box<dyn std::error:
                     }
                 }
             }
-            let line = headers.join("\t");
-            writer.write_all(format!("{}\t{}\n", "ID", line).as_ref())?;
+
+            let mut header_line = headers.join("\t");
+            if is_range {
+                header_line = header_line.replace("chr_id\tchr_start\tchr_end", "range");
+            }
+            writer.write_all(format!("{}\t{}\n", "ID", header_line).as_ref())?;
         }
 
-        let hash: BTreeMap<String, String> = conn2.hgetall(&x).unwrap();
+        //----------------------------
+        // Output
+        //----------------------------
+        let hash: BTreeMap<String, String> = conn2.hgetall(&id).unwrap();
         let mut values: Vec<String> = Vec::new();
-        for k in &headers {
-            let val = hash.get(k).unwrap();
-            values.push(val.clone());
+        if !is_range {
+            for k in &headers {
+                let val = hash.get(k).unwrap();
+                values.push(val.clone());
+            }
+        } else {
+            let (chr_id, chr_start, chr_end) = gars::get_key_pos(&mut conn2, &id);
+            let range = Range::from(&chr_id, chr_start, chr_end);
+            values.push(range.to_string());
+
+            for k in &headers {
+                if k == "chr_id" || k == "chr_start" || k == "chr_end" {
+                    continue;
+                }
+                let val = hash.get(k).unwrap();
+                values.push(val.clone());
+            }
         }
+
         let line = values.join("\t");
-        writer.write_all(format!("{}\t{}\n", x, line).as_ref())?;
+        writer.write_all(format!("{}\t{}\n", id, line).as_ref())?;
     }
 
     Ok(())

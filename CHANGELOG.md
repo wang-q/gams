@@ -2,6 +2,8 @@
 
 ## Unreleased - ReleaseDate
 
+* Add `--range` to `gars tsv`
+
 * Rename .ranges to .rg
 
 * Add more tests
