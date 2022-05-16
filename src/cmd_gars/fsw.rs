@@ -88,7 +88,6 @@ pub fn execute(args: &ArgMatches) -> std::result::Result<(), Box<dyn std::error:
         "gc_mean",
         "gc_stddev",
         "gc_cv",
-        "gc_snr",
     ];
     writer.write_all(format!("{}\t{}\n", "ID", headers.join("\t")).as_ref())?;
 
@@ -131,7 +130,7 @@ pub fn execute(args: &ArgMatches) -> std::result::Result<(), Box<dyn std::error:
 
                 let resized = center_resize(&parent, &sw_intspan, resize);
                 let re_rg = Range::from(&chr_id, resized.min(), resized.max());
-                let (gc_mean, gc_stddev, gc_cv, gc_snr) =
+                let (gc_mean, gc_stddev, gc_cv) =
                     cache_gc_stat(&re_rg, &parent, &seq, &mut cache, size, size);
 
                 // prepare to output
@@ -147,7 +146,6 @@ pub fn execute(args: &ArgMatches) -> std::result::Result<(), Box<dyn std::error:
                 values.push(format!("{:.5}", gc_mean));
                 values.push(format!("{:.5}", gc_stddev));
                 values.push(format!("{:.5}", gc_cv));
-                values.push(format!("{:.5}", gc_snr));
 
                 let line = values.join("\t");
                 writer.write_all(format!("{}\t{}\n", fsw_id, line).as_ref())?;

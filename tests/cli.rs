@@ -590,17 +590,13 @@ fn command_locate() -> Result<(), Box<dyn std::error::Error>> {
 #[test]
 fn test_gc_stat() {
     let tests = vec![
-        (vec![0.5, 0.5], (0.5, 0., 0., 0.)),
-        (
-            vec![0.4, 0.5, 0.5, 0.6],
-            (0.5, 0.08164966, 0.16329932, 6.123724),
-        ),
+        (vec![0.5, 0.5], (0.5, 0., 0.)),
+        (vec![0.4, 0.5, 0.5, 0.6], (0.5, 0.08164966, 0.16329932)),
     ];
     for (gcs, exp) in tests {
-        let (mean, stddev, cv, snr) = gars::gc_stat(&gcs);
+        let (mean, stddev, cv) = gars::gc_stat(&gcs);
         assert_relative_eq!(mean, exp.0);
         assert_relative_eq!(stddev, exp.1);
         assert_relative_eq!(cv, exp.2);
-        assert_relative_eq!(snr, exp.3);
     }
 }

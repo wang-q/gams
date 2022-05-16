@@ -350,7 +350,7 @@ pub fn cache_gc_stat(
     cache: &mut HashMap<String, f32>,
     size: i32,
     step: i32,
-) -> (f32, f32, f32, f32) {
+) -> (f32, f32, f32) {
     let intspan = rg.intspan();
     let windows = sliding(&intspan, size, step);
 

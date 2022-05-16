@@ -13,7 +13,7 @@ pub fn stddev(data: &[f32]) -> f32 {
     (sq_sum / (len - 1.)).sqrt()
 }
 
-pub fn gc_stat(gcs: &Vec<f32>) -> (f32, f32, f32, f32) {
+pub fn gc_stat(gcs: &Vec<f32>) -> (f32, f32, f32) {
     let mean = mean(gcs);
     let stddev = stddev(gcs);
 
@@ -26,16 +26,16 @@ pub fn gc_stat(gcs: &Vec<f32>) -> (f32, f32, f32, f32) {
         stddev / (1. - mean)
     };
 
-    // Signal-to-noise ratio
-    let snr = if stddev == 0. {
-        0.
-    } else if mean <= 0.5 {
-        mean / stddev
-    } else {
-        (1. - mean) / stddev
-    };
+    // // Signal-to-noise ratio
+    // let snr = if stddev == 0. {
+    //     0.
+    // } else if mean <= 0.5 {
+    //     mean / stddev
+    // } else {
+    //     (1. - mean) / stddev
+    // };
 
-    (mean, stddev, cv, snr)
+    (mean, stddev, cv)
 }
 
 pub fn thresholding_algo(data: &Vec<f32>, lag: usize, threshold: f32, influence: f32) -> Vec<i32> {

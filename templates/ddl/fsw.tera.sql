@@ -10,8 +10,7 @@ CREATE TABLE fsw
     `gc_content` Float32,
     `gc_mean`    Float32,
     `gc_stddev`  Float32,
-    `gc_cv`      Float32,
-    `gc_snr`     Float32
+    `gc_cv`      Float32
 )
     ENGINE = MergeTree()
         PRIMARY KEY (`ID`)
