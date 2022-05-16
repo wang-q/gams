@@ -116,16 +116,19 @@ gars gen genome/genome.fa.gz --piece 500000
 gars status dump && sync dump.rdb && cp dump.rdb dumps/ctg.dump.rdb
 
 # tsv exports
-gars tsv -s 'ctg:*' -f length | head
-gars tsv -s 'ctg:*' -f length --range | head
-
-gars tsv -s 'ctg:*' --range |
+gars tsv -s 'ctg:*' --range | head |
     rgr sort -H -f 2 stdin |
     rgr prop genome/cds.yml stdin -H -f 2 --prefix |
-    rgr prop genome/repeats.yml stdin -H -f 2 --prefix \
-    > tsvs/ctg.tsv
+    rgr prop genome/repeats.yml stdin -H -f 2 --prefix
 
-cat tsvs/ctg.tsv |
+gars tsv -s 'ctg:*' -f length | head
+
+gars tsv -s 'ctg:*' |
+    keep-header -- tsv-sort -k2,2 -k3,3n -k4,4n |
+    pigz \
+    > tsvs/ctg.tsv.gz
+
+gzip -dcf tsvs/ctg.tsv.gz |
     sed '1d' |
     cut -f 1 \
     > ctg.lst
@@ -139,9 +142,10 @@ time parallel -j 4 -k --line-buffer '
 #user    0m2.096s
 #sys     0m2.666s
 
-gars tsv -s 'range:*' --range |
-    rgr sort -H -f 2 stdin  \
-    > tsvs/range.tsv
+gars tsv -s 'range:*' |
+    keep-header -- tsv-sort -k2,2 -k3,3n -k4,4n |
+    pigz \
+    > tsvs/range.tsv.gz
 
 gars status dump && sync dump.rdb && cp dump.rdb dumps/range.dump.rdb
 
@@ -170,16 +174,18 @@ parallel -j 4 -k --line-buffer '
     ' ::: CSHL FLAG MX RATM
 
 gars tsv -s "feature:*" |
-    keep-header -- tsv-sort -k2,2 -k3,3n -k4,4n \
-    > tsvs/feature.tsv
+    keep-header -- tsv-sort -k2,2 -k3,3n -k4,4n |
+    pigz \
+    > tsvs/feature.tsv.gz
 
 gars status dump && sync dump.rdb && cp dump.rdb dumps/feature.dump.rdb
 
 # fsw
 time gars fsw |
     tsv-uniq |
-    keep-header -- tsv-sort -k2,2 -k3,3n -k4,4n \
-    > tsvs/fsw.tsv
+    keep-header -- tsv-sort -k2,2 -k3,3n -k4,4n |
+    pigz \
+    > tsvs/fsw.tsv.gz
 #real    0m33.137s
 #user    0m30.607s
 #sys     0m6.326s
@@ -311,7 +317,7 @@ done
 
 for q in ctg fsw; do
     echo ${q}
-    cat tsvs/${q}.tsv |
+    gzip -dcf tsvs/${q}.tsv.gz |
         clickhouse client --query "INSERT INTO ${q} FORMAT TSVWithNames"
 done
 

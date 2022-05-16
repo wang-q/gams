@@ -89,11 +89,20 @@ parallel -j 1 -k --line-buffer '
 # brew install --cask another-redis-desktop-manager
 
 # Clickhouse
+# Linux
 export LTS=21.8.4.51
 curl -LO https://repo.clickhouse.tech/tgz/lts/clickhouse-common-static-${LTS}.tgz
 
 tar -xzvf clickhouse-common-static-${LTS}.tgz
 sudo bash clickhouse-common-static-${LTS}/install/doinst.sh
+
+# mac
+#brew tap altinity/clickhouse
+#brew install altinity/clickhouse/clickhouse@21.8-altinity-stable
+
+aria2c 'https://builds.clickhouse.com/master/macos/clickhouse'
+mv clickhouse ~/bin
+chmod a+x ~/bin/clickhouse
 
 # Clickhouse GUI
 git clone https://github.com/VKCOM/lighthouse
