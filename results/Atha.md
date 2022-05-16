@@ -162,7 +162,7 @@ cd ~/data/gars/Atha/
 rm ./dump.rdb
 redis-server --appendonly no --dir ~/data/gars/Atha/
 
-gars env
+gars env --all
 
 gars status drop
 
@@ -196,8 +196,9 @@ time cat genome/chr.sizes |
         gars fsw --ctg "ctg:{}:*"
         ' |
     tsv-uniq |
-    keep-header -- tsv-sort -k2,2 -k3,3n -k4,4n \
-    > tsvs/fsw.tsv
+    keep-header -- tsv-sort -k2,2 -k3,3n -k4,4n |
+    pigz \
+    > tsvs/fsw.tsv.gz
 #real    0m17.195s
 #user    0m34.398s
 #sys     0m7.253s
@@ -365,7 +366,7 @@ done
 
 ## plots
 
-* fsw-distance-tag
+### fsw-distance-tag
 
 ```shell script
 cd ~/data/gars/Atha/
@@ -387,15 +388,15 @@ for tag in $(cat plots/tag.lst); do
         tsv-select -H --exclude tag \
         > plots/${base}.tsv
 
-    for y in {2..6}; do
+    for y in {2..5}; do
         echo ${y}
         Rscript plot_xy.R --infile plots/${base}.tsv --ycol ${y} --yacc 0.002 --outfile plots/${base}.${y}.pdf
     done
 
     gs -q -dNOPAUSE -dBATCH -sDEVICE=pdfwrite -sOutputFile=plots/${base}.pdf \
-        $( for y in {2..6}; do echo plots/${base}.${y}.pdf; done )
+        $( for y in {2..5}; do echo plots/${base}.${y}.pdf; done )
 
-    for y in {2..6}; do
+    for y in {2..5}; do
         rm plots/${base}.${y}.pdf
     done
 
@@ -406,6 +407,12 @@ for tag in $(cat plots/tag.lst); do
 
     rm plots/${base}.tsv
 done
+
+#gs -q -dNOPAUSE -dBATCH -sDEVICE=pdfwrite -sOutputFile=plots/fsw-distance-tag.pdf \
+#    $( for tag in $(cat plots/tag.lst); do echo plots/fsw-distance-tag.${tag}-nup.pdf; done )
+#
+#pdfjam plots/fsw-distance-tag.pdf --nup 1x5 --suffix nup -o plots
+
 
 ```
 
