@@ -6,6 +6,8 @@
 
 * Rename .ranges to .rg
 
+* Remove SNR from gc_stat()
+
 * Add more tests
 
 ## 0.3.0 - 2022-05-13
