@@ -2,7 +2,7 @@
 
 ## genome
 
-```shell script
+```shell
 mkdir -p ~/data/gars/Atha/genome
 cd ~/data/gars/Atha/genome
 
@@ -68,7 +68,7 @@ spanr stat chr.sizes anno.yml --all
 
 ## T-DNA
 
-```shell script
+```shell
 mkdir -p ~/data/gars/Atha/features/
 cd ~/data/gars/Atha/features/
 
@@ -100,7 +100,7 @@ done
 
 ### Contigs
 
-```shell script
+```shell
 # start redis-server
 rm ~/data/gars/Atha/dump.rdb
 redis-server --appendonly no --dir ~/data/gars/Atha/
@@ -211,7 +211,7 @@ gars status stop
 
 Restores from ctg.dump.rdb
 
-```shell script
+```shell
 cd ~/data/gars/Atha/
 
 cp dumps/ctg.dump.rdb ./dump.rdb
@@ -297,7 +297,7 @@ gars status stop
 
 * server
 
-```shell script
+```shell
 cd ~/data/gars/Atha/
 
 mkdir -p clickhouse
@@ -308,7 +308,7 @@ clickhouse server
 
 * load
 
-```shell script
+```shell
 cd ~/data/gars/Atha/
 
 for q in ctg fsw; do
@@ -326,7 +326,7 @@ done
 
 * queries
 
-```shell script
+```shell
 cd ~/data/gars/Atha/
 
 mkdir -p stats
@@ -368,7 +368,7 @@ done
 
 ### fsw-distance-tag
 
-```shell script
+```shell
 cd ~/data/gars/Atha/
 
 mkdir -p plots
