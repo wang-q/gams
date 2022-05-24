@@ -24,7 +24,7 @@ Index - format!("idx:ctg:{}", chr_id)
         )
         .arg(
             Arg::new("infiles")
-                .help("Sets the input files to use")
+                .help("Set the input files to use")
                 .required(true)
                 .min_values(1)
                 .index(1),
