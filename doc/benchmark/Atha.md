@@ -16,6 +16,8 @@ cp ~/data/gars/Atha/features/T-DNA.FLAG.rg .
 cp ~/data/gars/Atha/features/T-DNA.MX.rg .
 cp ~/data/gars/Atha/features/T-DNA.RATM.rg .
 
+cp ~/data/gars/Atha/genome/cds.yml .
+
 ```
 
 ## `gars`
@@ -76,6 +78,17 @@ cat gars.md.tmp
 | `d-g; feature;`      | 3.055 ± 0.050 |   2.980 |   3.144 | 2.73 ± 0.05 |
 | `d-g; feature; fsw;` | 8.949 ± 0.149 |   8.743 |   9.185 | 8.01 ± 0.14 |
 | `d-g; sliding;`      | 5.540 ± 0.028 |   5.496 |   5.587 | 4.96 ± 0.03 |
+
+### R5 4600U Windows 11
+
+| Command              |       Mean [s] | Min [s] | Max [s] |    Relative |
+|:---------------------|---------------:|--------:|--------:|------------:|
+| `drop; gen;`         |  1.657 ± 0.030 |   1.610 |   1.698 |        1.00 |
+| `d-g; range;`        |  5.785 ± 0.191 |   5.569 |   6.221 | 3.49 ± 0.13 |
+| `clear; range;`      |  6.050 ± 0.123 |   5.907 |   6.281 | 3.65 ± 0.10 |
+| `d-g; feature;`      |  5.694 ± 0.147 |   5.387 |   5.884 | 3.44 ± 0.11 |
+| `d-g; feature; fsw;` | 15.643 ± 0.358 |  15.284 |  16.413 | 9.44 ± 0.28 |
+| `d-g; sliding;`      |  7.880 ± 0.078 |   7.767 |   8.003 | 4.76 ± 0.10 |
 
 ### i7 8700K macOS Big Sur
 
@@ -204,6 +217,26 @@ cat threads.md.tmp
 | `parallel -j 2` | 14.920 ± 0.266 |  14.651 |  15.550 | 1.54 ± 0.03 |
 | `parallel -j 4` |  9.684 ± 0.052 |   9.611 |   9.766 |        1.00 |
 
+### R5 4600U Windows 11
+
+* feature
+
+| Command         |       Mean [s] | Min [s] | Max [s] |    Relative |
+|:----------------|---------------:|--------:|--------:|------------:|
+| `serial`        | 27.161 ± 0.682 |  26.077 |  28.379 | 1.53 ± 0.05 |
+| `parallel -j 1` | 28.967 ± 0.876 |  28.137 |  30.887 | 1.63 ± 0.06 |
+| `parallel -j 2` | 18.355 ± 0.323 |  17.776 |  18.851 | 1.03 ± 0.03 |
+| `parallel -j 4` | 17.807 ± 0.417 |  17.347 |  18.669 |        1.00 |
+
+* fsw
+
+| Command         |       Mean [s] | Min [s] | Max [s] |    Relative |
+|:----------------|---------------:|--------:|--------:|------------:|
+| `serial`        | 41.269 ± 0.478 |  40.597 |  42.305 | 2.33 ± 0.07 |
+| `parallel -j 1` | 50.651 ± 0.362 |  50.121 |  51.418 | 2.86 ± 0.08 |
+| `parallel -j 2` | 26.043 ± 0.635 |  25.187 |  27.485 | 1.47 ± 0.05 |
+| `parallel -j 4` | 17.721 ± 0.483 |  17.071 |  18.772 |        1.00 |
+
 ### i7 8700K macOS Big Sur
 
 * feature
@@ -312,7 +345,7 @@ gars status drop
 
 gars gen genome.fa.gz --piece 500000
 
-hyperfine -N --export-markdown locate.md.tmp \
+hyperfine --warmup 1 --export-markdown locate.md.tmp \
     -n 'idx' \
     'gars locate -f T-DNA.CSHL.rg' \
     -n 'lapper' \
@@ -331,6 +364,14 @@ cat locate.md.tmp
 | `idx`    |   22.1 ± 0.5 |     21.3 |     25.8 |         1.00 |
 | `lapper` | 930.5 ± 14.3 |    907.7 |    957.7 | 42.11 ± 1.23 |
 | `zrange` | 2041.1 ± 9.6 |   2029.8 |   2056.4 | 92.37 ± 2.33 |
+
+### R5 4600U Windows 11
+
+| Command  |     Mean [ms] | Min [ms] | Max [ms] |      Relative |
+|:---------|--------------:|---------:|---------:|--------------:|
+| `idx`    |    32.4 ± 1.4 |     30.8 |     37.6 |          1.00 |
+| `lapper` | 1931.3 ± 64.0 |   1825.9 |   2012.9 |  59.64 ± 3.25 |
+| `zrange` | 3852.4 ± 65.0 |   3780.5 |   3943.9 | 118.97 ± 5.53 |
 
 ### i7 8700K macOS Big Sur
 
