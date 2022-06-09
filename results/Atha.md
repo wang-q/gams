@@ -116,7 +116,7 @@ gars gen genome/genome.fa.gz --piece 500000
 gars status dump && sync dump.rdb && cp dump.rdb dumps/ctg.dump.rdb
 
 # tsv exports
-gars tsv -s 'ctg:*' --range | head |
+gars tsv -s 'ctg:*' --range |
     rgr sort -H -f 2 stdin |
     rgr prop genome/cds.yml stdin -H -f 2 --prefix |
     rgr prop genome/repeats.yml stdin -H -f 2 --prefix

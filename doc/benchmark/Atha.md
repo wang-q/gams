@@ -339,3 +339,50 @@ cat locate.md.tmp
 | `idx`    |    62.2 ± 1.1 |     60.0 |     65.2 |         1.00 |
 | `lapper` |   959.6 ± 9.4 |    945.4 |    974.2 | 15.43 ± 0.31 |
 | `zrange` | 3161.5 ± 64.4 |   3097.3 |   3289.5 | 50.82 ± 1.36 |
+
+## `rgr`
+
+```shell
+# redis
+cd ~/gars
+rm dump.rdb
+redis-server
+
+# gars
+cd ~/gars
+gars env
+
+gars status drop
+
+gars gen genome.fa.gz --piece 500000
+
+hyperfine --warmup 1 --export-markdown rgr.md.tmp \
+    -n 'tsv-sort' \
+    '
+    gars tsv -s "ctg:*" |
+        keep-header -- tsv-sort -k2,2 -k3,3n -k4,4n
+    ' \
+    -n 'rgr sort' \
+    '
+    gars tsv -s "ctg:*" --range |
+        rgr sort -H -f 2 stdin
+    ' \
+    -n 'rgr prop' \
+    '
+    gars tsv -s "ctg:*" --range |
+        rgr sort -H -f 2 stdin |
+        rgr prop cds.yml stdin -H -f 2 --prefix
+    '
+
+cat rgr.md.tmp
+
+```
+
+### R5 4600U Windows 11
+
+| Command    |   Mean [ms] | Min [ms] | Max [ms] |     Relative |
+|:-----------|------------:|---------:|---------:|-------------:|
+| `tsv-sort` |  29.8 ± 1.2 |     27.1 |     33.3 |         1.00 |
+| `rgr sort` |  49.3 ± 2.0 |     45.2 |     53.2 |  1.65 ± 0.09 |
+| `rgr prop` | 408.3 ± 3.9 |    403.4 |    415.4 | 13.71 ± 0.56 |
+
