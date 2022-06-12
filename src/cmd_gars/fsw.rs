@@ -46,6 +46,13 @@ pub fn make_subcommand<'a>() -> Command<'a> {
                 .forbid_empty_values(true),
         )
         .arg(
+            Arg::new("range")
+                .long("range")
+                .short('r')
+                .takes_value(false)
+                .help("Write a `range` fields instead of chr_id, chr_start, chr_end"),
+        )
+        .arg(
             Arg::new("outfile")
                 .short('o')
                 .long("outfile")
@@ -71,16 +78,22 @@ pub fn execute(args: &ArgMatches) -> std::result::Result<(), Box<dyn std::error:
         eprintln!("Need a integer for --resize\n{}", e);
         std::process::exit(1)
     });
+    let is_range = args.is_present("range");
 
     // redis connection
     let mut conn = connect();
 
     // headers
     let mut writer = writer(args.value_of("outfile").unwrap());
-    let headers = vec![
-        "chr_id",
-        "chr_start",
-        "chr_end",
+    let mut headers = vec![];
+    if is_range {
+        headers.push("range");
+    } else {
+        headers.push("chr_id");
+        headers.push("chr_start");
+        headers.push("chr_end");
+    }
+    headers.append(&mut vec![
         "type",
         "distance",
         "tag",
@@ -88,7 +101,7 @@ pub fn execute(args: &ArgMatches) -> std::result::Result<(), Box<dyn std::error:
         "gc_mean",
         "gc_stddev",
         "gc_cv",
-    ];
+    ]);
     writer.write_all(format!("{}\t{}\n", "ID", headers.join("\t")).as_ref())?;
 
     // process each contig
@@ -136,9 +149,14 @@ pub fn execute(args: &ArgMatches) -> std::result::Result<(), Box<dyn std::error:
                 // prepare to output
                 let mut values: Vec<String> = vec![];
 
-                values.push(format!("{}", chr_id));
-                values.push(format!("{}", sw_intspan.min()));
-                values.push(format!("{}", sw_intspan.max()));
+                if is_range {
+                    values
+                        .push(Range::from(&chr_id, sw_intspan.min(), sw_intspan.max()).to_string());
+                } else {
+                    values.push(format!("{}", chr_id));
+                    values.push(format!("{}", sw_intspan.min()));
+                    values.push(format!("{}", sw_intspan.max()));
+                }
                 values.push(format!("{}", sw_type));
                 values.push(format!("{}", sw_distance));
                 values.push(format!("{}", tag));
