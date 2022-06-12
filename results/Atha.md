@@ -119,12 +119,7 @@ gars status dump && sync dump.rdb && cp dump.rdb dumps/ctg.dump.rdb
 gars tsv -s 'ctg:*' --range |
     rgr sort -H -f 2 stdin |
     rgr prop genome/cds.yml stdin -H -f 2 --prefix |
-    rgr prop genome/repeats.yml stdin -H -f 2 --prefix
-
-gars tsv -s 'ctg:*' -f length | head
-
-gars tsv -s 'ctg:*' |
-    keep-header -- tsv-sort -k2,2 -k3,3n -k4,4n |
+    rgr prop genome/repeats.yml stdin -H -f 2 --prefix |
     pigz \
     > tsvs/ctg.tsv.gz
 
@@ -142,8 +137,10 @@ time parallel -j 4 -k --line-buffer '
 #user    0m2.096s
 #sys     0m2.666s
 
-gars tsv -s 'range:*' |
-    keep-header -- tsv-sort -k2,2 -k3,3n -k4,4n |
+gars tsv -s 'range:*' --range |
+    rgr sort -H -f 2 stdin |
+    rgr prop genome/cds.yml stdin -H -f 2 --prefix |
+    rgr prop genome/repeats.yml stdin -H -f 2 --prefix |
     pigz \
     > tsvs/range.tsv.gz
 
@@ -173,17 +170,18 @@ parallel -j 4 -k --line-buffer '
     gars feature features/T-DNA.{}.rg --tag {}
     ' ::: CSHL FLAG MX RATM
 
-gars tsv -s "feature:*" |
-    keep-header -- tsv-sort -k2,2 -k3,3n -k4,4n |
+gars tsv -s 'feature:*' --range |
+    rgr prop genome/cds.yml stdin -H -f 2 --prefix |
+    rgr prop genome/repeats.yml stdin -H -f 2 --prefix |
+    rgr sort -H -f 2 stdin |
     pigz \
     > tsvs/feature.tsv.gz
 
 gars status dump && sync dump.rdb && cp dump.rdb dumps/feature.dump.rdb
 
 # fsw
-time gars fsw |
-    tsv-uniq |
-    keep-header -- tsv-sort -k2,2 -k3,3n -k4,4n |
+time gars fsw --range |
+    rgr sort -H -f 2 stdin |
     pigz \
     > tsvs/fsw.tsv.gz
 #real    0m33.137s
@@ -193,10 +191,11 @@ time gars fsw |
 time cat genome/chr.sizes |
     cut -f 1 |
     parallel -j 4 -k --line-buffer '
-        gars fsw --ctg "ctg:{}:*"
+        gars fsw --ctg "ctg:{}:*" --range |
+            rgr prop genome/cds.yml stdin -H -f 2 --prefix |
+            rgr prop genome/repeats.yml stdin -H -f 2 --prefix
         ' |
-    tsv-uniq |
-    keep-header -- tsv-sort -k2,2 -k3,3n -k4,4n |
+    rgr sort -H -f 2 stdin |
     pigz \
     > tsvs/fsw.tsv.gz
 #real    0m17.195s
