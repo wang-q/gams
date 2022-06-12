@@ -417,6 +417,33 @@ hyperfine --warmup 1 --export-markdown rgr.md.tmp \
 
 cat rgr.md.tmp
 
+# ranges
+gars status drop
+
+gars gen genome.fa.gz --piece 500000
+
+gars range T-DNA.CSHL.rg
+
+hyperfine --warmup 1 --export-markdown rgr.md.tmp \
+    -n 'tsv-sort' \
+    '
+    gars tsv -s "range:*" |
+        keep-header -- tsv-sort -k2,2 -k3,3n -k4,4n
+    ' \
+    -n 'rgr sort' \
+    '
+    gars tsv -s "range:*" --range |
+        rgr sort -H -f 2 stdin
+    ' \
+    -n 'rgr prop' \
+    '
+    gars tsv -s "range:*" --range |
+        rgr sort -H -f 2 stdin |
+        rgr prop cds.yml stdin -H -f 2 --prefix
+    '
+
+cat rgr.md.tmp
+
 ```
 
 ### R5 4600U Windows 11
@@ -427,3 +454,8 @@ cat rgr.md.tmp
 | `rgr sort` |  49.3 ± 2.0 |     45.2 |     53.2 |  1.65 ± 0.09 |
 | `rgr prop` | 408.3 ± 3.9 |    403.4 |    415.4 | 13.71 ± 0.56 |
 
+| Command    |       Mean [s] | Min [s] | Max [s] |    Relative |
+|:-----------|---------------:|--------:|--------:|------------:|
+| `tsv-sort` |  2.120 ± 0.096 |   1.990 |   2.288 |        1.00 |
+| `rgr sort` |  3.916 ± 0.118 |   3.742 |   4.097 | 1.85 ± 0.10 |
+| `rgr prop` | 11.327 ± 0.211 |  11.057 |  11.771 | 5.34 ± 0.26 |
