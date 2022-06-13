@@ -18,6 +18,7 @@ fn main() -> std::io::Result<()> {
         .subcommand(cmd_gars::clear::make_subcommand())
         .subcommand(cmd_gars::feature::make_subcommand())
         .subcommand(cmd_gars::fsw::make_subcommand())
+        .subcommand(cmd_gars::anno::make_subcommand())
         .subcommand(cmd_gars::sliding::make_subcommand())
         .subcommand(cmd_gars::peak::make_subcommand())
         .subcommand(cmd_gars::tsv::make_subcommand());
@@ -32,6 +33,7 @@ fn main() -> std::io::Result<()> {
         Some(("clear", sub_matches)) => cmd_gars::clear::execute(sub_matches),
         Some(("feature", sub_matches)) => cmd_gars::feature::execute(sub_matches),
         Some(("fsw", sub_matches)) => cmd_gars::fsw::execute(sub_matches),
+        Some(("anno", sub_matches)) => cmd_gars::anno::execute(sub_matches),
         Some(("sliding", sub_matches)) => cmd_gars::sliding::execute(sub_matches),
         Some(("peak", sub_matches)) => cmd_gars::peak::execute(sub_matches),
         Some(("tsv", sub_matches)) => cmd_gars::tsv::execute(sub_matches),

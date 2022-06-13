@@ -123,6 +123,10 @@ gars tsv -s 'ctg:*' --range |
     pigz \
     > tsvs/ctg.tsv.gz
 
+gars tsv -s 'ctg:*' --range |
+    gars anno -H genome/cds.yml stdin
+
+
 gzip -dcf tsvs/ctg.tsv.gz |
     sed '1d' |
     cut -f 1 \
