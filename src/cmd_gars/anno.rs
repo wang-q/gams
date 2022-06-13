@@ -1,10 +1,9 @@
-use std::collections::HashMap;
 use clap::*;
 use gars::*;
 use intspan::*;
 use lazy_static::lazy_static;
-use redis::Commands;
 use regex::Regex;
+use std::collections::HashMap;
 use std::ffi::OsStr;
 use std::io::BufRead;
 use std::path::Path;
@@ -89,11 +88,14 @@ pub fn execute(args: &ArgMatches) -> std::result::Result<(), Box<dyn std::error:
     //----------------------------
     // Loading
     //----------------------------
+    // redis connection
+    let mut conn = connect();
+
     let yaml = read_yaml(args.value_of("runlist").unwrap());
     let set = yaml2set(&yaml);
 
-    // local caches of the feature runlist for each ctg
-    let mut cache: HashMap<String, String> = HashMap::new();
+    // local caches of the feature IntSpan for each ctg
+    let mut cache: HashMap<String, IntSpan> = HashMap::new();
 
     //----------------------------
     // Operating
@@ -118,22 +120,32 @@ pub fn execute(args: &ArgMatches) -> std::result::Result<(), Box<dyn std::error:
 
             let parts: Vec<&str> = line.split('\t').collect();
 
-            let field_id = parts.get(idx_id - 1).unwrap();
-            let ctg_id = match extract_ctg_id(field_id) {
+            let line_id = parts.get(idx_id - 1).unwrap();
+            let ctg_id = match extract_ctg_id(line_id) {
                 Some(ctg_id) => ctg_id,
                 None => continue,
-            };
+            }
+            .to_string();
 
             let range = Range::from_str(parts.get(idx_range - 1).unwrap());
-
             if !range.is_valid() {
                 continue 'LINE;
             }
+            let intspan = range.intspan();
 
-            let mut intspan = range.intspan();
+            let mut prop = 0.0;
+            if set.contains_key(range.chr()) {
+                if !cache.contains_key(&ctg_id) {
+                    let (_, chr_start, chr_end) = gars::get_key_pos(&mut conn, &ctg_id);
+                    let ctg_intspan = IntSpan::from_pair(chr_start, chr_end);
+                    let parent = set.get(range.chr()).unwrap().intersect(&ctg_intspan);
+                    cache.insert(ctg_id.clone(), parent);
+                }
 
-            eprintln!("ctg_id = {:#?}", ctg_id);
-            eprintln!("range = {:#?}", range.to_string());
+                let intxn = cache.get(&ctg_id).unwrap().intersect(&intspan);
+                prop = intxn.cardinality() as f32 / intspan.cardinality() as f32;
+            }
+            writer.write_fmt(format_args!("{}\t{:.4}\n", line, prop))?;
         }
     }
 
