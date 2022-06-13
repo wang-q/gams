@@ -17,6 +17,7 @@ cp ~/data/gars/Atha/features/T-DNA.MX.rg .
 cp ~/data/gars/Atha/features/T-DNA.RATM.rg .
 
 cp ~/data/gars/Atha/genome/cds.yml .
+cp ~/data/gars/Atha/genome/repeats.yml .
 
 ```
 
@@ -381,7 +382,7 @@ cat locate.md.tmp
 | `lapper` |   959.6 ± 9.4 |    945.4 |    974.2 | 15.43 ± 0.31 |
 | `zrange` | 3161.5 ± 64.4 |   3097.3 |   3289.5 | 50.82 ± 1.36 |
 
-## `rgr`
+## `rgr sort`
 
 ```shell
 # redis
@@ -397,49 +398,28 @@ gars status drop
 
 gars gen genome.fa.gz --piece 500000
 
+gars range T-DNA.CSHL.rg
+
 hyperfine --warmup 1 --export-markdown rgr.md.tmp \
-    -n 'tsv-sort' \
+    -n 'ctg - tsv-sort' \
     '
     gars tsv -s "ctg:*" |
         keep-header -- tsv-sort -k2,2 -k3,3n -k4,4n
     ' \
-    -n 'rgr sort' \
+    -n 'ctg - rgr sort' \
     '
     gars tsv -s "ctg:*" --range |
         rgr sort -H -f 2 stdin
     ' \
-    -n 'rgr prop' \
-    '
-    gars tsv -s "ctg:*" --range |
-        rgr sort -H -f 2 stdin |
-        rgr prop cds.yml stdin -H -f 2 --prefix
-    '
-
-cat rgr.md.tmp
-
-# ranges
-gars status drop
-
-gars gen genome.fa.gz --piece 500000
-
-gars range T-DNA.CSHL.rg
-
-hyperfine --warmup 1 --export-markdown rgr.md.tmp \
-    -n 'tsv-sort' \
+    -n 'range - tsv-sort' \
     '
     gars tsv -s "range:*" |
         keep-header -- tsv-sort -k2,2 -k3,3n -k4,4n
     ' \
-    -n 'rgr sort' \
+    -n 'range - rgr sort' \
     '
     gars tsv -s "range:*" --range |
         rgr sort -H -f 2 stdin
-    ' \
-    -n 'rgr prop' \
-    '
-    gars tsv -s "range:*" --range |
-        rgr sort -H -f 2 stdin |
-        rgr prop cds.yml stdin -H -f 2 --prefix
     '
 
 cat rgr.md.tmp
@@ -448,14 +428,86 @@ cat rgr.md.tmp
 
 ### R5 4600U Windows 11
 
-| Command    |   Mean [ms] | Min [ms] | Max [ms] |     Relative |
-|:-----------|------------:|---------:|---------:|-------------:|
-| `tsv-sort` |  29.8 ± 1.2 |     27.1 |     33.3 |         1.00 |
-| `rgr sort` |  49.3 ± 2.0 |     45.2 |     53.2 |  1.65 ± 0.09 |
-| `rgr prop` | 408.3 ± 3.9 |    403.4 |    415.4 | 13.71 ± 0.56 |
+| Command           |      Mean [ms] | Min [ms] | Max [ms] |     Relative |
+|:------------------|---------------:|---------:|---------:|-------------:|
+| `ctg: tsv-sort`   |    209.4 ± 5.4 |    198.0 |    220.4 |         1.00 |
+| `ctg: rgr sort`   |   225.5 ± 10.5 |    209.0 |    238.1 |  1.08 ± 0.06 |
+| `range: tsv-sort` |  2065.8 ± 87.3 |   1976.6 |   2190.4 |  9.87 ± 0.49 |
+| `range: rgr sort` | 4066.6 ± 101.1 |   3905.2 |   4278.3 | 19.42 ± 0.70 |
 
-| Command    |       Mean [s] | Min [s] | Max [s] |    Relative |
-|:-----------|---------------:|--------:|--------:|------------:|
-| `tsv-sort` |  2.120 ± 0.096 |   1.990 |   2.288 |        1.00 |
-| `rgr sort` |  3.916 ± 0.118 |   3.742 |   4.097 | 1.85 ± 0.10 |
-| `rgr prop` | 11.327 ± 0.211 |  11.057 |  11.771 | 5.34 ± 0.26 |
+## `rgr prop` and `gars anno`
+
+```shell
+# redis
+cd ~/gars
+rm dump.rdb
+redis-server
+
+# gars
+cd ~/gars
+gars env
+
+gars status drop
+
+gars gen genome.fa.gz --piece 500000
+
+gars range T-DNA.CSHL.rg
+
+hyperfine --warmup 1 --export-markdown prop.md.tmp \
+    -n 'ctg - cds - rgr prop' \
+    '
+    gars tsv -s "ctg:*" --range |
+        rgr prop cds.yml stdin -H -f 2 --prefix
+    ' \
+    -n 'ctg - cds - gars anno' \
+    '
+    gars tsv -s "ctg:*" --range |
+        gars anno cds.yml stdin -H
+    ' \
+    -n 'ctg - repeats - rgr prop' \
+    '
+    gars tsv -s "ctg:*" --range |
+        rgr prop repeats.yml stdin -H -f 2 --prefix
+    ' \
+    -n 'ctg - repeats - gars anno' \
+    '
+    gars tsv -s "ctg:*" --range |
+        gars anno repeats.yml stdin -H
+    ' \
+    -n 'range - cds - rgr prop' \
+    '
+    gars tsv -s "range:*" --range |
+        rgr prop cds.yml stdin -H -f 2 --prefix
+    ' \
+    -n 'range - cds - gars anno' \
+    '
+    gars tsv -s "range:*" --range |
+        gars anno cds.yml stdin -H
+    ' \
+    -n 'range - repeats - rgr prop' \
+    '
+    gars tsv -s "range:*" --range |
+        rgr prop repeats.yml stdin -H -f 2 --prefix
+    ' \
+    -n 'range - repeats - gars anno' \
+    '
+    gars tsv -s "range:*" --range |
+        gars anno repeats.yml stdin -H
+    '
+
+cat prop.md.tmp
+
+```
+
+### R5 4600U Windows 11
+
+| Command                       |       Mean [ms] | Min [ms] | Max [ms] |      Relative |
+|:------------------------------|----------------:|---------:|---------:|--------------:|
+| `ctg - cds - rgr prop`        |     542.5 ± 5.7 |    534.3 |    550.3 |          1.00 |
+| `ctg - cds - gars anno`       | 25040.8 ± 106.2 |  24871.5 |  25164.0 |  46.15 ± 0.53 |
+| `ctg - repeats - rgr prop`    |    952.5 ± 40.3 |    928.0 |   1065.2 |   1.76 ± 0.08 |
+| `ctg - repeats - gars anno`   | 57937.1 ± 276.4 |  57572.3 |  58375.0 | 106.79 ± 1.24 |
+| `range - cds - rgr prop`      |   7460.0 ± 39.3 |   7394.5 |   7524.7 |  13.75 ± 0.16 |
+| `range - cds - gars anno`     | 24846.5 ± 162.7 |  24603.7 |  25083.0 |  45.80 ± 0.57 |
+| `range - repeats - rgr prop`  |  11292.8 ± 73.2 |  11206.9 |  11464.7 |  20.81 ± 0.26 |
+| `range - repeats - gars anno` | 54754.9 ± 584.1 |  54087.1 |  55794.9 | 100.92 ± 1.52 |
