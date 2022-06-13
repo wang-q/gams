@@ -7,7 +7,7 @@ use std::collections::BTreeMap;
 // Create clap subcommand arguments
 pub fn make_subcommand<'a>() -> Command<'a> {
     Command::new("tsv")
-        .about("Exports Redis hashes to a tsv file")
+        .about("Export Redis hashes to a tsv file")
         .after_help(
             r#"
 All hashes should have the same structure.
