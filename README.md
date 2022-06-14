@@ -9,7 +9,7 @@
 
 ## INSTALL
 
-Current release: 0.3.0
+Current release: 0.3.1
 
 ```shell
 cargo install --force --offline --path .
