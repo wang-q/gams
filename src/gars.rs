@@ -46,4 +46,3 @@ fn main() -> std::io::Result<()> {
 
 // TODO: sliding windows of waves
 // TODO: `gars count`
-// TODO: annotations - coding and repeats

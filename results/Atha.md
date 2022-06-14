@@ -116,16 +116,15 @@ gars gen genome/genome.fa.gz --piece 500000
 gars status dump && sync dump.rdb && cp dump.rdb dumps/ctg.dump.rdb
 
 # tsv exports
-gars tsv -s 'ctg:*' --range |
+time gars tsv -s 'ctg:*' --range |
+    gars anno genome/cds.yml stdin -H |
+    gars anno genome/repeats.yml stdin -H |
     rgr sort -H -f 2 stdin |
-    rgr prop genome/cds.yml stdin -H -f 2 --prefix |
-    rgr prop genome/repeats.yml stdin -H -f 2 --prefix |
     pigz \
     > tsvs/ctg.tsv.gz
-
-gars tsv -s 'ctg:*' --range |
-    gars anno -H genome/cds.yml stdin
-
+#real    0m0.935s
+#user    0m1.008s
+#sys     0m0.040s
 
 gzip -dcf tsvs/ctg.tsv.gz |
     sed '1d' |
@@ -141,12 +140,15 @@ time parallel -j 4 -k --line-buffer '
 #user    0m2.096s
 #sys     0m2.666s
 
-gars tsv -s 'range:*' --range |
+time gars tsv -s 'range:*' --range |
+    gars anno genome/cds.yml stdin -H |
+    gars anno genome/repeats.yml stdin -H |
     rgr sort -H -f 2 stdin |
-    rgr prop genome/cds.yml stdin -H -f 2 --prefix |
-    rgr prop genome/repeats.yml stdin -H -f 2 --prefix |
     pigz \
     > tsvs/range.tsv.gz
+#real    0m7.933s
+#user    0m4.481s
+#sys     0m4.459s
 
 gars status dump && sync dump.rdb && cp dump.rdb dumps/range.dump.rdb
 
@@ -174,12 +176,15 @@ parallel -j 4 -k --line-buffer '
     gars feature features/T-DNA.{}.rg --tag {}
     ' ::: CSHL FLAG MX RATM
 
-gars tsv -s 'feature:*' --range |
-    rgr prop genome/cds.yml stdin -H -f 2 --prefix |
-    rgr prop genome/repeats.yml stdin -H -f 2 --prefix |
+time gars tsv -s 'feature:*' --range |
+    gars anno genome/cds.yml stdin -H |
+    gars anno genome/repeats.yml stdin -H |
     rgr sort -H -f 2 stdin |
     pigz \
     > tsvs/feature.tsv.gz
+#real    0m8.440s
+#user    0m5.084s
+#sys     0m4.266s
 
 gars status dump && sync dump.rdb && cp dump.rdb dumps/feature.dump.rdb
 
@@ -196,15 +201,15 @@ time cat genome/chr.sizes |
     cut -f 1 |
     parallel -j 4 -k --line-buffer '
         gars fsw --ctg "ctg:{}:*" --range |
-            rgr prop genome/cds.yml stdin -H -f 2 --prefix |
-            rgr prop genome/repeats.yml stdin -H -f 2 --prefix
+            gars anno genome/cds.yml stdin -H |
+            gars anno genome/repeats.yml stdin -H
         ' |
     rgr sort -H -f 2 stdin |
     pigz \
     > tsvs/fsw.tsv.gz
-#real    0m17.195s
-#user    0m34.398s
-#sys     0m7.253s
+#real    0m30.625s
+#user    2m55.935s
+#sys     0m12.084s
 
 gars status stop
 
