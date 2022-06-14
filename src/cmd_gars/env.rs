@@ -9,15 +9,13 @@ pub fn make_subcommand<'a>() -> Command<'a> {
     Command::new("env")
         .about("Create a .env file")
         .after_help(
-            r#"
+            r###"
 Default values:
 
 * REDIS_HOST - localhost
 * REDIS_PORT - 6379
-* REDIS_PASSWORD -
-* REDIS_TLS - false
 
-"#,
+"###,
         )
         .arg(Arg::new("all").long("all").help("Create all scripts"))
         .arg(
@@ -39,8 +37,6 @@ pub fn execute(args: &ArgMatches) -> std::result::Result<(), Box<dyn std::error:
         Ok(config) => {
             context.insert("host", &config.redis_host);
             context.insert("port", &config.redis_port);
-            context.insert("password", &config.redis_password);
-            context.insert("tls", &config.redis_tls);
         }
         Err(error) => panic!("{:#?}", error),
     }

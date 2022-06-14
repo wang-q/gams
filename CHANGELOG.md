@@ -4,9 +4,11 @@
 
 * Add `--range` to `gars tsv`
 
-* Rename .ranges to .rg
-
+* Switch to `clap` v3.2
+* Remove TLS
 * Remove SNR from gc_stat()
+
+* Rename .ranges to .rg
 
 * Add more tests
 

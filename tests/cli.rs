@@ -29,8 +29,8 @@ fn command_env() -> Result<(), Box<dyn std::error::Error>> {
         .unwrap();
     let stdout = String::from_utf8(output.stdout).unwrap();
 
-    assert_eq!(stdout.lines().count(), 6);
-    assert!(stdout.contains("REDIS_PASSWORD=''"), "original values");
+    assert_eq!(stdout.lines().count(), 4);
+    assert!(stdout.contains("6379"), "original values");
 
     Ok(())
 }
@@ -67,7 +67,7 @@ fn command_env_all() -> Result<(), Box<dyn std::error::Error>> {
 fn command_env_env() -> Result<(), Box<dyn std::error::Error>> {
     let mut cmd = Command::cargo_bin("gars")?;
     let output = cmd
-        .env("REDIS_PASSWORD", "mYpa$$")
+        .env("REDIS_PORT", "7379")
         .arg("env")
         .arg("--outfile")
         .arg("stdout")
@@ -75,9 +75,9 @@ fn command_env_env() -> Result<(), Box<dyn std::error::Error>> {
         .unwrap();
     let stdout = String::from_utf8(output.stdout).unwrap();
 
-    assert_eq!(stdout.lines().count(), 6);
+    assert_eq!(stdout.lines().count(), 4);
     assert!(
-        stdout.contains("REDIS_PASSWORD='mYpa$$'"),
+        stdout.contains("REDIS_PORT=7379"),
         "modified values"
     );
 
