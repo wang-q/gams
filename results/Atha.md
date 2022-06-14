@@ -409,17 +409,17 @@ for tag in $(cat plots/tag.lst); do
         Rscript plot_xy.R --infile plots/${base}.tsv --ycol ${y} --yacc 0.002 --outfile plots/${base}.${y}.pdf
     done
 
-#    gs -q -dNOPAUSE -dBATCH -sDEVICE=pdfwrite -sOutputFile=plots/${base}.pdf \
-#        $( for y in {2..5}; do echo plots/${base}.${y}.pdf; done )
-#
-#    for y in {2..5}; do
-#        rm plots/${base}.${y}.pdf
-#    done
-#
-#    pdfjam plots/${base}.pdf --nup 5x1 --suffix nup -o plots
-#
-#    pdfcrop plots/${base}-nup.pdf
-#    mv plots/${base}-nup-crop.pdf plots/${base}-nup.pdf
+    gs -q -dNOPAUSE -dBATCH -sDEVICE=pdfwrite -sOutputFile=plots/${base}.pdf \
+        $( for y in {2..7}; do echo plots/${base}.${y}.pdf; done )
+
+    for y in {2..7}; do
+        rm plots/${base}.${y}.pdf
+    done
+
+    pdfjam plots/${base}.pdf --nup 7x1 --suffix nup -o plots
+
+    pdfcrop --margins 5 plots/${base}-nup.pdf
+    mv plots/${base}-nup-crop.pdf plots/${base}-nup.pdf
 
     rm plots/${base}.tsv
 done
