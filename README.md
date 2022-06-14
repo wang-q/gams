@@ -74,7 +74,11 @@ brew install wang-q/tap/tsv-utils wang-q/tap/intspan wang-q/tap/faops
 ```shell
 # R packages
 parallel -j 1 -k --line-buffer '
-    Rscript -e '\'' if (!requireNamespace("{}", quietly = TRUE)) { install.packages("{}", repos="https://mirrors.tuna.tsinghua.edu.cn/CRAN") } '\''
+    Rscript -e '\''
+        if (!requireNamespace("{}", quietly = TRUE)) {
+            install.packages("{}", repos="https://mirrors.tuna.tsinghua.edu.cn/CRAN")
+        }
+    '\''
     ' ::: \
         getopt \
         extrafont ggplot2 gridExtra \

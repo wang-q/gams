@@ -404,7 +404,7 @@ for tag in $(cat plots/tag.lst); do
         tsv-select -H --exclude tag \
         > plots/${base}.tsv
 
-    for y in {2..5}; do
+    for y in {2..7}; do
         echo ${y}
         Rscript plot_xy.R --infile plots/${base}.tsv --ycol ${y} --yacc 0.002 --outfile plots/${base}.${y}.pdf
     done
