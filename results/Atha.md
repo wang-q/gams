@@ -116,15 +116,18 @@ gars gen genome/genome.fa.gz --piece 500000
 gars status dump && sync dump.rdb && cp dump.rdb dumps/ctg.dump.rdb
 
 # tsv exports
-time gars tsv -s 'ctg:*' --range |
+time gars tsv -s 'ctg:*' |
+    rgr field -H -a --chr 2 --start 3 --end 4 stdin |
+    tsv-select -f 1,7,2-6 |
     gars anno genome/cds.yml stdin -H |
     gars anno genome/repeats.yml stdin -H |
     rgr sort -H -f 2 stdin |
+    tsv-select -H -e range |
     pigz \
     > tsvs/ctg.tsv.gz
-#real    0m0.935s
-#user    0m1.008s
-#sys     0m0.040s
+#real    0m1.175s
+#user    0m1.060s
+#sys     0m0.217s
 
 gzip -dcf tsvs/ctg.tsv.gz |
     sed '1d' |
@@ -200,11 +203,16 @@ time gars fsw --range |
 time cat genome/chr.sizes |
     cut -f 1 |
     parallel -j 4 -k --line-buffer '
-        gars fsw --ctg "ctg:{}:*" --range |
+        gars fsw --ctg "ctg:{}:*" |
+            rgr field -H -a --chr 2 --start 3 --end 4 stdin |
+            tsv-select -f 1,12,2-11 |
             gars anno genome/cds.yml stdin -H |
             gars anno genome/repeats.yml stdin -H
+            rgr sort -H -f 2 stdin |
         ' |
     rgr sort -H -f 2 stdin |
+    tsv-select -H -e range |
+    tsv-uniq |
     pigz \
     > tsvs/fsw.tsv.gz
 #real    0m30.625s
@@ -401,17 +409,17 @@ for tag in $(cat plots/tag.lst); do
         Rscript plot_xy.R --infile plots/${base}.tsv --ycol ${y} --yacc 0.002 --outfile plots/${base}.${y}.pdf
     done
 
-    gs -q -dNOPAUSE -dBATCH -sDEVICE=pdfwrite -sOutputFile=plots/${base}.pdf \
-        $( for y in {2..5}; do echo plots/${base}.${y}.pdf; done )
-
-    for y in {2..5}; do
-        rm plots/${base}.${y}.pdf
-    done
-
-    pdfjam plots/${base}.pdf --nup 5x1 --suffix nup -o plots
-
-    pdfcrop plots/${base}-nup.pdf
-    mv plots/${base}-nup-crop.pdf plots/${base}-nup.pdf
+#    gs -q -dNOPAUSE -dBATCH -sDEVICE=pdfwrite -sOutputFile=plots/${base}.pdf \
+#        $( for y in {2..5}; do echo plots/${base}.${y}.pdf; done )
+#
+#    for y in {2..5}; do
+#        rm plots/${base}.${y}.pdf
+#    done
+#
+#    pdfjam plots/${base}.pdf --nup 5x1 --suffix nup -o plots
+#
+#    pdfcrop plots/${base}-nup.pdf
+#    mv plots/${base}-nup-crop.pdf plots/${base}-nup.pdf
 
     rm plots/${base}.tsv
 done
