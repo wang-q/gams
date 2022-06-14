@@ -2,6 +2,7 @@
 
 ## Unreleased - ReleaseDate
 
+* Add `gars anno`
 * Add `--range` to `gars tsv`
 
 * Switch to `clap` v3.2
@@ -12,6 +13,7 @@
 * Rename .ranges to .rg
 
 * Add more tests
+* Add more benchmarks
 
 ## 0.3.0 - 2022-05-13
 
