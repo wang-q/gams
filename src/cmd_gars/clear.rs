@@ -32,7 +32,7 @@ List of actions:
 
 // command implementation
 pub fn execute(args: &ArgMatches) -> std::result::Result<(), Box<dyn std::error::Error>> {
-    match args.value_of("action").unwrap() {
+    match args.get_one::<String>("action").unwrap().as_str() {
         "feature" => {
             clear("feature:*");
             clear("cnt:feature:*");

@@ -27,7 +27,7 @@ ID - format!("feature:{}:{}", ctg_id, serial)
                 .short('t')
                 .takes_value(true)
                 .default_value("feature")
-                .forbid_empty_values(true)
+                .value_parser(clap::builder::NonEmptyStringValueParser::new())
                 .help("Feature tags"),
         )
 }
@@ -35,8 +35,8 @@ ID - format!("feature:{}:{}", ctg_id, serial)
 // command implementation
 pub fn execute(args: &ArgMatches) -> std::result::Result<(), Box<dyn std::error::Error>> {
     // opts
-    let infile = args.value_of("infile").unwrap();
-    let tag = args.value_of("tag").unwrap();
+    let infile = args.get_one::<String>("infile").unwrap();
+    let tag = args.get_one::<String>("tag").unwrap().as_str();
 
     // redis connection
     let mut conn = connect();

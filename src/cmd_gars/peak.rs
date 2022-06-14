@@ -29,7 +29,7 @@ Left-/right- wave lengths may be negative
 // command implementation
 pub fn execute(args: &ArgMatches) -> std::result::Result<(), Box<dyn std::error::Error>> {
     // opts
-    let infile = args.value_of("infile").unwrap();
+    let infile = args.get_one::<String>("infile").unwrap();
 
     // redis connection
     let mut conn = connect();

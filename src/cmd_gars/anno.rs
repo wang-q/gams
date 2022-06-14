@@ -44,6 +44,7 @@ pub fn make_subcommand<'a>() -> Command<'a> {
             Arg::new("id")
                 .long("id")
                 .takes_value(true)
+                .value_parser(value_parser!(usize))
                 .default_value("1")
                 .required(true)
                 .help("Set the index of the ID field"),
@@ -52,6 +53,7 @@ pub fn make_subcommand<'a>() -> Command<'a> {
             Arg::new("range")
                 .long("range")
                 .takes_value(true)
+                .value_parser(value_parser!(usize))
                 .default_value("2")
                 .help("Set the index of the range field"),
         )
@@ -61,7 +63,7 @@ pub fn make_subcommand<'a>() -> Command<'a> {
                 .long("outfile")
                 .takes_value(true)
                 .default_value("stdout")
-                .forbid_empty_values(true)
+                .value_parser(clap::builder::NonEmptyStringValueParser::new())
                 .help("Output filename. [stdout] for screen"),
         )
 }
@@ -71,19 +73,11 @@ pub fn execute(args: &ArgMatches) -> std::result::Result<(), Box<dyn std::error:
     //----------------------------
     // Options
     //----------------------------
-    let mut writer = writer(args.value_of("outfile").unwrap());
+    let mut writer = writer(args.get_one::<String>("outfile").unwrap());
 
-    let is_header = args.is_present("header");
-
-    let idx_id: usize = args.value_of_t("id").unwrap_or_else(|e| {
-        eprintln!("Need an integer for --id\n{}", e);
-        std::process::exit(1)
-    });
-
-    let idx_range: usize = args.value_of_t("range").unwrap_or_else(|e| {
-        eprintln!("Need an integer for --range\n{}", e);
-        std::process::exit(1)
-    });
+    let is_header = args.contains_id("header");
+    let idx_id = *args.get_one::<usize>("id").unwrap();
+    let idx_range = *args.get_one::<usize>("range").unwrap();
 
     //----------------------------
     // Loading
@@ -91,7 +85,7 @@ pub fn execute(args: &ArgMatches) -> std::result::Result<(), Box<dyn std::error:
     // redis connection
     let mut conn = connect();
 
-    let yaml = read_yaml(args.value_of("runlist").unwrap());
+    let yaml = read_yaml(args.get_one::<String>("runlist").unwrap());
     let set = yaml2set(&yaml);
 
     // local caches of the feature IntSpan for each ctg
@@ -100,11 +94,11 @@ pub fn execute(args: &ArgMatches) -> std::result::Result<(), Box<dyn std::error:
     //----------------------------
     // Operating
     //----------------------------
-    for infile in args.values_of("infiles").unwrap() {
+    for infile in args.get_many::<String>("infiles").unwrap() {
         let reader = reader(infile);
         'LINE: for (i, line) in reader.lines().filter_map(|r| r.ok()).enumerate() {
             if is_header && i == 0 {
-                let prefix = Path::new(args.value_of("runlist").unwrap())
+                let prefix = Path::new(args.get_one::<String>("runlist").unwrap())
                     .file_stem()
                     .and_then(OsStr::to_str)
                     .unwrap()

@@ -53,27 +53,27 @@ It can also be used as a benchmark program.
                 .long("outfile")
                 .takes_value(true)
                 .default_value("stdout")
-                .forbid_empty_values(true)
+                .value_parser(clap::builder::NonEmptyStringValueParser::new())
                 .help("Output filename. [stdout] for screen"),
         )
 }
 
 // command implementation
 pub fn execute(args: &ArgMatches) -> std::result::Result<(), Box<dyn std::error::Error>> {
-    let mut writer = intspan::writer(args.value_of("outfile").unwrap());
+    let mut writer = intspan::writer(args.get_one::<String>("outfile").unwrap());
 
     // redis connection
     let mut conn = connect();
 
     // rebuild
-    if args.is_present("rebuild") {
+    if args.contains_id("rebuild") {
         gars::build_idx_ctg(&mut conn);
     }
 
     // all ranges
     let mut ranges: Vec<String> = vec![];
-    if args.is_present("file") {
-        for infile in args.values_of("ranges").unwrap() {
+    if args.contains_id("file") {
+        for infile in args.get_many::<String>("ranges").unwrap() {
             let reader = reader(infile);
             for line in reader.lines().filter_map(|r| r.ok()) {
                 let parts: Vec<&str> = line.split('\t').collect();
@@ -82,7 +82,7 @@ pub fn execute(args: &ArgMatches) -> std::result::Result<(), Box<dyn std::error:
         }
     } else {
         ranges = args
-            .values_of("ranges")
+            .get_many::<String>("ranges")
             .unwrap()
             .into_iter()
             .map(|e| e.to_string())
@@ -91,7 +91,7 @@ pub fn execute(args: &ArgMatches) -> std::result::Result<(), Box<dyn std::error:
 
     // index of ctgs
     let mut lapper_of = BTreeMap::new();
-    if !args.is_present("lapper") || !args.is_present("zrange") {
+    if !args.contains_id("lapper") || !args.contains_id("zrange") {
         lapper_of = gars::get_idx_ctg(&mut conn);
     }
 
@@ -103,9 +103,9 @@ pub fn execute(args: &ArgMatches) -> std::result::Result<(), Box<dyn std::error:
         }
         *rg.strand_mut() = "".to_string();
 
-        let ctg_id = if args.is_present("lapper") {
+        let ctg_id = if args.contains_id("lapper") {
             gars::find_one_l(&mut conn, &rg)
-        } else if args.is_present("zrange") {
+        } else if args.contains_id("zrange") {
             gars::find_one_z(&mut conn, &rg)
         } else {
             gars::find_one_idx(&lapper_of, &rg)

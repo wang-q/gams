@@ -13,7 +13,7 @@ pub fn make_subcommand<'a>() -> Command<'a> {
                 .long("ctg")
                 .takes_value(true)
                 .default_value("ctg:*")
-                .forbid_empty_values(true)
+                .value_parser(clap::builder::NonEmptyStringValueParser::new())
                 .help("Sets the full ID or the prefix of ctgs, `ctg:I:*` or `ctg:I:2`"),
         )
         .arg(
@@ -21,29 +21,29 @@ pub fn make_subcommand<'a>() -> Command<'a> {
                 .long("style")
                 .takes_value(true)
                 .default_value("intact")
-                .forbid_empty_values(true)
+                .value_parser(clap::builder::NonEmptyStringValueParser::new())
                 .help("Style of sliding windows, intact or center"),
         )
         .arg(
             Arg::new("size")
                 .long("size")
                 .takes_value(true)
-                .default_value("100")
-                .forbid_empty_values(true),
+                .value_parser(value_parser!(i32))
+                .default_value("100"),
         )
         .arg(
             Arg::new("max")
                 .long("max")
                 .takes_value(true)
-                .default_value("20")
-                .forbid_empty_values(true),
+                .value_parser(value_parser!(i32))
+                .default_value("20"),
         )
         .arg(
             Arg::new("resize")
                 .long("resize")
                 .takes_value(true)
-                .default_value("500")
-                .forbid_empty_values(true),
+                .value_parser(value_parser!(i32))
+                .default_value("500"),
         )
         .arg(
             Arg::new("range")
@@ -58,7 +58,7 @@ pub fn make_subcommand<'a>() -> Command<'a> {
                 .long("outfile")
                 .takes_value(true)
                 .default_value("stdout")
-                .forbid_empty_values(true)
+                .value_parser(clap::builder::NonEmptyStringValueParser::new())
                 .help("Output filename. [stdout] for screen"),
         )
 }
@@ -66,25 +66,16 @@ pub fn make_subcommand<'a>() -> Command<'a> {
 // command implementation
 pub fn execute(args: &ArgMatches) -> std::result::Result<(), Box<dyn std::error::Error>> {
     // opts
-    let size: i32 = args.value_of_t("size").unwrap_or_else(|e| {
-        eprintln!("Need a integer for --size\n{}", e);
-        std::process::exit(1)
-    });
-    let max: i32 = args.value_of_t("max").unwrap_or_else(|e| {
-        eprintln!("Need a integer for --max\n{}", e);
-        std::process::exit(1)
-    });
-    let resize: i32 = args.value_of_t("resize").unwrap_or_else(|e| {
-        eprintln!("Need a integer for --resize\n{}", e);
-        std::process::exit(1)
-    });
-    let is_range = args.is_present("range");
+    let size = *args.get_one::<i32>("size").unwrap();
+    let max = *args.get_one::<i32>("max").unwrap();
+    let resize = *args.get_one::<i32>("resize").unwrap();
+    let is_range = args.contains_id("range");
 
     // redis connection
     let mut conn = connect();
 
     // headers
-    let mut writer = writer(args.value_of("outfile").unwrap());
+    let mut writer = writer(args.get_one::<String>("outfile").unwrap());
     let mut headers = vec![];
     if is_range {
         headers.push("range");
@@ -105,8 +96,10 @@ pub fn execute(args: &ArgMatches) -> std::result::Result<(), Box<dyn std::error:
     writer.write_all(format!("{}\t{}\n", "ID", headers.join("\t")).as_ref())?;
 
     // process each contig
-    let ctgs: Vec<String> =
-        gars::get_scan_vec(&mut conn, args.value_of("ctg").unwrap().to_string());
+    let ctgs: Vec<String> = gars::get_scan_vec(
+        &mut conn,
+        args.get_one::<String>("ctg").unwrap().to_string(),
+    );
     eprintln!("{} contigs to be processed", ctgs.len());
     for ctg_id in &ctgs {
         let (chr_id, chr_start, chr_end) = gars::get_key_pos(&mut conn, ctg_id);

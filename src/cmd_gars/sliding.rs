@@ -17,7 +17,7 @@ pub fn make_subcommand<'a>() -> Command<'a> {
                 .long("ctg")
                 .takes_value(true)
                 .default_value("ctg:*")
-                .forbid_empty_values(true)
+                .value_parser(clap::builder::NonEmptyStringValueParser::new())
                 .help("Sets full name or prefix of contigs, `ctg:I:*` or `ctg:I:2`"),
         )
         .arg(
@@ -25,21 +25,21 @@ pub fn make_subcommand<'a>() -> Command<'a> {
                 .long("size")
                 .takes_value(true)
                 .default_value("100")
-                .forbid_empty_values(true)
+                .value_parser(value_parser!(i32))
         )
         .arg(
             Arg::new("step")
                 .long("step")
                 .takes_value(true)
                 .default_value("50")
-                .forbid_empty_values(true)
+                .value_parser(value_parser!(i32))
         )
         .arg(
             Arg::new("lag")
                 .long("lag")
                 .takes_value(true)
                 .default_value("1000")
-                .forbid_empty_values(true)
+                .value_parser(value_parser!(usize))
                 .help("The lag of the moving window"),
         )
         .arg(
@@ -47,7 +47,7 @@ pub fn make_subcommand<'a>() -> Command<'a> {
                 .long("threshold")
                 .takes_value(true)
                 .default_value("3")
-                .forbid_empty_values(true)
+                .value_parser(value_parser!(f32))
                 .help("The z-score at which the algorithm signals"),
         )
         .arg(
@@ -55,7 +55,7 @@ pub fn make_subcommand<'a>() -> Command<'a> {
                 .long("influence")
                 .takes_value(true)
                 .default_value("1")
-                .forbid_empty_values(true)
+                .value_parser(value_parser!(f32))
                 .help("The influence (between 0 and 1) of new signals on the mean and standard deviation"),
         )
         .arg(
@@ -64,7 +64,7 @@ pub fn make_subcommand<'a>() -> Command<'a> {
                 .long("outfile")
                 .takes_value(true)
                 .default_value("stdout")
-                .forbid_empty_values(true)
+                .value_parser(clap::builder::NonEmptyStringValueParser::new())
                 .help("Output filename. [stdout] for screen"),
         )
 }
@@ -72,40 +72,27 @@ pub fn make_subcommand<'a>() -> Command<'a> {
 // command implementation
 pub fn execute(args: &ArgMatches) -> std::result::Result<(), Box<dyn std::error::Error>> {
     // opts
-    let size: i32 = args.value_of_t("size").unwrap_or_else(|e| {
-        eprintln!("Need a integer for --size\n{}", e);
-        std::process::exit(1)
-    });
-    let step: i32 = args.value_of_t("step").unwrap_or_else(|e| {
-        eprintln!("Need a integer for --step\n{}", e);
-        std::process::exit(1)
-    });
-    let lag: usize = args.value_of_t("lag").unwrap_or_else(|e| {
-        eprintln!("Need a integer for --lag\n{}", e);
-        std::process::exit(1)
-    });
-    let threshold: f32 = args.value_of_t("threshold").unwrap_or_else(|e| {
-        eprintln!("Need a float for --threshold\n{}", e);
-        std::process::exit(1)
-    });
-    let influence: f32 = args.value_of_t("influence").unwrap_or_else(|e| {
-        eprintln!("Need a float for --influence\n{}", e);
-        std::process::exit(1)
-    });
+    let size = *args.get_one::<i32>("size").unwrap();
+    let step = *args.get_one::<i32>("step").unwrap();
+    let lag = *args.get_one::<usize>("lag").unwrap();
+    let threshold = *args.get_one::<f32>("threshold").unwrap();
+    let influence = *args.get_one::<f32>("influence").unwrap();
 
     // redis connection
     let mut conn = connect();
 
     // headers
-    let mut writer = writer(args.value_of("outfile").unwrap());
+    let mut writer = writer(args.get_one::<String>("outfile").unwrap());
     writer.write_fmt(format_args!(
         "{}\t{}\t{}\n",
         "#range", "gc_content", "signal"
     ))?;
 
     // process each contig
-    let ctgs: Vec<String> =
-        gars::get_scan_vec(&mut conn, args.value_of("ctg").unwrap().to_string());
+    let ctgs: Vec<String> = gars::get_scan_vec(
+        &mut conn,
+        args.get_one::<String>("ctg").unwrap().to_string(),
+    );
     eprintln!("{} contigs to be processed", ctgs.len());
     for ctg_id in ctgs {
         let (chr_id, chr_start, chr_end) = gars::get_key_pos(&mut conn, &ctg_id);

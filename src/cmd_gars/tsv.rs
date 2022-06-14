@@ -21,14 +21,14 @@ ID, chr_id, chr_start, chr_end will always be included.
                 .short('s')
                 .takes_value(true)
                 .default_value("ctg:*")
-                .forbid_empty_values(true)
+                .value_parser(clap::builder::NonEmptyStringValueParser::new())
                 .help("Sets the pattern to scan, `ctg:*`"),
         )
         .arg(
             Arg::new("field")
                 .long("field")
                 .short('f')
-                .multiple_values(true)
+                .action(ArgAction::Append)
                 .takes_value(true)
                 .help("Sets the fields to output"),
         )
@@ -45,7 +45,7 @@ ID, chr_id, chr_start, chr_end will always be included.
                 .long("outfile")
                 .takes_value(true)
                 .default_value("stdout")
-                .forbid_empty_values(true)
+                .value_parser(clap::builder::NonEmptyStringValueParser::new())
                 .help("Output filename. [stdout] for screen"),
         )
 }
@@ -55,23 +55,23 @@ pub fn execute(args: &ArgMatches) -> std::result::Result<(), Box<dyn std::error:
     //----------------------------
     // Options
     //----------------------------
-    let pattern = args.value_of("scan").unwrap();
-    let fields: Vec<String> = if args.is_present("field") {
-        args.values_of("field")
+    let pattern = args.get_one::<String>("scan").unwrap().as_str();
+    let fields: Vec<String> = if args.contains_id("field") {
+        args.get_many::<String>("field")
             .unwrap()
             .map(|s| s.to_string())
             .collect()
     } else {
         Vec::new()
     };
-    let is_range = args.is_present("range");
+    let is_range = args.contains_id("range");
 
     // redis connection
     let mut conn = connect();
     let mut conn2 = connect(); // can't use one same `conn` inside an iter
 
     // headers
-    let mut writer = writer(args.value_of("outfile").unwrap());
+    let mut writer = writer(args.get_one::<String>("outfile").unwrap());
 
     // scan
     let mut headers: Vec<String> = Vec::new();

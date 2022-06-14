@@ -35,7 +35,7 @@ Index - format!("idx:ctg:{}", chr_id)
                 .short('n')
                 .takes_value(true)
                 .default_value("target")
-                .forbid_empty_values(true)
+                .value_parser(clap::builder::NonEmptyStringValueParser::new())
                 .help("The common name, e.g. S288c"),
         )
         .arg(
@@ -43,7 +43,7 @@ Index - format!("idx:ctg:{}", chr_id)
                 .long("piece")
                 .takes_value(true)
                 .default_value("500000")
-                .forbid_empty_values(true)
+                .value_parser(value_parser!(i32))
                 .help("Break genome into pieces"),
         )
         .arg(
@@ -51,7 +51,7 @@ Index - format!("idx:ctg:{}", chr_id)
                 .long("fill")
                 .takes_value(true)
                 .default_value("50")
-                .forbid_empty_values(true)
+                .value_parser(value_parser!(i32))
                 .help("Fill gaps smaller than this"),
         )
         .arg(
@@ -59,7 +59,7 @@ Index - format!("idx:ctg:{}", chr_id)
                 .long("min")
                 .takes_value(true)
                 .default_value("5000")
-                .forbid_empty_values(true)
+                .value_parser(value_parser!(i32))
                 .help("Skip pieces smaller than this"),
         )
 }
@@ -67,21 +67,10 @@ Index - format!("idx:ctg:{}", chr_id)
 // command implementation
 pub fn execute(args: &ArgMatches) -> std::result::Result<(), Box<dyn std::error::Error>> {
     // opts
-    let common_name = args.value_of("name").unwrap();
-    let piece: i32 = args.value_of_t("piece").unwrap_or_else(|e| {
-        eprintln!("Need a integer for --piece\n{}", e);
-        std::process::exit(1)
-    });
-
-    let fill: i32 = args.value_of_t("fill").unwrap_or_else(|e| {
-        eprintln!("Need a integer for --fill\n{}", e);
-        std::process::exit(1)
-    });
-
-    let min: i32 = args.value_of_t("min").unwrap_or_else(|e| {
-        eprintln!("Need a integer for --min\n{}", e);
-        std::process::exit(1)
-    });
+    let common_name = args.get_one::<String>("name").unwrap().as_str();
+    let piece = *args.get_one::<i32>("piece").unwrap();
+    let fill = *args.get_one::<i32>("fill").unwrap();
+    let min = *args.get_one::<i32>("min").unwrap();
 
     // redis connection
     let mut conn = connect();
@@ -89,7 +78,7 @@ pub fn execute(args: &ArgMatches) -> std::result::Result<(), Box<dyn std::error:
     // common_name
     let _: () = conn.set("common_name", common_name).unwrap();
 
-    for infile in args.values_of("infiles").unwrap() {
+    for infile in args.get_many::<String>("infiles").unwrap() {
         let reader = reader(infile);
         let fa_in = fasta::Reader::new(reader);
 

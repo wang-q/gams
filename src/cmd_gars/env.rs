@@ -26,7 +26,7 @@ Default values:
                 .long("outfile")
                 .takes_value(true)
                 .default_value("gars.env")
-                .forbid_empty_values(true)
+                .value_parser(clap::builder::NonEmptyStringValueParser::new())
                 .help("Output filename. [stdout] for screen"),
         )
 }
@@ -47,7 +47,7 @@ pub fn execute(args: &ArgMatches) -> std::result::Result<(), Box<dyn std::error:
 
     // context from args
     let mut opt = HashMap::new();
-    opt.insert("outfile", args.value_of("outfile").unwrap());
+    opt.insert("outfile", args.get_one::<String>("outfile").unwrap());
 
     context.insert("opt", &opt);
 
@@ -60,7 +60,7 @@ pub fn execute(args: &ArgMatches) -> std::result::Result<(), Box<dyn std::error:
     intspan::write_lines(opt.get("outfile").unwrap(), &vec![rendered.as_str()])?;
 
     // create scripts
-    if args.is_present("all") {
+    if args.contains_id("all") {
         // dirs
         fs::create_dir_all("sqls/ddl")?;
         fs::create_dir_all("dumps")?;

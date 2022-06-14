@@ -33,7 +33,7 @@ pub fn execute(args: &ArgMatches) -> std::result::Result<(), Box<dyn std::error:
     let lapper_of = gars::get_idx_ctg(&mut conn);
 
     // processing each file
-    for infile in args.values_of("infiles").unwrap() {
+    for infile in args.get_many::<String>("infiles").unwrap() {
         let reader = reader(infile);
 
         for line in reader.lines().filter_map(|r| r.ok()) {
