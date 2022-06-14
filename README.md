@@ -38,6 +38,7 @@ OPTIONS:
     -V, --version    Print version information
 
 SUBCOMMANDS:
+    anno       Annotate anything that contains a ctg_id and a range
     clear      Clear some parts from Redis
     env        Create a .env file
     feature    Add genomic features from range files
@@ -49,7 +50,7 @@ SUBCOMMANDS:
     range      Add range files for counting
     sliding    Sliding windows along a chromosome
     status     Test Redis config and connection
-    tsv        Exports Redis hashes to a tsv file
+    tsv        Export Redis hashes to a tsv file
 
 ```
 
