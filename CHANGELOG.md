@@ -5,6 +5,7 @@
 * Add `--range` to `gars tsv`
 
 * Switch to `clap` v3.2
+* Switch to `intspan` v0.7.1
 * Remove TLS
 * Remove SNR from gc_stat()
 

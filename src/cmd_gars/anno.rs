@@ -46,7 +46,6 @@ pub fn make_subcommand<'a>() -> Command<'a> {
                 .takes_value(true)
                 .value_parser(value_parser!(usize))
                 .default_value("1")
-                .required(true)
                 .help("Set the index of the ID field"),
         )
         .arg(

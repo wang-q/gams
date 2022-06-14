@@ -214,7 +214,7 @@ gars peak tests/S288c/I.peaks.tsv
 ### Env variables
 
 ```shell
-REDIS_TLS=true REDIS_PASSWORD='mYpa$$' gars env -o stdout
+REDIS_PORT=7379 gars env -o stdout
 
 gars env
 
