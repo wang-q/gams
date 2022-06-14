@@ -588,6 +588,48 @@ fn command_locate() -> Result<(), Box<dyn std::error::Error>> {
 }
 
 #[test]
+fn command_anno() -> Result<(), Box<dyn std::error::Error>> {
+    // env
+    let mut cmd = Command::cargo_bin("gars")?;
+    cmd.arg("env").unwrap();
+
+    // drop
+    let mut cmd = Command::cargo_bin("gars")?;
+    cmd.arg("status").arg("drop").unwrap();
+
+    // gen
+    let mut cmd = Command::cargo_bin("gars")?;
+    cmd.arg("gen")
+        .arg("tests/S288c/genome.fa.gz")
+        .arg("--piece")
+        .arg("100000")
+        .unwrap();
+
+    // anno
+    let mut cmd = Command::cargo_bin("gars")?;
+    let output = cmd
+        .arg("anno")
+        .arg("tests/S288c/intergenic.yml")
+        .arg("tests/S288c/ctg.range.tsv")
+        .arg("-H")
+        .output()
+        .unwrap();
+    let stdout = String::from_utf8(output.stdout).unwrap();
+
+    assert_eq!(stdout.lines().count(), 4);
+    assert_eq!(
+        stdout.lines().next().unwrap().split('\t').count(),
+        5,
+        "field count"
+    );
+    assert!(stdout.contains("85779\t0.0000"));
+    assert!(stdout.contains("130218\t0.1072"));
+
+
+    Ok(())
+}
+
+#[test]
 fn test_gc_stat() {
     let tests = vec![
         (vec![0.5, 0.5], (0.5, 0., 0.)),

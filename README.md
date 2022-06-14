@@ -137,8 +137,12 @@ gars status drop
 gars gen tests/S288c/genome.fa.gz --piece 100000
 
 gars tsv -s 'ctg:*' > tests/S288c/ctg.tsv
+gars tsv -s 'ctg:*' --range > tests/S288c/ctg.range.tsv
 
 gars-stat tests/S288c/ctg.tsv ctg
+
+# annotate
+gars anno tests/S288c/intergenic.yml tests/S288c/ctg.range.tsv -H
 
 # locate an range
 gars locate "I(+):1000-1100"
