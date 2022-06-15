@@ -50,7 +50,7 @@ pub fn make_subcommand<'a>() -> Command<'a> {
                 .long("range")
                 .short('r')
                 .takes_value(false)
-                .help("Write a `range` fields instead of chr_id, chr_start, chr_end"),
+                .help("Write a `range` field before the chr_id field"),
         )
         .arg(
             Arg::new("outfile")
@@ -79,12 +79,11 @@ pub fn execute(args: &ArgMatches) -> std::result::Result<(), Box<dyn std::error:
     let mut headers = vec![];
     if is_range {
         headers.push("range");
-    } else {
-        headers.push("chr_id");
-        headers.push("chr_start");
-        headers.push("chr_end");
     }
     headers.append(&mut vec![
+        "chr_id",
+        "chr_start",
+        "chr_end",
         "type",
         "distance",
         "tag",
@@ -145,11 +144,10 @@ pub fn execute(args: &ArgMatches) -> std::result::Result<(), Box<dyn std::error:
                 if is_range {
                     values
                         .push(Range::from(&chr_id, sw_intspan.min(), sw_intspan.max()).to_string());
-                } else {
-                    values.push(format!("{}", chr_id));
-                    values.push(format!("{}", sw_intspan.min()));
-                    values.push(format!("{}", sw_intspan.max()));
                 }
+                values.push(format!("{}", chr_id));
+                values.push(format!("{}", sw_intspan.min()));
+                values.push(format!("{}", sw_intspan.max()));
                 values.push(format!("{}", sw_type));
                 values.push(format!("{}", sw_distance));
                 values.push(format!("{}", tag));

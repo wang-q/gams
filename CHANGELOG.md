@@ -2,6 +2,8 @@
 
 ## Unreleased - ReleaseDate
 
+* `--range` writes a `range` field before the chr_id field
+
 ## 0.3.1 - 2022-06-15
 
 * Add `gars anno`
