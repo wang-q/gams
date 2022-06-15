@@ -76,10 +76,7 @@ fn command_env_env() -> Result<(), Box<dyn std::error::Error>> {
     let stdout = String::from_utf8(output.stdout).unwrap();
 
     assert_eq!(stdout.lines().count(), 4);
-    assert!(
-        stdout.contains("REDIS_PORT=7379"),
-        "modified values"
-    );
+    assert!(stdout.contains("REDIS_PORT=7379"), "modified values");
 
     Ok(())
 }
@@ -624,7 +621,6 @@ fn command_anno() -> Result<(), Box<dyn std::error::Error>> {
     );
     assert!(stdout.contains("85779\t0.0000"));
     assert!(stdout.contains("130218\t0.1072"));
-
 
     Ok(())
 }

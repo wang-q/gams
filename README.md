@@ -26,7 +26,7 @@ cargo install --force --path . --features build-stat
 
 ```text
 $ gars help
-gars 0.3.0
+gars 0.3.1
 wang-q <wang-q@outlook.com>
 Genome Analyst with Rust and rediS
 

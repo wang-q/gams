@@ -44,10 +44,7 @@ pub fn connect() -> redis::Connection {
     // };
     let uri_scheme = "redis";
 
-    let redis_conn_url = format!(
-        "{}://{}:{}",
-        uri_scheme, redis_host, redis_port
-    );
+    let redis_conn_url = format!("{}://{}:{}", uri_scheme, redis_host, redis_port);
     //println!("{}", redis_conn_url);
 
     redis::Client::open(redis_conn_url)
