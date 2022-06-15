@@ -116,18 +116,16 @@ gars gen genome/genome.fa.gz --piece 500000
 gars status dump && sync dump.rdb && cp dump.rdb dumps/ctg.dump.rdb
 
 # tsv exports
-time gars tsv -s 'ctg:*' |
-    rgr field -H -a --chr 2 --start 3 --end 4 stdin |
-    tsv-select -f 1,7,2-6 |
+time gars tsv -s 'ctg:*' --range |
     gars anno genome/cds.yml stdin -H |
     gars anno genome/repeats.yml stdin -H |
     rgr sort -H -f 2 stdin |
     tsv-select -H -e range |
     pigz \
     > tsvs/ctg.tsv.gz
-#real    0m1.175s
-#user    0m1.060s
-#sys     0m0.217s
+#real    0m0.977s
+#user    0m1.001s
+#sys     0m0.049s
 
 gzip -dcf tsvs/ctg.tsv.gz |
     sed '1d' |
@@ -147,6 +145,7 @@ time gars tsv -s 'range:*' --range |
     gars anno genome/cds.yml stdin -H |
     gars anno genome/repeats.yml stdin -H |
     rgr sort -H -f 2 stdin |
+    tsv-select -H -e range |
     pigz \
     > tsvs/range.tsv.gz
 #real    0m7.933s
@@ -183,6 +182,7 @@ time gars tsv -s 'feature:*' --range |
     gars anno genome/cds.yml stdin -H |
     gars anno genome/repeats.yml stdin -H |
     rgr sort -H -f 2 stdin |
+    tsv-select -H -e range |
     pigz \
     > tsvs/feature.tsv.gz
 #real    0m8.440s
@@ -203,21 +203,19 @@ time gars fsw --range |
 time cat genome/chr.sizes |
     cut -f 1 |
     parallel -j 4 -k --line-buffer '
-        gars fsw --ctg "ctg:{}:*" |
-            rgr field -H -a --chr 2 --start 3 --end 4 stdin |
-            tsv-select -f 1,12,2-11 |
+        gars fsw --ctg "ctg:{}:*" --range |
             gars anno genome/cds.yml stdin -H |
-            gars anno genome/repeats.yml stdin -H
-            rgr sort -H -f 2 stdin |
+            gars anno genome/repeats.yml stdin -H |
+            rgr sort -H -f 2 stdin
         ' |
     rgr sort -H -f 2 stdin |
     tsv-select -H -e range |
     tsv-uniq |
     pigz \
     > tsvs/fsw.tsv.gz
-#real    0m30.625s
-#user    2m55.935s
-#sys     0m12.084s
+#real    0m34.185s
+#user    2m52.237s
+#sys     0m9.119s
 
 gars status stop
 

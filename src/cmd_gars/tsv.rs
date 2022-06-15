@@ -37,7 +37,7 @@ ID, chr_id, chr_start, chr_end will always be included.
                 .long("range")
                 .short('r')
                 .takes_value(false)
-                .help("Write a `range` fields instead of chr_id, chr_start, chr_end"),
+                .help("Write a `range` field before the chr_id field"),
         )
         .arg(
             Arg::new("outfile")
@@ -106,7 +106,7 @@ pub fn execute(args: &ArgMatches) -> std::result::Result<(), Box<dyn std::error:
 
             let mut header_line = headers.join("\t");
             if is_range {
-                header_line = header_line.replace("chr_id\tchr_start\tchr_end", "range");
+                header_line = header_line.replace("chr_id\t", "range\tchr_id\t");
             }
             writer.write_all(format!("{}\t{}\n", "ID", header_line).as_ref())?;
         }
@@ -127,9 +127,6 @@ pub fn execute(args: &ArgMatches) -> std::result::Result<(), Box<dyn std::error:
             values.push(range.to_string());
 
             for k in &headers {
-                if k == "chr_id" || k == "chr_start" || k == "chr_end" {
-                    continue;
-                }
                 let val = hash.get(k).unwrap();
                 values.push(val.clone());
             }

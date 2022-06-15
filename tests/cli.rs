@@ -619,7 +619,7 @@ fn command_anno() -> Result<(), Box<dyn std::error::Error>> {
     assert_eq!(stdout.lines().count(), 4);
     assert_eq!(
         stdout.lines().next().unwrap().split('\t').count(),
-        5,
+        8,
         "field count"
     );
     assert!(stdout.contains("85779\t0.0000"));
