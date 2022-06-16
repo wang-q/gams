@@ -51,6 +51,25 @@ SUBCOMMANDS:
     sliding    Sliding windows along a chromosome
     status     Test Redis config and connection
     tsv        Export Redis hashes to a tsv file
+```
+
+```text
+$ gars-stat --help
+gars-stat 0.3.1
+wang-q <wang-q@outlook.com>
+Build-in stats for gars
+
+USAGE:
+    gars-stat [OPTIONS] <infile> <query>
+
+ARGS:
+    <infile>    Sets the input file to use
+    <query>     Query name [default: ctg]
+
+OPTIONS:
+    -h, --help                 Print help information
+    -o, --outfile <outfile>    Output filename. [stdout] for screen [default: stdout]
+    -V, --version              Print version information
 
 ```
 
