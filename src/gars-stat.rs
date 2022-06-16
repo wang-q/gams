@@ -43,10 +43,10 @@ fn main() -> std::io::Result<()> {
 // command implementation
 fn execute(args: &ArgMatches) -> std::result::Result<(), Box<dyn std::error::Error>> {
     // opts
-    let infile = args.value_of("infile").unwrap();
-    let query = args.value_of("query").unwrap();
+    let infile = args.get_one::<String>("infile").unwrap();
+    let query = args.get_one::<String>("query").unwrap().as_str();
 
-    let writer = writer(args.value_of("outfile").unwrap());
+    let writer = writer(args.get_one::<String>("outfile").unwrap());
 
     let df = CsvReader::from_path(infile)
         .unwrap()
