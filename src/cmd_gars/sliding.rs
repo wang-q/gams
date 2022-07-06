@@ -17,7 +17,7 @@ pub fn make_subcommand<'a>() -> Command<'a> {
                 .long("ctg")
                 .takes_value(true)
                 .default_value("ctg:*")
-                .value_parser(clap::builder::NonEmptyStringValueParser::new())
+                .value_parser(builder::NonEmptyStringValueParser::new())
                 .help("Sets full name or prefix of contigs, `ctg:I:*` or `ctg:I:2`"),
         )
         .arg(
@@ -64,7 +64,7 @@ pub fn make_subcommand<'a>() -> Command<'a> {
                 .long("outfile")
                 .takes_value(true)
                 .default_value("stdout")
-                .value_parser(clap::builder::NonEmptyStringValueParser::new())
+                .value_parser(builder::NonEmptyStringValueParser::new())
                 .help("Output filename. [stdout] for screen"),
         )
 }

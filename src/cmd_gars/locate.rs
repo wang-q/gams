@@ -53,7 +53,7 @@ It can also be used as a benchmark program.
                 .long("outfile")
                 .takes_value(true)
                 .default_value("stdout")
-                .value_parser(clap::builder::NonEmptyStringValueParser::new())
+                .value_parser(builder::NonEmptyStringValueParser::new())
                 .help("Output filename. [stdout] for screen"),
         )
 }

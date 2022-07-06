@@ -13,7 +13,7 @@ pub fn make_subcommand<'a>() -> Command<'a> {
                 .long("ctg")
                 .takes_value(true)
                 .default_value("ctg:*")
-                .value_parser(clap::builder::NonEmptyStringValueParser::new())
+                .value_parser(builder::NonEmptyStringValueParser::new())
                 .help("Sets the full ID or the prefix of ctgs, `ctg:I:*` or `ctg:I:2`"),
         )
         .arg(
@@ -21,7 +21,7 @@ pub fn make_subcommand<'a>() -> Command<'a> {
                 .long("style")
                 .takes_value(true)
                 .default_value("intact")
-                .value_parser(clap::builder::NonEmptyStringValueParser::new())
+                .value_parser(builder::NonEmptyStringValueParser::new())
                 .help("Style of sliding windows, intact or center"),
         )
         .arg(
@@ -58,7 +58,7 @@ pub fn make_subcommand<'a>() -> Command<'a> {
                 .long("outfile")
                 .takes_value(true)
                 .default_value("stdout")
-                .value_parser(clap::builder::NonEmptyStringValueParser::new())
+                .value_parser(builder::NonEmptyStringValueParser::new())
                 .help("Output filename. [stdout] for screen"),
         )
 }
@@ -145,12 +145,12 @@ pub fn execute(args: &ArgMatches) -> std::result::Result<(), Box<dyn std::error:
                     values
                         .push(Range::from(&chr_id, sw_intspan.min(), sw_intspan.max()).to_string());
                 }
-                values.push(format!("{}", chr_id));
+                values.push(chr_id.to_string());
                 values.push(format!("{}", sw_intspan.min()));
                 values.push(format!("{}", sw_intspan.max()));
-                values.push(format!("{}", sw_type));
+                values.push(sw_type.to_string());
                 values.push(format!("{}", sw_distance));
-                values.push(format!("{}", tag));
+                values.push(tag.to_string());
                 values.push(format!("{:.5}", gc_content));
                 values.push(format!("{:.5}", gc_mean));
                 values.push(format!("{:.5}", gc_stddev));

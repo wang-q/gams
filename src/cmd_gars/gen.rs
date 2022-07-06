@@ -35,7 +35,7 @@ Index - format!("idx:ctg:{}", chr_id)
                 .short('n')
                 .takes_value(true)
                 .default_value("target")
-                .value_parser(clap::builder::NonEmptyStringValueParser::new())
+                .value_parser(builder::NonEmptyStringValueParser::new())
                 .help("The common name, e.g. S288c"),
         )
         .arg(
