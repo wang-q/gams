@@ -27,7 +27,7 @@ ID - format!("feature:{}:{}", ctg_id, serial)
                 .short('t')
                 .takes_value(true)
                 .default_value("feature")
-                .value_parser(clap::builder::NonEmptyStringValueParser::new())
+                .value_parser(builder::NonEmptyStringValueParser::new())
                 .help("Feature tags"),
         )
 }
@@ -80,7 +80,7 @@ pub fn execute(args: &ArgMatches) -> std::result::Result<(), Box<dyn std::error:
     }
 
     // number of ranges
-    let n_feature = gars::get_scan_count(&mut conn, "feature:*".to_string());
+    let n_feature = get_scan_count(&mut conn, "feature:*".to_string());
     eprintln!("There are {} features", n_feature);
 
     Ok(())

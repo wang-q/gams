@@ -21,7 +21,7 @@ ID, chr_id, chr_start, chr_end will always be included.
                 .short('s')
                 .takes_value(true)
                 .default_value("ctg:*")
-                .value_parser(clap::builder::NonEmptyStringValueParser::new())
+                .value_parser(builder::NonEmptyStringValueParser::new())
                 .help("Sets the pattern to scan, `ctg:*`"),
         )
         .arg(
@@ -45,7 +45,7 @@ ID, chr_id, chr_start, chr_end will always be included.
                 .long("outfile")
                 .takes_value(true)
                 .default_value("stdout")
-                .value_parser(clap::builder::NonEmptyStringValueParser::new())
+                .value_parser(builder::NonEmptyStringValueParser::new())
                 .help("Output filename. [stdout] for screen"),
         )
 }
