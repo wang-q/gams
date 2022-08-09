@@ -61,7 +61,7 @@ hyperfine --warmup 1 --export-markdown gars.md.tmp \
     ' \
     -n 'd-g; sliding;' \
     '
-    gars status drop;gars gen genome.fa.gz --piece 500000;
+    gars status drop; gars gen genome.fa.gz --piece 500000;
     gars sliding --size 100 --step 20 --lag 50 > /dev/null;
     '
 
