@@ -1,67 +1,46 @@
 # Atha
 
-## data
-
-Avoid HDD
-
-```shell
-mkdir -p ~/gars
-cd ~/gars
-
-cp ~/data/gars/Atha/genome/genome.fa.gz .
-cp ~/data/gars/Atha/genome/chr.sizes .
-
-cp ~/data/gars/Atha/features/T-DNA.CSHL.rg .
-cp ~/data/gars/Atha/features/T-DNA.FLAG.rg .
-cp ~/data/gars/Atha/features/T-DNA.MX.rg .
-cp ~/data/gars/Atha/features/T-DNA.RATM.rg .
-
-cp ~/data/gars/Atha/genome/cds.yml .
-cp ~/data/gars/Atha/genome/repeats.yml .
-
-```
-
 ## `gars`
 
 ```shell
 # redis
-cd ~/gars
+cd ~/data/gars/Atha/
 rm dump.rdb
 redis-server
 
 # gars
-cd ~/gars
+cd ~/data/gars/Atha/
 gars env
 
 hyperfine --warmup 1 --export-markdown gars.md.tmp \
     -n 'drop; gen;' \
     '
-    gars status drop; gars gen genome.fa.gz --piece 500000;
+    gars status drop; gars gen genome/genome.fa.gz --piece 500000;
     ' \
     -n 'd-g; range;' \
     '
-    gars status drop; gars gen genome.fa.gz --piece 500000;
-    gars range T-DNA.CSHL.rg;
+    gars status drop; gars gen genome/genome.fa.gz --piece 500000;
+    gars range features/T-DNA.CSHL.rg;
     ' \
     -n 'clear; range;' \
     '
     gars clear range;
-    gars range T-DNA.CSHL.rg;
+    gars range features/T-DNA.CSHL.rg;
     ' \
     -n 'd-g; feature;' \
     '
-    gars status drop; gars gen genome.fa.gz --piece 500000;
-    gars feature T-DNA.CSHL.rg --tag CSHL;
+    gars status drop; gars gen genome/genome.fa.gz --piece 500000;
+    gars feature features/T-DNA.CSHL.rg --tag CSHL;
     ' \
     -n 'd-g; feature; fsw;' \
     '
-    gars status drop; gars gen genome.fa.gz --piece 500000;
-    gars feature T-DNA.CSHL.rg --tag CSHL;
+    gars status drop; gars gen genome/genome.fa.gz --piece 500000;
+    gars feature features/T-DNA.CSHL.rg --tag CSHL;
     gars fsw;
     ' \
     -n 'd-g; sliding;' \
     '
-    gars status drop; gars gen genome.fa.gz --piece 500000;
+    gars status drop; gars gen genome/genome.fa.gz --piece 500000;
     gars sliding --size 100 --step 20 --lag 50 > /dev/null;
     '
 
