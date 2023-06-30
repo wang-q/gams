@@ -65,9 +65,7 @@ pub fn get_vec_ctg(conn: &mut redis::Connection, chr_id: &String) -> Vec<String>
     let list: Vec<String> = if cnt == 0 {
         vec![]
     } else {
-        (1..=cnt)
-            .map(|i| format!("ctg:{}:{}", chr_id, i))
-            .collect()
+        (1..=cnt).map(|i| format!("ctg:{}:{}", chr_id, i)).collect()
     };
 
     list

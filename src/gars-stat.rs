@@ -15,14 +15,14 @@ fn main() -> anyhow::Result<()> {
             Arg::new("infile")
                 .index(1)
                 .num_args(1)
-                .help("Sets the input file to use")
+                .help("Sets the input file to use"),
         )
         .arg(
             Arg::new("query")
                 .default_value("ctg")
                 .index(2)
                 .num_args(1)
-                .help("Query name")
+                .help("Query name"),
         )
         .arg(
             Arg::new("outfile")
@@ -73,9 +73,22 @@ fn execute(args: &ArgMatches) -> anyhow::Result<()> {
 
 fn query_ctg(df: DataFrame) -> DataFrame {
     let res = df
-        .groupby(&["chr_id"])
-        .unwrap()
-        .agg(&[("length", &["count", "mean"])]);
+        .lazy()
+        .groupby(["chr_id"])
+        .agg([
+            count(),
+            col("length").mean().alias("length_mean"),
+            col("length").sum().alias("length_sum"),
+        ])
+        .sort(
+            "chr_id",
+            SortOptions {
+                descending: false,
+                nulls_last: true,
+                multithreaded: true,
+            },
+        )
+        .collect();
 
     res.unwrap()
 }
