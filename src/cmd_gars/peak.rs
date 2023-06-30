@@ -40,7 +40,7 @@ pub fn execute(args: &ArgMatches) -> anyhow::Result<()> {
     // processing each line
     eprintln!("Loading peaks...");
     let reader = reader(infile);
-    for line in reader.lines().filter_map(|r| r.ok()) {
+    for line in reader.lines().map_while(Result::ok) {
         let parts: Vec<&str> = line.split('\t').collect();
 
         let mut rg = Range::from_str(parts[0]);
@@ -136,9 +136,9 @@ pub fn execute(args: &ArgMatches) -> anyhow::Result<()> {
             .hget(peaks.first().unwrap(), &["signal", "gc"])
             .unwrap();
         let mut prev_end: i32 = chr_start;
-        for i in 0..peaks.len() {
+        for peak in &peaks {
             let (cur_signal, cur_start, cur_end, cur_gc): (String, i32, i32, f32) = conn
-                .hget(&peaks[i], &["signal", "chr_start", "chr_end", "gc"])
+                .hget(peak, &["signal", "chr_start", "chr_end", "gc"])
                 .unwrap();
 
             let left_wave_length = cur_start - prev_end + 1;
@@ -146,11 +146,11 @@ pub fn execute(args: &ArgMatches) -> anyhow::Result<()> {
 
             // hset_multiple cannot be used because of the different value types
             let _: () = redis::pipe()
-                .hset(&peaks[i], "left_signal", &prev_signal)
+                .hset(peak, "left_signal", &prev_signal)
                 .ignore()
-                .hset(&peaks[i], "left_wave_length", left_wave_length)
+                .hset(peak, "left_wave_length", left_wave_length)
                 .ignore()
-                .hset(&peaks[i], "left_amplitude", left_amplitude)
+                .hset(peak, "left_amplitude", left_amplitude)
                 .ignore()
                 .query(&mut conn)
                 .unwrap();

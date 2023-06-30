@@ -75,7 +75,7 @@ impl DeltaG {
         }
     }
 
-    pub fn polymer(&self, polymer: &String) -> Option<f32> {
+    pub fn polymer(&self, polymer: &str) -> Option<f32> {
         let seq = polymer.to_ascii_uppercase();
 
         let len = seq.len();
@@ -99,7 +99,7 @@ impl DeltaG {
         }
 
         // terminal correction
-        let init_ter = format!("i{}", seq.chars().nth(0).unwrap());
+        let init_ter = format!("i{}", seq.chars().next().unwrap());
         dg += dgnn.get(&init_ter).unwrap();
 
         let end_ter = format!("i{}", seq.chars().nth(len - 1).unwrap());
@@ -194,7 +194,7 @@ fn init_delta_g(temp: f32, salt: f32) -> HashMap<String, f32> {
     for (key, value) in delta_h {
         // the length of each monomer is 1, thus the modifier of dS is 0
         // and the values are precalculated
-        if key.starts_with("i") || key.starts_with("s") {
+        if key.starts_with('i') || key.starts_with('s') {
             continue;
         }
 

@@ -13,7 +13,7 @@ pub fn stddev(data: &[f32]) -> f32 {
     (sq_sum / (len - 1.)).sqrt()
 }
 
-pub fn gc_stat(gcs: &Vec<f32>) -> (f32, f32, f32) {
+pub fn gc_stat(gcs: &[f32]) -> (f32, f32, f32) {
     let mean = mean(gcs);
     let stddev = stddev(gcs);
 

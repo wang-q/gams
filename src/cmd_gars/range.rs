@@ -35,7 +35,7 @@ pub fn execute(args: &ArgMatches) -> anyhow::Result<()> {
     for infile in args.get_many::<String>("infiles").unwrap() {
         let reader = reader(infile);
 
-        for line in reader.lines().filter_map(|r| r.ok()) {
+        for line in reader.lines().map_while(Result::ok) {
             let mut rg = Range::from_str(&line);
             if !rg.is_valid() {
                 continue;

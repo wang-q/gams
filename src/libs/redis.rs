@@ -66,7 +66,6 @@ pub fn get_vec_ctg(conn: &mut redis::Connection, chr_id: &String) -> Vec<String>
         vec![]
     } else {
         (1..=cnt)
-            .into_iter()
             .map(|i| format!("ctg:{}:{}", chr_id, i))
             .collect()
     };
@@ -82,7 +81,6 @@ pub fn get_vec_feature(conn: &mut redis::Connection, ctg_id: &String) -> Vec<Str
         vec![]
     } else {
         (1..=cnt)
-            .into_iter()
             .map(|i| format!("feature:{}:{}", ctg_id, i))
             .collect()
     };
@@ -98,7 +96,6 @@ pub fn get_vec_peak(conn: &mut redis::Connection, ctg_id: &String) -> Vec<String
         vec![]
     } else {
         (1..=cnt)
-            .into_iter()
             .map(|i| format!("peak:{}:{}", ctg_id, i))
             .collect()
     };
@@ -296,7 +293,7 @@ pub fn find_one_z(conn: &mut redis::Connection, rg: &Range) -> String {
 }
 
 pub fn decode_gz(bytes: &[u8]) -> io::Result<String> {
-    let mut gz = GzDecoder::new(&bytes[..]);
+    let mut gz = GzDecoder::new(bytes);
     let mut s = String::new();
     gz.read_to_string(&mut s)?;
     Ok(s)
@@ -312,7 +309,7 @@ pub fn get_ctg_seq(conn: &mut redis::Connection, ctg_id: &str) -> String {
 pub fn cache_gc_content(
     rg: &Range,
     parent: &IntSpan,
-    seq: &String,
+    seq: &str,
     cache: &mut HashMap<String, f32>,
 ) -> f32 {
     let field = rg.to_string();
@@ -335,7 +332,7 @@ pub fn cache_gc_content(
 pub fn cache_gc_stat(
     rg: &Range,
     parent: &IntSpan,
-    seq: &String,
+    seq: &str,
     cache: &mut HashMap<String, f32>,
     size: i32,
     step: i32,

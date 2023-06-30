@@ -184,7 +184,7 @@ pub fn execute(args: &ArgMatches) -> anyhow::Result<()> {
 
 fn encode_gz(seq: &[u8]) -> io::Result<Vec<u8>> {
     let mut bytes = Vec::new();
-    let mut z = GzEncoder::new(&seq[..], Compression::fast());
+    let mut z = GzEncoder::new(seq, Compression::fast());
     z.read_to_end(&mut bytes)?;
     Ok(bytes)
 }

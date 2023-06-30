@@ -73,16 +73,15 @@ pub fn execute(args: &ArgMatches) -> anyhow::Result<()> {
     if args.get_flag("file") {
         for infile in args.get_many::<String>("ranges").unwrap() {
             let reader = reader(infile);
-            for line in reader.lines().filter_map(|r| r.ok()) {
+            for line in reader.lines().map_while(Result::ok) {
                 let parts: Vec<&str> = line.split('\t').collect();
-                ranges.push(parts.get(0).unwrap().to_string());
+                ranges.push(parts.first().unwrap().to_string());
             }
         }
     } else {
         ranges = args
             .get_many::<String>("ranges")
             .unwrap()
-            .into_iter()
             .map(|e| e.to_string())
             .collect();
     }
