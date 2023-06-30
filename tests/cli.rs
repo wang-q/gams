@@ -11,9 +11,9 @@ use tempfile::TempDir;
 fn command_invalid() -> Result<(), Box<dyn std::error::Error>> {
     let mut cmd = Command::cargo_bin("gars")?;
     cmd.arg("foobar");
-    cmd.assert().failure().stderr(predicate::str::contains(
-        "which wasn't expected, or isn't valid in this context",
-    ));
+    cmd.assert()
+        .failure()
+        .stderr(predicate::str::contains("recognized"));
 
     Ok(())
 }
@@ -311,6 +311,12 @@ fn command_range() -> Result<(), Box<dyn std::error::Error>> {
 
 #[test]
 fn command_clear() -> Result<(), Box<dyn std::error::Error>> {
+    // gars env
+    // gars status drop
+    // gars gen tests/S288c/genome.fa.gz --piece 100000
+    // gars range tests/S288c/spo11_hot.rg tests/S288c/spo11_hot.rg
+    // gars clear range
+
     // env
     let mut cmd = Command::cargo_bin("gars")?;
     cmd.arg("env").unwrap();
@@ -504,6 +510,12 @@ fn command_peak() -> Result<(), Box<dyn std::error::Error>> {
 
 #[test]
 fn command_locate() -> Result<(), Box<dyn std::error::Error>> {
+    // gars env
+    // gars status drop
+    // gars gen tests/S288c/genome.fa.gz --piece 100000
+    // gars locate "I:1000-1100" "II:1000-1100" "Mito:1000-1100"
+    // gars locate -f tests/S288c/spo11_hot.rg
+
     // env
     let mut cmd = Command::cargo_bin("gars")?;
     cmd.arg("env").unwrap();

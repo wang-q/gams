@@ -11,7 +11,7 @@ use std::io::Read;
 use std::iter::FromIterator;
 
 // Create clap subcommand arguments
-pub fn make_subcommand<'a>() -> Command<'a> {
+pub fn make_subcommand() -> Command {
     Command::new("gen")
         .about("Generate the database from (gzipped) fasta files")
         .after_help(
@@ -24,24 +24,22 @@ Index - format!("idx:ctg:{}", chr_id)
         )
         .arg(
             Arg::new("infiles")
-                .help("Set the input files to use")
-                .required(true)
-                .min_values(1)
-                .index(1),
+                .index(1)
+                .num_args(1..)
+                .help("Set the input files to use"),
         )
         .arg(
             Arg::new("name")
                 .long("name")
                 .short('n')
-                .takes_value(true)
+                .num_args(1)
                 .default_value("target")
-                .value_parser(builder::NonEmptyStringValueParser::new())
                 .help("The common name, e.g. S288c"),
         )
         .arg(
             Arg::new("piece")
                 .long("piece")
-                .takes_value(true)
+                .num_args(1)
                 .default_value("500000")
                 .value_parser(value_parser!(i32))
                 .help("Break genome into pieces"),
@@ -49,7 +47,7 @@ Index - format!("idx:ctg:{}", chr_id)
         .arg(
             Arg::new("fill")
                 .long("fill")
-                .takes_value(true)
+                .num_args(1)
                 .default_value("50")
                 .value_parser(value_parser!(i32))
                 .help("Fill gaps smaller than this"),
@@ -57,7 +55,7 @@ Index - format!("idx:ctg:{}", chr_id)
         .arg(
             Arg::new("min")
                 .long("min")
-                .takes_value(true)
+                .num_args(1)
                 .default_value("5000")
                 .value_parser(value_parser!(i32))
                 .help("Skip pieces smaller than this"),
@@ -65,7 +63,7 @@ Index - format!("idx:ctg:{}", chr_id)
 }
 
 // command implementation
-pub fn execute(args: &ArgMatches) -> std::result::Result<(), Box<dyn std::error::Error>> {
+pub fn execute(args: &ArgMatches) -> anyhow::Result<()> {
     // opts
     let common_name = args.get_one::<String>("name").unwrap().as_str();
     let piece = *args.get_one::<i32>("piece").unwrap();

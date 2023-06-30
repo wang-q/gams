@@ -5,43 +5,41 @@ use redis::Commands;
 use std::collections::HashMap;
 
 // Create clap subcommand arguments
-pub fn make_subcommand<'a>() -> Command<'a> {
+pub fn make_subcommand() -> Command {
     Command::new("fsw")
         .about("Sliding windows around a feature")
         .arg(
             Arg::new("ctg")
                 .long("ctg")
-                .takes_value(true)
+                .num_args(1)
                 .default_value("ctg:*")
-                .value_parser(builder::NonEmptyStringValueParser::new())
                 .help("Sets the full ID or the prefix of ctgs, `ctg:I:*` or `ctg:I:2`"),
         )
         .arg(
             Arg::new("style")
                 .long("style")
-                .takes_value(true)
+                .num_args(1)
                 .default_value("intact")
-                .value_parser(builder::NonEmptyStringValueParser::new())
                 .help("Style of sliding windows, intact or center"),
         )
         .arg(
             Arg::new("size")
                 .long("size")
-                .takes_value(true)
+                .num_args(1)
                 .value_parser(value_parser!(i32))
                 .default_value("100"),
         )
         .arg(
             Arg::new("max")
                 .long("max")
-                .takes_value(true)
+                .num_args(1)
                 .value_parser(value_parser!(i32))
                 .default_value("20"),
         )
         .arg(
             Arg::new("resize")
                 .long("resize")
-                .takes_value(true)
+                .num_args(1)
                 .value_parser(value_parser!(i32))
                 .default_value("500"),
         )
@@ -49,27 +47,26 @@ pub fn make_subcommand<'a>() -> Command<'a> {
             Arg::new("range")
                 .long("range")
                 .short('r')
-                .takes_value(false)
+                .action(ArgAction::SetTrue)
                 .help("Write a `range` field before the chr_id field"),
         )
         .arg(
             Arg::new("outfile")
-                .short('o')
                 .long("outfile")
-                .takes_value(true)
+                .short('o')
+                .num_args(1)
                 .default_value("stdout")
-                .value_parser(builder::NonEmptyStringValueParser::new())
                 .help("Output filename. [stdout] for screen"),
         )
 }
 
 // command implementation
-pub fn execute(args: &ArgMatches) -> std::result::Result<(), Box<dyn std::error::Error>> {
+pub fn execute(args: &ArgMatches) -> anyhow::Result<()> {
     // opts
     let size = *args.get_one::<i32>("size").unwrap();
     let max = *args.get_one::<i32>("max").unwrap();
     let resize = *args.get_one::<i32>("resize").unwrap();
-    let is_range = args.contains_id("range");
+    let is_range = args.get_flag("range");
 
     // redis connection
     let mut conn = connect();

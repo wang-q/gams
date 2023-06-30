@@ -5,7 +5,7 @@ use redis::Commands;
 use std::io::BufRead;
 
 // Create clap subcommand arguments
-pub fn make_subcommand<'a>() -> Command<'a> {
+pub fn make_subcommand() -> Command {
     Command::new("range")
         .about("Add range files for counting")
         .after_help(
@@ -17,15 +17,14 @@ ID - format!("range:{}:{}", ctg_id, serial)
         )
         .arg(
             Arg::new("infiles")
-                .help("Sets the input file to use")
-                .required(true)
-                .min_values(1)
-                .index(1),
+                .index(1)
+                .num_args(1..)
+                .help("Sets the input file to use"),
         )
 }
 
 // command implementation
-pub fn execute(args: &ArgMatches) -> std::result::Result<(), Box<dyn std::error::Error>> {
+pub fn execute(args: &ArgMatches) -> anyhow::Result<()> {
     // redis connection
     let mut conn = connect();
 

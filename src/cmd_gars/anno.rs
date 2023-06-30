@@ -9,7 +9,7 @@ use std::io::BufRead;
 use std::path::Path;
 
 // Create clap subcommand arguments
-pub fn make_subcommand<'a>() -> Command<'a> {
+pub fn make_subcommand() -> Command {
     Command::new("anno")
         .about("Annotate anything that contains a ctg_id and a range")
         .after_help(
@@ -22,59 +22,59 @@ pub fn make_subcommand<'a>() -> Command<'a> {
         )
         .arg(
             Arg::new("runlist")
-                .help("Set the runlist file to use")
                 .required(true)
-                .index(1),
+                .index(1)
+                .num_args(1)
+                .help("Set the runlist file to use"),
         )
         .arg(
             Arg::new("infiles")
-                .help("Set the input files to use")
                 .required(true)
                 .index(2)
-                .min_values(1),
+                .num_args(1..)
+                .help("Set the input files to use"),
         )
         .arg(
             Arg::new("header")
                 .long("header")
                 .short('H')
-                .takes_value(false)
+                .action(ArgAction::SetTrue)
                 .help("Treat the first line of each file as a header"),
         )
         .arg(
             Arg::new("id")
                 .long("id")
-                .takes_value(true)
-                .value_parser(value_parser!(usize))
+                .num_args(1)
                 .default_value("1")
+                .value_parser(value_parser!(usize))
                 .help("Set the index of the ID field"),
         )
         .arg(
             Arg::new("range")
                 .long("range")
-                .takes_value(true)
-                .value_parser(value_parser!(usize))
+                .num_args(1)
                 .default_value("2")
+                .value_parser(value_parser!(usize))
                 .help("Set the index of the range field"),
         )
         .arg(
             Arg::new("outfile")
-                .short('o')
                 .long("outfile")
-                .takes_value(true)
+                .short('o')
+                .num_args(1)
                 .default_value("stdout")
-                .value_parser(builder::NonEmptyStringValueParser::new())
                 .help("Output filename. [stdout] for screen"),
         )
 }
 
 // command implementation
-pub fn execute(args: &ArgMatches) -> std::result::Result<(), Box<dyn std::error::Error>> {
+pub fn execute(args: &ArgMatches) -> anyhow::Result<()> {
     //----------------------------
     // Options
     //----------------------------
     let mut writer = writer(args.get_one::<String>("outfile").unwrap());
 
-    let is_header = args.contains_id("header");
+    let is_header = args.get_flag("header");
     let idx_id = *args.get_one::<usize>("id").unwrap();
     let idx_range = *args.get_one::<usize>("range").unwrap();
 

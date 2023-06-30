@@ -13,13 +13,14 @@ categories = ["command-line-utilities", "science"]
 publish = false
 
 [dependencies]
-clap = { version = "3.2.2", features = ["cargo"] }
-regex = "1.5.6"
-lazy_static = "1.3.0"
-tera = "1.16.0"
+clap = { version = "4.0.29", features = ["cargo"] }
+anyhow = "1.0.66"
+regex = "1.7.0"
+lazy_static = "1.4.0"
+tera = "1.17.1"
 
-redis = { version = "0.21.5", default-features = false, features = ["script"] }
-flate2 = "1.0.24"
+redis = { version = "0.23.0", default-features = false, features = ["script"] }
+flate2 = "1.0.25"
 rand = "0.8.1"
 serde = "1.0.137"
 envy = "0.4.2"
@@ -29,7 +30,7 @@ dotenv = "0.15.0"
 #simplelog = "^0.10.0"
 
 intspan = "0.7.1"
-bio = "0.30.0"
+bio = "0.30.1"
 
 # serialize
 rust-lapper = { version = "1.0.1", features = ["with_serde"] }
@@ -52,9 +53,9 @@ required-features = ["build-stat"]
 [build-dependencies]
 
 [dev-dependencies]
-tempfile = "3.1.0"
-assert_cmd = "0.11"
-predicates = "1"
+tempfile = "3.3.0"
+assert_cmd = "2.0.4"
+predicates = "3.0.3"
 approx = "0.5.0"
 
 [profile.release]

@@ -3,7 +3,7 @@ use gars::*;
 use intspan::*;
 
 // Create clap subcommand arguments
-pub fn make_subcommand<'a>() -> Command<'a> {
+pub fn make_subcommand() -> Command {
     Command::new("sliding")
         .about("Sliding windows along a chromosome")
         .after_help(
@@ -15,29 +15,28 @@ pub fn make_subcommand<'a>() -> Command<'a> {
         .arg(
             Arg::new("ctg")
                 .long("ctg")
-                .takes_value(true)
+                .num_args(1)
                 .default_value("ctg:*")
-                .value_parser(builder::NonEmptyStringValueParser::new())
                 .help("Sets full name or prefix of contigs, `ctg:I:*` or `ctg:I:2`"),
         )
         .arg(
             Arg::new("size")
                 .long("size")
-                .takes_value(true)
+                .num_args(1)
                 .default_value("100")
                 .value_parser(value_parser!(i32))
         )
         .arg(
             Arg::new("step")
                 .long("step")
-                .takes_value(true)
+                .num_args(1)
                 .default_value("50")
                 .value_parser(value_parser!(i32))
         )
         .arg(
             Arg::new("lag")
                 .long("lag")
-                .takes_value(true)
+                .num_args(1)
                 .default_value("1000")
                 .value_parser(value_parser!(usize))
                 .help("The lag of the moving window"),
@@ -45,7 +44,7 @@ pub fn make_subcommand<'a>() -> Command<'a> {
         .arg(
             Arg::new("threshold")
                 .long("threshold")
-                .takes_value(true)
+                .num_args(1)
                 .default_value("3")
                 .value_parser(value_parser!(f32))
                 .help("The z-score at which the algorithm signals"),
@@ -53,24 +52,23 @@ pub fn make_subcommand<'a>() -> Command<'a> {
         .arg(
             Arg::new("influence")
                 .long("influence")
-                .takes_value(true)
+                .num_args(1)
                 .default_value("1")
                 .value_parser(value_parser!(f32))
                 .help("The influence (between 0 and 1) of new signals on the mean and standard deviation"),
         )
         .arg(
             Arg::new("outfile")
-                .short('o')
                 .long("outfile")
-                .takes_value(true)
+                .short('o')
+                .num_args(1)
                 .default_value("stdout")
-                .value_parser(builder::NonEmptyStringValueParser::new())
                 .help("Output filename. [stdout] for screen"),
         )
 }
 
 // command implementation
-pub fn execute(args: &ArgMatches) -> std::result::Result<(), Box<dyn std::error::Error>> {
+pub fn execute(args: &ArgMatches) -> anyhow::Result<()> {
     // opts
     let size = *args.get_one::<i32>("size").unwrap();
     let step = *args.get_one::<i32>("step").unwrap();

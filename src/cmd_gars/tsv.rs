@@ -5,7 +5,7 @@ use redis::Commands;
 use std::collections::BTreeMap;
 
 // Create clap subcommand arguments
-pub fn make_subcommand<'a>() -> Command<'a> {
+pub fn make_subcommand() -> Command {
     Command::new("tsv")
         .about("Export Redis hashes to a tsv file")
         .after_help(
@@ -19,39 +19,37 @@ ID, chr_id, chr_start, chr_end will always be included.
             Arg::new("scan")
                 .long("scan")
                 .short('s')
-                .takes_value(true)
+                .num_args(1)
                 .default_value("ctg:*")
-                .value_parser(builder::NonEmptyStringValueParser::new())
                 .help("Sets the pattern to scan, `ctg:*`"),
         )
         .arg(
             Arg::new("field")
                 .long("field")
                 .short('f')
+                .num_args(1..)
                 .action(ArgAction::Append)
-                .takes_value(true)
                 .help("Sets the fields to output"),
         )
         .arg(
             Arg::new("range")
                 .long("range")
                 .short('r')
-                .takes_value(false)
+                .action(ArgAction::SetTrue)
                 .help("Write a `range` field before the chr_id field"),
         )
         .arg(
             Arg::new("outfile")
-                .short('o')
                 .long("outfile")
-                .takes_value(true)
+                .short('o')
+                .num_args(1)
                 .default_value("stdout")
-                .value_parser(builder::NonEmptyStringValueParser::new())
                 .help("Output filename. [stdout] for screen"),
         )
 }
 
 // command implementation
-pub fn execute(args: &ArgMatches) -> std::result::Result<(), Box<dyn std::error::Error>> {
+pub fn execute(args: &ArgMatches) -> anyhow::Result<()> {
     //----------------------------
     // Options
     //----------------------------
@@ -64,7 +62,7 @@ pub fn execute(args: &ArgMatches) -> std::result::Result<(), Box<dyn std::error:
     } else {
         Vec::new()
     };
-    let is_range = args.contains_id("range");
+    let is_range = args.get_flag("range");
 
     // redis connection
     let mut conn = connect();

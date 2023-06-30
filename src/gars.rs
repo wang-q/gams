@@ -3,13 +3,14 @@ use clap::*;
 
 pub mod cmd_gars;
 
-fn main() -> std::io::Result<()> {
+fn main() -> anyhow::Result<()> {
     let app = Command::new("gars")
         .version(crate_version!())
         .author(crate_authors!())
         .about("Genome Analyst with Rust and rediS")
         .propagate_version(true)
         .arg_required_else_help(true)
+        .color(ColorChoice::Auto)
         .subcommand(cmd_gars::env::make_subcommand())
         .subcommand(cmd_gars::status::make_subcommand())
         .subcommand(cmd_gars::gen::make_subcommand())

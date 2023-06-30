@@ -6,7 +6,7 @@ use rand::Rng;
 use std::collections::{BTreeMap, BTreeSet};
 
 // Create clap subcommand arguments
-pub fn make_subcommand<'a>() -> Command<'a> {
+pub fn make_subcommand() -> Command {
     Command::new("status")
         .about("Test Redis config and connection")
         .after_help(
@@ -24,14 +24,15 @@ List of actions:
         )
         .arg(
             Arg::new("action")
-                .help("What to do")
+                .index(1)
+                .num_args(1)
                 .default_value("test")
-                .index(1),
+                .help("What to do"),
         )
 }
 
 // command implementation
-pub fn execute(args: &ArgMatches) -> std::result::Result<(), Box<dyn std::error::Error>> {
+pub fn execute(args: &ArgMatches) -> anyhow::Result<()> {
     match args.get_one::<String>("action").unwrap().as_str() {
         "cli" => {
             cli();

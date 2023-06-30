@@ -6,7 +6,7 @@ use std::collections::HashMap;
 use std::io::BufRead;
 
 // Create clap subcommand arguments
-pub fn make_subcommand<'a>() -> Command<'a> {
+pub fn make_subcommand() -> Command {
     Command::new("peak")
         .about("Add peaks of GC-waves")
         .after_help(
@@ -20,14 +20,14 @@ Left-/right- wave lengths may be negative
         )
         .arg(
             Arg::new("infile")
-                .help("Sets the input file to use")
-                .required(true)
-                .index(1),
+                .index(1)
+                .num_args(1)
+                .help("Sets the input file to use"),
         )
 }
 
 // command implementation
-pub fn execute(args: &ArgMatches) -> std::result::Result<(), Box<dyn std::error::Error>> {
+pub fn execute(args: &ArgMatches) -> anyhow::Result<()> {
     // opts
     let infile = args.get_one::<String>("infile").unwrap();
 

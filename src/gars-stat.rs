@@ -4,32 +4,32 @@ use clap::*;
 use intspan::writer;
 use polars::prelude::*;
 
-fn main() -> std::io::Result<()> {
+fn main() -> anyhow::Result<()> {
     let app = Command::new("gars-stat")
         .version(crate_version!())
         .author(crate_authors!())
         .about("Build-in stats for gars")
         .arg_required_else_help(true)
+        .color(ColorChoice::Auto)
         .arg(
             Arg::new("infile")
+                .index(1)
+                .num_args(1)
                 .help("Sets the input file to use")
-                .required(true)
-                .index(1),
         )
         .arg(
             Arg::new("query")
                 .default_value("ctg")
+                .index(2)
+                .num_args(1)
                 .help("Query name")
-                .required(true)
-                .index(2),
         )
         .arg(
             Arg::new("outfile")
-                .short('o')
                 .long("outfile")
-                .takes_value(true)
+                .short('o')
+                .num_args(1)
                 .default_value("stdout")
-                .value_parser(builder::NonEmptyStringValueParser::new())
                 .help("Output filename. [stdout] for screen"),
         );
 
@@ -41,7 +41,7 @@ fn main() -> std::io::Result<()> {
 }
 
 // command implementation
-fn execute(args: &ArgMatches) -> std::result::Result<(), Box<dyn std::error::Error>> {
+fn execute(args: &ArgMatches) -> anyhow::Result<()> {
     // opts
     let infile = args.get_one::<String>("infile").unwrap();
     let query = args.get_one::<String>("query").unwrap().as_str();

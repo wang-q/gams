@@ -3,7 +3,7 @@ use gars::*;
 use redis::Commands;
 
 // Create clap subcommand arguments
-pub fn make_subcommand<'a>() -> Command<'a> {
+pub fn make_subcommand() -> Command {
     Command::new("clear")
         .about("Clear some parts from Redis")
         .after_help(
@@ -24,14 +24,15 @@ List of actions:
         )
         .arg(
             Arg::new("action")
-                .help("What to do")
                 .required(true)
-                .index(1),
+                .index(1)
+                .num_args(1)
+                .help("What to do"),
         )
 }
 
 // command implementation
-pub fn execute(args: &ArgMatches) -> std::result::Result<(), Box<dyn std::error::Error>> {
+pub fn execute(args: &ArgMatches) -> anyhow::Result<()> {
     match args.get_one::<String>("action").unwrap().as_str() {
         "feature" => {
             clear("feature:*");

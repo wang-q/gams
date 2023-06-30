@@ -5,7 +5,7 @@ use std::fs;
 use tera::{Context, Tera};
 
 // Create clap subcommand arguments
-pub fn make_subcommand<'a>() -> Command<'a> {
+pub fn make_subcommand() -> Command {
     Command::new("env")
         .about("Create a .env file")
         .after_help(
@@ -17,20 +17,24 @@ Default values:
 
 "###,
         )
-        .arg(Arg::new("all").long("all").help("Create all scripts"))
+        .arg(
+            Arg::new("all")
+                .long("all")
+                .action(ArgAction::SetTrue)
+                .help("Create all scripts"),
+        )
         .arg(
             Arg::new("outfile")
-                .short('o')
                 .long("outfile")
-                .takes_value(true)
+                .short('o')
+                .num_args(1)
                 .default_value("gars.env")
-                .value_parser(builder::NonEmptyStringValueParser::new())
                 .help("Output filename. [stdout] for screen"),
         )
 }
 
 // command implementation
-pub fn execute(args: &ArgMatches) -> std::result::Result<(), Box<dyn std::error::Error>> {
+pub fn execute(args: &ArgMatches) -> anyhow::Result<()> {
     // context from ENV variables
     let mut context = Context::new();
     match envy::from_env::<Config>() {
@@ -56,7 +60,7 @@ pub fn execute(args: &ArgMatches) -> std::result::Result<(), Box<dyn std::error:
     intspan::write_lines(opt.get("outfile").unwrap(), &vec![rendered.as_str()])?;
 
     // create scripts
-    if args.contains_id("all") {
+    if args.get_flag("all") {
         // dirs
         fs::create_dir_all("sqls/ddl")?;
         fs::create_dir_all("dumps")?;

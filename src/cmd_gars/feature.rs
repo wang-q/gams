@@ -5,7 +5,7 @@ use redis::Commands;
 use std::io::BufRead;
 
 // Create clap subcommand arguments
-pub fn make_subcommand<'a>() -> Command<'a> {
+pub fn make_subcommand() -> Command {
     Command::new("feature")
         .about("Add genomic features from range files")
         .after_help(
@@ -17,23 +17,22 @@ ID - format!("feature:{}:{}", ctg_id, serial)
         )
         .arg(
             Arg::new("infile")
-                .help("Sets the input file to use")
-                .required(true)
-                .index(1),
+                .index(1)
+                .num_args(1)
+                .help("Sets the input file to use"),
         )
         .arg(
             Arg::new("tag")
                 .long("tag")
                 .short('t')
-                .takes_value(true)
+                .num_args(1)
                 .default_value("feature")
-                .value_parser(builder::NonEmptyStringValueParser::new())
                 .help("Feature tags"),
         )
 }
 
 // command implementation
-pub fn execute(args: &ArgMatches) -> std::result::Result<(), Box<dyn std::error::Error>> {
+pub fn execute(args: &ArgMatches) -> anyhow::Result<()> {
     // opts
     let infile = args.get_one::<String>("infile").unwrap();
     let tag = args.get_one::<String>("tag").unwrap().as_str();

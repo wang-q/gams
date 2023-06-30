@@ -5,7 +5,7 @@ use std::collections::BTreeMap;
 use std::io::BufRead;
 
 // Create clap subcommand arguments
-pub fn make_subcommand<'a>() -> Command<'a> {
+pub fn make_subcommand() -> Command {
     Command::new("locate")
         .about("Locate the given ranges to the corresponding ctgs")
         .after_help(
@@ -16,63 +16,61 @@ It can also be used as a benchmark program.
         )
         .arg(
             Arg::new("ranges")
-                .help("The given ranges, separating by spaces")
-                .required(true)
-                .min_values(1)
-                .index(1),
+                .index(1)
+                .num_args(1..)
+                .help("The given ranges, separating by spaces"),
         )
         .arg(
             Arg::new("file")
                 .long("file")
                 .short('f')
-                .takes_value(false)
+                .action(ArgAction::SetTrue)
                 .help("Treat ranges as filenames"),
         )
         .arg(
             Arg::new("rebuild")
                 .long("rebuild")
                 .short('r')
-                .takes_value(false)
+                .action(ArgAction::SetTrue)
                 .help("Rebuild the index of ctgs"),
         )
         .arg(
             Arg::new("lapper")
                 .long("lapper")
-                .takes_value(false)
+                .action(ArgAction::SetTrue)
                 .help("Deserialize the index on request"),
         )
         .arg(
             Arg::new("zrange")
                 .long("zrange")
-                .takes_value(false)
+                .action(ArgAction::SetTrue)
                 .help("Use Redis ZRANGESTORE and ZINTER to locate the ctg"),
         )
         .arg(
             Arg::new("outfile")
-                .short('o')
                 .long("outfile")
-                .takes_value(true)
+                .short('o')
+                .num_args(1)
                 .default_value("stdout")
-                .value_parser(builder::NonEmptyStringValueParser::new())
                 .help("Output filename. [stdout] for screen"),
         )
 }
 
 // command implementation
-pub fn execute(args: &ArgMatches) -> std::result::Result<(), Box<dyn std::error::Error>> {
+pub fn execute(args: &ArgMatches) -> anyhow::Result<()> {
     let mut writer = intspan::writer(args.get_one::<String>("outfile").unwrap());
 
     // redis connection
     let mut conn = connect();
 
     // rebuild
-    if args.contains_id("rebuild") {
+    if args.get_flag("rebuild") {
         gars::build_idx_ctg(&mut conn);
     }
 
     // all ranges
     let mut ranges: Vec<String> = vec![];
-    if args.contains_id("file") {
+    if args.get_flag("file") {
         for infile in args.get_many::<String>("ranges").unwrap() {
             let reader = reader(infile);
             for line in reader.lines().filter_map(|r| r.ok()) {
@@ -91,7 +89,7 @@ pub fn execute(args: &ArgMatches) -> std::result::Result<(), Box<dyn std::error:
 
     // index of ctgs
     let mut lapper_of = BTreeMap::new();
-    if !args.contains_id("lapper") || !args.contains_id("zrange") {
+    if !args.get_flag("lapper") || !args.get_flag("zrange") {
         lapper_of = gars::get_idx_ctg(&mut conn);
     }
 
@@ -103,9 +101,9 @@ pub fn execute(args: &ArgMatches) -> std::result::Result<(), Box<dyn std::error:
         }
         *rg.strand_mut() = "".to_string();
 
-        let ctg_id = if args.contains_id("lapper") {
+        let ctg_id = if args.get_flag("lapper") {
             gars::find_one_l(&mut conn, &rg)
-        } else if args.contains_id("zrange") {
+        } else if args.get_flag("zrange") {
             gars::find_one_z(&mut conn, &rg)
         } else {
             gars::find_one_idx(&lapper_of, &rg)
