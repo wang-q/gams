@@ -7,11 +7,9 @@ mkdir -p ~/data/gars/Atha/genome
 cd ~/data/gars/Atha/genome
 
 # download
-aria2c -j 4 -x 4 -s 2 -c --file-allocation=none \
-    http://ftp.ensemblgenomes.org/pub/release-52/plants/fasta/arabidopsis_thaliana/dna/Arabidopsis_thaliana.TAIR10.dna_sm.toplevel.fa.gz
+curl -LO http://ftp.ensemblgenomes.org/pub/release-52/plants/fasta/arabidopsis_thaliana/dna/Arabidopsis_thaliana.TAIR10.dna_sm.toplevel.fa.gz
 
-aria2c -j 4 -x 4 -s 2 -c --file-allocation=none \
-    http://ftp.ensemblgenomes.org/pub/release-52/plants/gff3/arabidopsis_thaliana/Arabidopsis_thaliana.TAIR10.52.gff3.gz
+curl -LO http://ftp.ensemblgenomes.org/pub/release-52/plants/gff3/arabidopsis_thaliana/Arabidopsis_thaliana.TAIR10.52.gff3.gz
 
 # chromosomes
 gzip -dcf *dna_sm.toplevel* |
