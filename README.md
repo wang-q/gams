@@ -18,7 +18,7 @@ cargo install --force --offline --path .
 cargo test -- --test-threads=1
 
 # gars-stat
-cargo install --force --offline --path . --features build-stat
+cargo install --force --offline --path . --features stat
 
 ```
 

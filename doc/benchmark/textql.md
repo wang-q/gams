@@ -4,7 +4,7 @@
 
 ```shell
 # gars-stat
-cargo install --force --path . --features build-stat
+cargo install --force --path . --features stat
 
 # textql
 brew install textql
@@ -32,13 +32,16 @@ textql -dlm=tab -header -output-dlm=tab -output-header \
     tests/S288c/ctg.tsv
 
 hyperfine --warmup 1 --export-markdown stat.md.tmp \
+    -n gars-stat \
     'gars-stat tests/S288c/ctg.tsv ctg > /dev/null' \
+    -n textql \
     '
     textql -dlm=tab -header -output-dlm=tab -output-header \
         -sql "$(cat templates/ctg-2.sql)" \
         tests/S288c/ctg.tsv > /dev/null
     '
 
+cat stat.md.tmp
 
 ```
 
