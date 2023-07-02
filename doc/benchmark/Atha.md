@@ -59,7 +59,7 @@ cat gars.md.tmp
 | `d-g; feature; fsw;` | 9.108 ± 0.153 |   9.015 |   9.519 | 8.32 ± 0.16 |
 | `d-g; sliding;`      | 5.993 ± 0.021 |   5.965 |   6.024 | 5.47 ± 0.05 |
 
-## E5-2680 v3 RHEL 7.7
+### E5-2680 v3 RHEL 7.7
 
 | Command              |       Mean [s] | Min [s] | Max [s] |    Relative |
 |:---------------------|---------------:|--------:|--------:|------------:|
@@ -70,7 +70,7 @@ cat gars.md.tmp
 | `d-g; feature; fsw;` | 13.935 ± 0.175 |  13.608 |  14.149 | 9.13 ± 0.19 |
 | `d-g; sliding;`      | 10.842 ± 0.290 |  10.398 |  11.129 | 7.10 ± 0.23 |
 
-## Apple M2 macOS 13.4
+### Apple M2 macOS 13.4
 
 | Command              |      Mean [s] | Min [s] | Max [s] |    Relative |
 |:---------------------|--------------:|--------:|--------:|------------:|
@@ -85,32 +85,32 @@ cat gars.md.tmp
 
 ```shell
 # redis
-cd ~/gars
+cd ~/data/gars/Atha/
 rm dump.rdb
 redis-server
 
 # gars
-cd ~/gars
+cd ~/data/gars/Atha/
 gars env
 
 # feature
-gars status drop; gars gen genome.fa.gz --piece 500000;
+gars status drop; gars gen genome/genome.fa.gz --piece 500000;
 
 hyperfine --warmup 1 --export-markdown threads.md.tmp \
     -n 'serial' \
     '
     gars clear feature;
-    gars feature T-DNA.CSHL.rg --tag CSHL;
-    gars feature T-DNA.FLAG.rg --tag FLAG;
-    gars feature T-DNA.MX.rg   --tag MX;
-    gars feature T-DNA.RATM.rg --tag RATM;
+    gars feature features/T-DNA.CSHL.rg --tag CSHL;
+    gars feature features/T-DNA.FLAG.rg --tag FLAG;
+    gars feature features/T-DNA.MX.rg   --tag MX;
+    gars feature features/T-DNA.RATM.rg --tag RATM;
     ' \
     -n 'parallel -j 1' \
     '
     gars clear feature;
     parallel -j 1 "
         echo {}
-        gars feature T-DNA.{}.rg --tag {}
+        gars feature features/T-DNA.{}.rg --tag {}
         " ::: CSHL FLAG MX RATM
     ' \
     -n 'parallel -j 2' \
@@ -118,7 +118,7 @@ hyperfine --warmup 1 --export-markdown threads.md.tmp \
     gars clear feature;
     parallel -j 2 "
         echo {}
-        gars feature T-DNA.{}.rg --tag {}
+        gars feature features/T-DNA.{}.rg --tag {}
         " ::: CSHL FLAG MX RATM
     ' \
     -n 'parallel -j 4' \
@@ -126,19 +126,19 @@ hyperfine --warmup 1 --export-markdown threads.md.tmp \
     gars clear feature;
     parallel -j 4 "
         echo {}
-        gars feature T-DNA.{}.rg --tag {}
+        gars feature features/T-DNA.{}.rg --tag {}
         " ::: CSHL FLAG MX RATM
     '
 
 cat threads.md.tmp
 
 # fsw
-gars status drop; gars gen genome.fa.gz --piece 500000;
+gars status drop; gars gen genome/genome.fa.gz --piece 500000;
 
-gars feature T-DNA.CSHL.rg --tag CSHL;
-gars feature T-DNA.FLAG.rg --tag FLAG;
-gars feature T-DNA.MX.rg   --tag MX;
-gars feature T-DNA.RATM.rg --tag RATM;
+gars feature features/T-DNA.CSHL.rg --tag CSHL;
+gars feature features/T-DNA.FLAG.rg --tag FLAG;
+gars feature features/T-DNA.MX.rg   --tag MX;
+gars feature features/T-DNA.RATM.rg --tag RATM;
 
 hyperfine --warmup 1 --export-markdown threads.md.tmp \
     -n 'serial' \
@@ -147,7 +147,7 @@ hyperfine --warmup 1 --export-markdown threads.md.tmp \
     ' \
     -n 'parallel -j 1' \
     '
-    cat chr.sizes |
+    cat genome/chr.sizes |
         cut -f 1 |
         parallel -j 1 '\''
             gars fsw --ctg "ctg:{}:*"
@@ -156,7 +156,7 @@ hyperfine --warmup 1 --export-markdown threads.md.tmp \
     ' \
     -n 'parallel -j 2' \
     '
-    cat chr.sizes |
+    cat genome/chr.sizes |
         cut -f 1 |
         parallel -j 2 '\''
             gars fsw --ctg "ctg:{}:*"
@@ -165,7 +165,7 @@ hyperfine --warmup 1 --export-markdown threads.md.tmp \
     ' \
     -n 'parallel -j 4' \
     '
-    cat chr.sizes |
+    cat genome/chr.sizes |
         cut -f 1 |
         parallel -j 4 '\''
             gars fsw --ctg "ctg:{}:*"
@@ -197,38 +197,45 @@ cat threads.md.tmp
 | `parallel -j 2` | 14.920 ± 0.266 |  14.651 |  15.550 | 1.54 ± 0.03 |
 | `parallel -j 4` |  9.684 ± 0.052 |   9.611 |   9.766 |        1.00 |
 
-### i5-12500H Windows 11 WSL
+### E5-2680 v3 RHEL 7.7
 
 * feature
 
-| Command         |       Mean [s] | Min [s] | Max [s] |    Relative |
-|:----------------|---------------:|--------:|--------:|------------:|
-| `serial`        | 12.959 ± 1.023 |  11.919 |  15.276 | 1.66 ± 0.13 |
-| `parallel -j 1` | 12.960 ± 0.419 |  12.506 |  13.734 | 1.66 ± 0.05 |
-| `parallel -j 2` |  7.997 ± 0.096 |   7.845 |   8.148 | 1.03 ± 0.01 |
-| `parallel -j 4` |  7.793 ± 0.025 |   7.754 |   7.830 |        1.00 |
-
-* fsw
-
-### i7 8700K macOS Big Sur
-
-* feature
-
-| Command         |       Mean [s] | Min [s] | Max [s] |    Relative |
-|:----------------|---------------:|--------:|--------:|------------:|
-| `serial`        | 12.456 ± 1.254 |  11.814 |  15.908 | 1.61 ± 0.17 |
-| `parallel -j 1` | 13.276 ± 1.253 |  12.492 |  16.573 | 1.72 ± 0.17 |
-| `parallel -j 2` |  8.980 ± 0.226 |   8.677 |   9.424 | 1.16 ± 0.04 |
-| `parallel -j 4` |  7.735 ± 0.188 |   7.359 |   7.992 |        1.00 |
+| Command         |      Mean [s] | Min [s] | Max [s] |    Relative |
+|:----------------|--------------:|--------:|--------:|------------:|
+| `serial`        | 7.308 ± 0.058 |   7.247 |   7.436 | 1.49 ± 0.03 |
+| `parallel -j 1` | 7.749 ± 0.043 |   7.691 |   7.841 | 1.58 ± 0.03 |
+| `parallel -j 2` | 5.191 ± 0.117 |   5.026 |   5.404 | 1.06 ± 0.03 |
+| `parallel -j 4` | 4.918 ± 0.090 |   4.830 |   5.042 |        1.00 |
 
 * fsw
 
 | Command         |       Mean [s] | Min [s] | Max [s] |    Relative |
 |:----------------|---------------:|--------:|--------:|------------:|
-| `serial`        | 59.416 ± 0.226 |  59.159 |  59.762 | 2.58 ± 0.07 |
-| `parallel -j 1` | 65.700 ± 0.241 |  65.444 |  66.138 | 2.85 ± 0.08 |
-| `parallel -j 2` | 34.759 ± 0.087 |  34.648 |  34.930 | 1.51 ± 0.04 |
-| `parallel -j 4` | 23.027 ± 0.615 |  22.263 |  24.429 |        1.00 |
+| `serial`        | 44.774 ± 1.161 |  42.892 |  46.623 | 2.75 ± 0.08 |
+| `parallel -j 1` | 48.743 ± 0.765 |  47.453 |  49.555 | 3.00 ± 0.06 |
+| `parallel -j 2` | 25.205 ± 0.558 |  24.065 |  25.980 | 1.55 ± 0.04 |
+| `parallel -j 4` | 16.273 ± 0.178 |  15.946 |  16.552 |        1.00 |
+
+### Apple M2 macOS 13.4
+
+* feature
+
+| Command         |      Mean [s] | Min [s] | Max [s] |    Relative |
+|:----------------|--------------:|--------:|--------:|------------:|
+| `serial`        | 7.562 ± 0.032 |   7.500 |   7.617 | 1.47 ± 0.01 |
+| `parallel -j 1` | 8.013 ± 0.021 |   7.979 |   8.045 | 1.56 ± 0.01 |
+| `parallel -j 2` | 6.302 ± 0.019 |   6.263 |   6.321 | 1.22 ± 0.01 |
+| `parallel -j 4` | 5.146 ± 0.019 |   5.121 |   5.176 |        1.00 |
+
+* fsw
+
+| Command         |       Mean [s] | Min [s] | Max [s] |    Relative |
+|:----------------|---------------:|--------:|--------:|------------:|
+| `serial`        | 21.995 ± 0.026 |  21.957 |  22.044 | 2.34 ± 0.01 |
+| `parallel -j 1` | 25.078 ± 0.026 |  25.038 |  25.122 | 2.66 ± 0.01 |
+| `parallel -j 2` | 14.065 ± 0.021 |  14.034 |  14.098 | 1.49 ± 0.00 |
+| `parallel -j 4` |  9.413 ± 0.024 |   9.369 |   9.464 |        1.00 |
 
 ## keydb
 
@@ -244,23 +251,23 @@ keydb-server
 cd ~/gars
 gars env
 
-gars status drop; gars gen genome.fa.gz --piece 500000;
+gars status drop; gars gen genome/genome.fa.gz --piece 500000;
 
 hyperfine --warmup 1 --export-markdown threads.md.tmp \
     -n 'serial' \
     '
     gars clear feature;
-    gars feature T-DNA.CSHL.rg --tag CSHL;
-    gars feature T-DNA.FLAG.rg --tag FLAG;
-    gars feature T-DNA.MX.rg   --tag MX;
-    gars feature T-DNA.RATM.rg --tag RATM;
+    gars feature features/T-DNA.CSHL.rg --tag CSHL;
+    gars feature features/T-DNA.FLAG.rg --tag FLAG;
+    gars feature features/T-DNA.MX.rg   --tag MX;
+    gars feature features/T-DNA.RATM.rg --tag RATM;
     ' \
     -n 'parallel -j 1' \
     '
     gars clear feature;
     parallel -j 1 "
         echo {}
-        gars feature T-DNA.{}.rg --tag {}
+        gars feature features/T-DNA.{}.rg --tag {}
         " ::: CSHL FLAG MX RATM
     ' \
     -n 'parallel -j 2' \
@@ -268,7 +275,7 @@ hyperfine --warmup 1 --export-markdown threads.md.tmp \
     gars clear feature;
     parallel -j 2 "
         echo {}
-        gars feature T-DNA.{}.rg --tag {}
+        gars feature features/T-DNA.{}.rg --tag {}
         " ::: CSHL FLAG MX RATM
     ' \
     -n 'parallel -j 4' \
@@ -276,7 +283,7 @@ hyperfine --warmup 1 --export-markdown threads.md.tmp \
     gars clear feature;
     parallel -j 4 "
         echo {}
-        gars feature T-DNA.{}.rg --tag {}
+        gars feature features/T-DNA.{}.rg --tag {}
         " ::: CSHL FLAG MX RATM
     '
 
@@ -306,25 +313,25 @@ cat threads.md.tmp
 
 ```shell
 # redis
-cd ~/gars
+cd ~/data/gars/Atha/
 rm dump.rdb
 redis-server
 
 # gars
-cd ~/gars
+cd ~/data/gars/Atha/
 gars env
 
 gars status drop
 
-gars gen genome.fa.gz --piece 500000
+gars gen genome/genome.fa.gz --piece 500000
 
 hyperfine --warmup 1 --export-markdown locate.md.tmp \
     -n 'idx' \
-    'gars locate -f T-DNA.CSHL.rg' \
+    'gars locate -f features/T-DNA.CSHL.rg' \
     -n 'lapper' \
-    'gars locate --lapper -f T-DNA.CSHL.rg' \
+    'gars locate --lapper -f features/T-DNA.CSHL.rg' \
     -n 'zrange' \
-    'gars locate --zrange -f T-DNA.CSHL.rg'
+    'gars locate --zrange -f features/T-DNA.CSHL.rg'
 
 cat locate.md.tmp
 
@@ -338,39 +345,39 @@ cat locate.md.tmp
 | `lapper` | 930.5 ± 14.3 |    907.7 |    957.7 | 42.11 ± 1.23 |
 | `zrange` | 2041.1 ± 9.6 |   2029.8 |   2056.4 | 92.37 ± 2.33 |
 
-### i5-12500H Windows 11 WSL
-
-| Command  |      Mean [ms] | Min [ms] | Max [ms] |      Relative |
-|:---------|---------------:|---------:|---------:|--------------:|
-| `idx`    |     21.4 ± 0.7 |     20.3 |     25.0 |          1.00 |
-| `lapper` |  1037.6 ± 40.9 |    986.4 |   1105.4 |  48.38 ± 2.42 |
-| `zrange` | 2330.1 ± 104.8 |   2254.5 |   2610.2 | 108.65 ± 5.92 |
-
-### i7 8700K macOS Big Sur
+### E5-2680 v3 RHEL 7.7
 
 | Command  |     Mean [ms] | Min [ms] | Max [ms] |     Relative |
 |:---------|--------------:|---------:|---------:|-------------:|
-| `idx`    |    62.2 ± 1.1 |     60.0 |     65.2 |         1.00 |
-| `lapper` |   959.6 ± 9.4 |    945.4 |    974.2 | 15.43 ± 0.31 |
-| `zrange` | 3161.5 ± 64.4 |   3097.3 |   3289.5 | 50.82 ± 1.36 |
+| `idx`    |    48.0 ± 2.4 |     45.0 |     53.9 |         1.00 |
+| `lapper` |  613.3 ± 21.8 |    583.1 |    658.5 | 12.78 ± 0.79 |
+| `zrange` | 2377.9 ± 27.8 |   2336.1 |   2429.0 | 49.54 ± 2.59 |
+
+### Apple M2 macOS 13.4
+
+| Command  |    Mean [ms] | Min [ms] | Max [ms] |     Relative |
+|:---------|-------------:|---------:|---------:|-------------:|
+| `idx`    |   25.6 ± 0.5 |     24.6 |     29.8 |         1.00 |
+| `lapper` |  560.5 ± 2.1 |    557.0 |    563.6 | 21.85 ± 0.45 |
+| `zrange` | 2030.1 ± 7.9 |   2021.8 |   2049.7 | 79.15 ± 1.63 |
 
 ## `rgr sort`
 
 ```shell
 # redis
-cd ~/gars
+cd ~/data/gars/Atha/
 rm dump.rdb
 redis-server
 
 # gars
-cd ~/gars
+cd ~/data/gars/Atha/
 gars env
 
 gars status drop
 
-gars gen genome.fa.gz --piece 500000
+gars gen genome/genome.fa.gz --piece 500000
 
-gars range T-DNA.CSHL.rg
+gars range features/T-DNA.CSHL.rg
 
 hyperfine --warmup 1 --export-markdown rgr.md.tmp \
     -n 'ctg - tsv-sort' \
@@ -407,73 +414,73 @@ cat rgr.md.tmp
 | `range - tsv-sort` |  996.9 ± 60.8 |    919.6 |   1096.1 | 10.82 ± 0.92 |
 | `range - rgr sort` | 1740.1 ± 50.5 |   1666.5 |   1828.8 | 18.88 ± 1.25 |
 
-### i5-12500H Windows 11 WSL
+### Apple M2 macOS 13.4
 
 | Command            |     Mean [ms] | Min [ms] | Max [ms] |     Relative |
 |:-------------------|--------------:|---------:|---------:|-------------:|
-| `ctg - tsv-sort`   |  118.6 ± 11.1 |    105.4 |    146.5 |         1.00 |
-| `ctg - rgr sort`   |  129.6 ± 12.8 |    116.1 |    154.8 |  1.09 ± 0.15 |
-| `range - tsv-sort` | 1080.5 ± 17.0 |   1056.9 |   1116.2 |  9.11 ± 0.86 |
-| `range - rgr sort` | 1991.1 ± 35.4 |   1959.2 |   2074.7 | 16.79 ± 1.59 |
+| `ctg - tsv-sort`   |    65.4 ± 1.1 |     62.8 |     70.3 |         1.00 |
+| `ctg - rgr sort`   |    69.1 ± 3.9 |     67.6 |     93.1 |  1.06 ± 0.06 |
+| `range - tsv-sort` |   663.1 ± 3.3 |    656.4 |    667.3 | 10.13 ± 0.17 |
+| `range - rgr sort` | 1147.0 ± 11.4 |   1122.8 |   1169.8 | 17.53 ± 0.34 |
 
 ## `rgr prop` and `gars anno`
 
 ```shell
 # redis
-cd ~/gars
+cd ~/data/gars/Atha/
 rm dump.rdb
 redis-server
 
 # gars
-cd ~/gars
+cd ~/data/gars/Atha/
 gars env
 
 gars status drop
 
-gars gen genome.fa.gz --piece 500000
+gars gen genome/genome.fa.gz --piece 500000
 
-gars range T-DNA.CSHL.rg
+gars range features/T-DNA.CSHL.rg
 
 hyperfine --warmup 1 --export-markdown prop.md.tmp \
     -n 'ctg - cds - rgr prop' \
     '
     gars tsv -s "ctg:*" --range |
-        rgr prop cds.yml stdin -H -f 2 --prefix
+        rgr prop genome/cds.yml stdin -H -f 2 --prefix
     ' \
     -n 'ctg - cds - gars anno' \
     '
     gars tsv -s "ctg:*" --range |
-        gars anno cds.yml stdin -H
+        gars anno genome/cds.yml stdin -H
     ' \
     -n 'ctg - repeats - rgr prop' \
     '
     gars tsv -s "ctg:*" --range |
-        rgr prop repeats.yml stdin -H -f 2 --prefix
+        rgr prop genome/repeats.yml stdin -H -f 2 --prefix
     ' \
     -n 'ctg - repeats - gars anno' \
     '
     gars tsv -s "ctg:*" --range |
-        gars anno repeats.yml stdin -H
+        gars anno genome/repeats.yml stdin -H
     ' \
     -n 'range - cds - rgr prop' \
     '
     gars tsv -s "range:*" --range |
-        rgr prop cds.yml stdin -H -f 2 --prefix
+        rgr prop genome/cds.yml stdin -H -f 2 --prefix
     ' \
     -n 'range - cds - gars anno' \
     '
     gars tsv -s "range:*" --range |
-        gars anno cds.yml stdin -H
+        gars anno genome/cds.yml stdin -H
     ' \
     -n 'range - repeats - rgr prop' \
     '
     gars tsv -s "range:*" --range |
-        rgr prop repeats.yml stdin -H -f 2 --prefix
+        rgr prop genome/repeats.yml stdin -H -f 2 --prefix
     ' \
     -n 'range - repeats - gars anno' \
     '
     gars tsv -s "range:*" --range |
-        gars anno repeats.yml stdin -H
+        gars anno genome/repeats.yml stdin -H
     '
 
 cat prop.md.tmp
@@ -493,15 +500,15 @@ cat prop.md.tmp
 | `range - repeats - rgr prop`  |  8776.2 ± 8.8 |   8765.1 |   8796.1 | 22.59 ± 0.17 |
 | `range - repeats - gars anno` | 2088.1 ± 54.3 |   2032.1 |   2179.1 |  5.37 ± 0.15 |
 
-### i5-12500H Windows 11 WSL
+### Apple M2 macOS 13.4
 
-| Command                       |      Mean [ms] | Min [ms] | Max [ms] |     Relative |
-|:------------------------------|---------------:|---------:|---------:|-------------:|
-| `ctg - cds - rgr prop`        |   445.1 ± 13.0 |    429.6 |    466.4 |         1.00 |
-| `ctg - cds - gars anno`       |   495.4 ± 11.7 |    481.8 |    520.2 |  1.11 ± 0.04 |
-| `ctg - repeats - rgr prop`    |   963.4 ± 14.8 |    939.6 |    980.6 |  2.16 ± 0.07 |
-| `ctg - repeats - gars anno`   |  1017.9 ± 18.5 |    995.6 |   1053.4 |  2.29 ± 0.08 |
-| `range - cds - rgr prop`      | 5029.5 ± 147.1 |   4751.8 |   5208.8 | 11.30 ± 0.47 |
-| `range - cds - gars anno`     |  2141.9 ± 46.9 |   2090.6 |   2237.5 |  4.81 ± 0.18 |
-| `range - repeats - rgr prop`  | 7795.8 ± 240.8 |   7454.3 |   8113.4 | 17.51 ± 0.75 |
-| `range - repeats - gars anno` | 2709.9 ± 130.4 |   2602.4 |   3047.7 |  6.09 ± 0.34 |
+| Command                       |     Mean [ms] | Min [ms] | Max [ms] |    Relative |
+|:------------------------------|--------------:|---------:|---------:|------------:|
+| `ctg - cds - rgr prop`        |   498.2 ± 5.7 |    486.9 |    504.7 |        1.00 |
+| `ctg - cds - gars anno`       |   512.9 ± 2.9 |    510.1 |    517.5 | 1.03 ± 0.01 |
+| `ctg - repeats - rgr prop`    |  1057.5 ± 3.2 |   1053.6 |   1064.4 | 2.12 ± 0.03 |
+| `ctg - repeats - gars anno`   |  1082.4 ± 5.8 |   1077.1 |   1097.5 | 2.17 ± 0.03 |
+| `range - cds - rgr prop`      | 3102.5 ± 12.2 |   3085.7 |   3118.3 | 6.23 ± 0.08 |
+| `range - cds - gars anno`     |  1479.7 ± 5.7 |   1471.3 |   1489.5 | 2.97 ± 0.04 |
+| `range - repeats - rgr prop`  | 4221.7 ± 18.5 |   4186.9 |   4252.5 | 8.47 ± 0.10 |
+| `range - repeats - gars anno` |  2013.6 ± 9.3 |   2007.8 |   2039.6 | 4.04 ± 0.05 |
