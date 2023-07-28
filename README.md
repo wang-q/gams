@@ -20,6 +20,10 @@ cargo test -- --test-threads=1
 # gars-stat
 cargo install --force --offline --path . --features stat
 
+# build under WSL 2
+export CARGO_TARGET_DIR=/tmp
+cargo build
+
 ```
 
 ## SYNOPSIS
@@ -51,6 +55,7 @@ SUBCOMMANDS:
     sliding    Sliding windows along a chromosome
     status     Test Redis config and connection
     tsv        Export Redis hashes to a tsv file
+
 ```
 
 ```text

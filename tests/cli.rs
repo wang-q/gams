@@ -618,7 +618,7 @@ fn command_anno() -> Result<(), Box<dyn std::error::Error>> {
     let mut cmd = Command::cargo_bin("gars")?;
     let output = cmd
         .arg("anno")
-        .arg("tests/S288c/intergenic.yml")
+        .arg("tests/S288c/intergenic.json")
         .arg("tests/S288c/ctg.range.tsv")
         .arg("-H")
         .output()

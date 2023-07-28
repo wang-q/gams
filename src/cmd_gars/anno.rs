@@ -84,8 +84,8 @@ pub fn execute(args: &ArgMatches) -> anyhow::Result<()> {
     // redis connection
     let mut conn = connect();
 
-    let yaml = read_yaml(args.get_one::<String>("runlist").unwrap());
-    let set = yaml2set(&yaml);
+    let json = read_json(args.get_one::<String>("runlist").unwrap());
+    let set = json2set(&json);
 
     // local caches of the feature IntSpan for each ctg
     let mut cache: HashMap<String, IntSpan> = HashMap::new();
