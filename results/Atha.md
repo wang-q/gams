@@ -50,14 +50,14 @@ gzip -dcf Arabidopsis_thaliana.TAIR10.52.gff3.gz |
 #  48308 three_prime_UTR
 #    689 tRNA
 
-spanr gff Arabidopsis_thaliana.TAIR10.52.gff3.gz --tag CDS -o cds.yml
+spanr gff Arabidopsis_thaliana.TAIR10.52.gff3.gz --tag CDS -o cds.json
 
 faops masked genome.fa.gz |
-    spanr cover stdin -o repeats.yml
+    spanr cover stdin -o repeats.json
 
-spanr merge repeats.yml cds.yml -o anno.yml
+spanr merge repeats.json cds.json -o anno.json
 
-spanr stat chr.sizes anno.yml --all
+spanr stat chr.sizes anno.json --all
 #key,chrLength,size,coverage
 #cds,119667750,33775569,0.2822
 #repeats,119667750,28237829,0.2360
@@ -115,8 +115,8 @@ gars status dump && sync dump.rdb && cp dump.rdb dumps/ctg.dump.rdb
 
 # tsv exports
 time gars tsv -s 'ctg:*' --range |
-    gars anno genome/cds.yml stdin -H |
-    gars anno genome/repeats.yml stdin -H |
+    gars anno genome/cds.json stdin -H |
+    gars anno genome/repeats.json stdin -H |
     rgr sort -H -f 2 stdin |
     tsv-select -H -e range |
     pigz \
@@ -140,8 +140,8 @@ time parallel -j 4 -k --line-buffer '
 #sys     0m2.666s
 
 time gars tsv -s 'range:*' --range |
-    gars anno genome/cds.yml stdin -H |
-    gars anno genome/repeats.yml stdin -H |
+    gars anno genome/cds.json stdin -H |
+    gars anno genome/repeats.json stdin -H |
     rgr sort -H -f 2 stdin |
     tsv-select -H -e range |
     pigz \
@@ -177,8 +177,8 @@ parallel -j 4 -k --line-buffer '
     ' ::: CSHL FLAG MX RATM
 
 time gars tsv -s 'feature:*' --range |
-    gars anno genome/cds.yml stdin -H |
-    gars anno genome/repeats.yml stdin -H |
+    gars anno genome/cds.json stdin -H |
+    gars anno genome/repeats.json stdin -H |
     rgr sort -H -f 2 stdin |
     tsv-select -H -e range |
     pigz \
@@ -202,8 +202,8 @@ time cat genome/chr.sizes |
     cut -f 1 |
     parallel -j 4 -k --line-buffer '
         gars fsw --ctg "ctg:{}:*" --range |
-            gars anno genome/cds.yml stdin -H |
-            gars anno genome/repeats.yml stdin -H |
+            gars anno genome/cds.json stdin -H |
+            gars anno genome/repeats.json stdin -H |
             rgr sort -H -f 2 stdin
         ' |
     rgr sort -H -f 2 stdin |
@@ -231,42 +231,96 @@ redis-server --appendonly no --dir ~/data/gars/Atha/
 
 gars env
 
+# --parallel
+for p in 1 2 3 4 6 8; do
+    time gars sliding \
+        --ctg "ctg:1:*" \
+        --size 100 --step 1 \
+        --lag 1000 \
+        --threshold 3.0 \
+        --influence 1.0 \
+        --parallel ${p} \
+        -o stdout |
+        tsv-filter -H --ne signal:0 \
+        > /dev/null
+done
+# 1
+#real    1m3.518s
+#user    1m2.463s
+#sys     0m0.642s
+# 2
+#real    0m33.947s
+#user    1m6.931s
+#sys     0m0.663s
+# 3
+#real    0m23.364s
+#user    1m8.893s
+#sys     0m0.706s
+# 4
+#real    0m18.771s
+#user    1m13.224s
+#sys     0m0.767s
+# 6
+#real    0m14.730s
+#user    1m24.935s
+#sys     0m1.167s
+# 8
+#real    0m12.800s
+#user    1m35.152s
+#sys     0m1.957s
+
+# split a chr to 10
+cat ctg.lst |
+    perl -nl -e '
+        BEGIN {%seen}
+        s/(ctg:\w+:\d)\d*$/$1/;
+        $seen{"$1*"}++;
+        END { print for sort keys %seen}
+    ' \
+    > ctg.group.lst
+
 # can't use chr.sizes, which greatly reduces the speed of `rgr merge`
-time cat ctg.lst |
+time cat ctg.group.lst |
     parallel -j 4 -k --line-buffer '
+        prefix=$(echo {} | sed "s/[^[:alnum:]-]/_/g")
+        export prefix
+
         gars sliding \
             --ctg {} \
             --size 100 --step 1 \
             --lag 1000 \
             --threshold 3.0 \
             --influence 1.0 \
+            --parallel 4 \
             -o stdout |
             tsv-filter -H --ne signal:0 \
-            > {.}.gc.tsv
+            > ${prefix}.gc.tsv
 
-        cat {.}.gc.tsv |
-            cut -f 1 |
-            rgr merge -c 0.8 stdin -o {.}.replace.tsv
+        rgr pl-2rmp -c 0.8 ${prefix}.gc.tsv -o ${prefix}.replace
 
-        cat {.}.gc.tsv |
-            rgr replace stdin {.}.replace.tsv |
+        cat ${prefix}.replace |
             tsv-uniq -H -f 1 \
-            > tsvs/{.}.peak.tsv
+            > tsvs/${prefix}.peak.tsv
 
-        tsv-summarize tsvs/{.}.peak.tsv \
+        tsv-summarize tsvs/${prefix}.peak.tsv \
             -H --group-by signal --count
 
-        rm {.}.gc.tsv {.}.replace.tsv
+        rm ${prefix}.gc.tsv ${prefix}.replace
     '
 #real    3m55.356s
 #user    15m31.976s
 #sys     0m7.637s
 
 # Don't need to be sorted
-tsv-append $(cat ctg.lst | sed 's/$/.peak.tsv/' | sed 's/^/tsvs\//') -H \
+tsv-append -H $(
+    cat ctg.group.lst |
+        sed "s/[^[:alnum:]-]/_/g" `# Remove : *` |
+        sed 's/$/.peak.tsv/' `# suffix` |
+        sed 's/^/tsvs\//' `# dir`
+    ) \
     > tsvs/peak.tsv
 
-rm tsvs/ctg:*.peak.tsv
+rm tsvs/ctg*.peak.tsv
 
 tsv-summarize tsvs/peak.tsv \
     -H --group-by signal --count

@@ -477,6 +477,55 @@ fn command_sliding() -> Result<(), Box<dyn std::error::Error>> {
 }
 
 #[test]
+fn command_sliding_p() -> Result<(), Box<dyn std::error::Error>> {
+    // env
+    let mut cmd = Command::cargo_bin("gars")?;
+    cmd.arg("env").unwrap();
+
+    // drop
+    let mut cmd = Command::cargo_bin("gars")?;
+    cmd.arg("status").arg("drop").unwrap();
+
+    // gen
+    let mut cmd = Command::cargo_bin("gars")?;
+    cmd.arg("gen")
+        .arg("tests/S288c/genome.fa.gz")
+        .arg("--piece")
+        .arg("100000")
+        .unwrap();
+
+    // sliding
+    let mut cmd = Command::cargo_bin("gars")?;
+    let output = cmd
+        .arg("sliding")
+        .arg("--ctg")
+        .arg("ctg:I:*")
+        .arg("--size")
+        .arg("100")
+        .arg("--step")
+        .arg("10")
+        .arg("--lag")
+        .arg("100")
+        .arg("--threshold")
+        .arg("3.0")
+        .arg("--influence")
+        .arg("1.0")
+        .arg("--parallel")
+        .arg("2")
+        .output()
+        .unwrap();
+    let stdout = String::from_utf8(output.stdout).unwrap();
+    assert_eq!(stdout.lines().count(), 23004);
+    assert!(stdout.contains("I:78291-78390\t0.39"));
+
+    let stderr = String::from_utf8(output.stderr).unwrap();
+    assert_eq!(stderr.lines().count(), 3);
+    assert!(stderr.contains("Process ctg:I:2"));
+
+    Ok(())
+}
+
+#[test]
 fn command_peak() -> Result<(), Box<dyn std::error::Error>> {
     // env
     let mut cmd = Command::cargo_bin("gars")?;

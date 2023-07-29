@@ -28,8 +28,9 @@ cargo build
 
 ## SYNOPSIS
 
+### `gars help`
+
 ```text
-$ gars help
 gars 0.3.1
 wang-q <wang-q@outlook.com>
 Genome Analyst with Rust and rediS
@@ -58,8 +59,9 @@ SUBCOMMANDS:
 
 ```
 
+### `gars-stat --help`
+
 ```text
-$ gars-stat --help
 gars-stat 0.3.1
 wang-q <wang-q@outlook.com>
 Build-in stats for gars
@@ -241,6 +243,17 @@ tsv-summarize tests/S288c/I.peaks.tsv \
 #1       61
 
 gars peak tests/S288c/I.peaks.tsv
+
+# --parallel
+gars sliding \
+    --ctg 'ctg:I:*' \
+    --size 100 --step 10 \
+    --lag 100 \
+    --threshold 3.0 \
+    --influence 1.0 \
+    --parallel 1 \
+    -o tests/S288c/I.gc.tsv
+
 
 ```
 
