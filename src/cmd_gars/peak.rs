@@ -122,6 +122,10 @@ pub fn execute(args: &ArgMatches) -> anyhow::Result<()> {
         let mut peaks: Vec<String> = get_vec_feature(&mut conn, ctg_id);
         eprintln!("\tThere are {} peaks", peaks.len());
 
+        if peaks.is_empty() {
+            continue;
+        }
+
         // sort peaks
         let mut chr_start_of: HashMap<String, i32> = HashMap::new();
         for key in &peaks {
