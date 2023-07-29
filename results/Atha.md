@@ -231,44 +231,6 @@ redis-server --appendonly no --dir ~/data/gars/Atha/
 
 gars env
 
-# --parallel
-for p in 1 2 3 4 6 8; do
-    time gars sliding \
-        --ctg "ctg:1:*" \
-        --size 100 --step 1 \
-        --lag 1000 \
-        --threshold 3.0 \
-        --influence 1.0 \
-        --parallel ${p} \
-        -o stdout |
-        tsv-filter -H --ne signal:0 \
-        > /dev/null
-done
-# 1
-#real    1m3.518s
-#user    1m2.463s
-#sys     0m0.642s
-# 2
-#real    0m33.947s
-#user    1m6.931s
-#sys     0m0.663s
-# 3
-#real    0m23.364s
-#user    1m8.893s
-#sys     0m0.706s
-# 4
-#real    0m18.771s
-#user    1m13.224s
-#sys     0m0.767s
-# 6
-#real    0m14.730s
-#user    1m24.935s
-#sys     0m1.167s
-# 8
-#real    0m12.800s
-#user    1m35.152s
-#sys     0m1.957s
-
 # split a chr to 10
 cat ctg.lst |
     perl -nl -e '

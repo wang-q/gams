@@ -175,6 +175,57 @@ hyperfine --warmup 1 --export-markdown threads.md.tmp \
 
 cat threads.md.tmp
 
+# sliding
+gars status drop; gars gen genome/genome.fa.gz --piece 500000;
+
+hyperfine --warmup 1 --export-markdown threads.md.tmp \
+    -n 'parallel 1' \
+    '
+    gars sliding \
+        --ctg "ctg:1:*" \
+        --size 100 --step 5 \
+        --lag 200 \
+        --threshold 3.0 \
+        --influence 1.0 \
+        --parallel 1 \
+        > /dev/null
+    ' \
+    -n 'parallel 2' \
+    '
+    gars sliding \
+        --ctg "ctg:1:*" \
+        --size 100 --step 5 \
+        --lag 200 \
+        --threshold 3.0 \
+        --influence 1.0 \
+        --parallel 2 \
+        > /dev/null
+    ' \
+    -n 'parallel 4' \
+    '
+    gars sliding \
+        --ctg "ctg:1:*" \
+        --size 100 --step 5 \
+        --lag 200 \
+        --threshold 3.0 \
+        --influence 1.0 \
+        --parallel 4 \
+        > /dev/null
+    ' \
+    -n 'parallel 8' \
+    '
+    gars sliding \
+        --ctg "ctg:1:*" \
+        --size 100 --step 5 \
+        --lag 200 \
+        --threshold 3.0 \
+        --influence 1.0 \
+        --parallel 8 \
+        > /dev/null
+    '
+
+cat threads.md.tmp
+
 ```
 
 ### R7 5800 Windows 11 WSL
@@ -196,6 +247,35 @@ cat threads.md.tmp
 | `parallel -j 1` | 28.501 ± 0.549 |  27.699 |  29.672 | 2.94 ± 0.06 |
 | `parallel -j 2` | 14.920 ± 0.266 |  14.651 |  15.550 | 1.54 ± 0.03 |
 | `parallel -j 4` |  9.684 ± 0.052 |   9.611 |   9.766 |        1.00 |
+
+### i5-12500H Windows 11 WSL
+
+* feature
+
+| Command         |       Mean [s] | Min [s] | Max [s] |    Relative |
+|:----------------|---------------:|--------:|--------:|------------:|
+| `serial`        | 13.379 ± 0.540 |  13.035 |  14.839 | 1.59 ± 0.07 |
+| `parallel -j 1` | 14.124 ± 0.552 |  13.698 |  15.358 | 1.67 ± 0.07 |
+| `parallel -j 2` |  8.677 ± 0.192 |   8.472 |   9.057 | 1.03 ± 0.03 |
+| `parallel -j 4` |  8.440 ± 0.104 |   8.272 |   8.628 |        1.00 |
+
+* fsw
+
+| Command         |       Mean [s] | Min [s] | Max [s] |    Relative |
+|:----------------|---------------:|--------:|--------:|------------:|
+| `serial`        | 24.958 ± 0.809 |  23.794 |  26.062 | 2.04 ± 0.08 |
+| `parallel -j 1` | 30.466 ± 0.687 |  29.646 |  32.267 | 2.49 ± 0.08 |
+| `parallel -j 2` | 16.563 ± 0.521 |  15.954 |  17.413 | 1.35 ± 0.05 |
+| `parallel -j 4` | 12.247 ± 0.274 |  11.902 |  12.745 |        1.00 |
+
+* sliding
+
+| Command      |      Mean [s] | Min [s] | Max [s] |    Relative |
+|:-------------|--------------:|--------:|--------:|------------:|
+| `parallel 1` | 5.914 ± 0.070 |   5.820 |   6.039 | 4.42 ± 0.10 |
+| `parallel 2` | 3.240 ± 0.032 |   3.181 |   3.273 | 2.42 ± 0.05 |
+| `parallel 4` | 1.823 ± 0.018 |   1.802 |   1.865 | 1.36 ± 0.03 |
+| `parallel 8` | 1.337 ± 0.025 |   1.306 |   1.384 |        1.00 |
 
 ### E5-2680 v3 RHEL 7.7
 
