@@ -222,6 +222,28 @@ hyperfine --warmup 1 --export-markdown threads.md.tmp \
         --influence 1.0 \
         --parallel 8 \
         > /dev/null
+    ' \
+    -n 'parallel 12' \
+    '
+    gars sliding \
+        --ctg "ctg:1:*" \
+        --size 100 --step 5 \
+        --lag 200 \
+        --threshold 3.0 \
+        --influence 1.0 \
+        --parallel 8 \
+        > /dev/null
+    ' \
+    -n 'parallel 16' \
+    '
+    gars sliding \
+        --ctg "ctg:1:*" \
+        --size 100 --step 5 \
+        --lag 200 \
+        --threshold 3.0 \
+        --influence 1.0 \
+        --parallel 16 \
+        > /dev/null
     '
 
 cat threads.md.tmp
@@ -296,6 +318,17 @@ cat threads.md.tmp
 | `parallel -j 1` | 48.743 ± 0.765 |  47.453 |  49.555 | 3.00 ± 0.06 |
 | `parallel -j 2` | 25.205 ± 0.558 |  24.065 |  25.980 | 1.55 ± 0.04 |
 | `parallel -j 4` | 16.273 ± 0.178 |  15.946 |  16.552 |        1.00 |
+
+* sliding
+
+| Command       |       Mean [s] | Min [s] | Max [s] |    Relative |
+|:--------------|---------------:|--------:|--------:|------------:|
+| `parallel 1`  | 11.618 ± 0.127 |  11.522 |  11.911 | 9.56 ± 0.29 |
+| `parallel 2`  |  6.378 ± 0.040 |   6.314 |   6.450 | 5.25 ± 0.15 |
+| `parallel 4`  |  3.358 ± 0.037 |   3.307 |   3.424 | 2.76 ± 0.08 |
+| `parallel 8`  |  1.879 ± 0.009 |   1.864 |   1.892 | 1.55 ± 0.04 |
+| `parallel 12` |  1.875 ± 0.009 |   1.863 |   1.890 | 1.54 ± 0.04 |
+| `parallel 16` |  1.215 ± 0.035 |   1.160 |   1.276 |        1.00 |
 
 ### Apple M2 macOS 13.4
 
