@@ -111,7 +111,7 @@ gars status drop
 
 gars gen genome/genome.fa.gz --piece 500000
 
-gars status dump && sync dump.rdb && cp dump.rdb dumps/ctg.dump.rdb
+gars status dump dumps/ctg.rdb
 
 # tsv exports
 time gars tsv -s 'ctg:*' --range |

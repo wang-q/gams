@@ -9,6 +9,8 @@
   * `clap` v4
   * `polars` v0.30
 
+* Add more benchmarks
+
 ## 0.3.1 - 2022-06-15
 
 * Add `gars anno`

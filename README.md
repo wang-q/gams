@@ -199,7 +199,7 @@ gars status dump
 
 ```shell
 # start redis-server
-redis-server
+redis-server &
 
 # gars
 gars env

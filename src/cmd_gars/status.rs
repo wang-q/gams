@@ -4,6 +4,9 @@ use redis::Commands;
 
 use rand::Rng;
 use std::collections::{BTreeMap, BTreeSet};
+use std::fs;
+use std::path::Path;
+use std::thread::sleep;
 
 // Create clap subcommand arguments
 pub fn make_subcommand() -> Command {
@@ -26,13 +29,21 @@ List of actions:
             Arg::new("action")
                 .index(1)
                 .num_args(1)
-                .default_value("test")
+                .default_value("info")
                 .help("What to do"),
+        )
+        .arg(
+            Arg::new("file")
+                .index(2)
+                .num_args(1)
+                .default_value("backup.rdb")
+                .help("Target filename"),
         )
 }
 
 // command implementation
 pub fn execute(args: &ArgMatches) -> anyhow::Result<()> {
+    let file = args.get_one::<String>("file").unwrap();
     match args.get_one::<String>("action").unwrap().as_str() {
         "cli" => {
             cli();
@@ -53,7 +64,7 @@ pub fn execute(args: &ArgMatches) -> anyhow::Result<()> {
             drop();
         }
         "dump" => {
-            dump();
+            dump(file)?;
         }
         "stop" => {
             stop();
@@ -70,8 +81,8 @@ fn info() {
         .query(&mut conn)
         .expect("Failed to execute INFO");
 
-    let mut output: BTreeMap<&str, String> = BTreeMap::new();
-    for key in &[
+    let mut output: BTreeMap<String, String> = BTreeMap::new();
+    for key in [
         "redis_version",
         "os",
         "used_memory_human",
@@ -80,8 +91,17 @@ fn info() {
         "total_connections_received",
         "total_commands_processed",
     ] {
-        output.insert(key, info.get(key).unwrap());
+        output.insert(key.to_string(), info.get(key).unwrap());
     }
+
+    let config: Vec<String> = redis::cmd("CONFIG")
+        .arg("GET")
+        .arg("dir")
+        .query(&mut conn)
+        .expect("Failed to execute CONFIG");
+    config.windows(2).for_each(|w| {
+        output.insert(w[0].to_string(), w[1].to_string());
+    });
 
     eprintln!("output = {:#?}", output);
 }
@@ -104,12 +124,58 @@ fn drop() {
     println!("{}", output);
 }
 
-fn dump() {
+fn dump(file: &str) -> anyhow::Result<()> {
     let mut conn = connect();
-    let output: String = redis::cmd("SAVE")
+
+    // When LASTSAVE changed, the saving is completed
+    let start : i32 = redis::cmd("LASTSAVE")
+        .query(&mut conn)
+        .expect("Failed to execute LASTSAVE");
+
+    let output: String = redis::cmd("BGSAVE")
         .query(&mut conn)
         .expect("Failed to execute SAVE");
     println!("{}", output);
+
+    loop {
+        let cur : i32 = redis::cmd("LASTSAVE")
+            .query(&mut conn)
+            .expect("Failed to execute LASTSAVE");
+
+        eprintln!("Sleep 1 sec");
+        sleep(std::time::Duration::from_secs(1));
+
+        if cur != start {
+            eprintln!("Redis BGSAVE completed");
+            break;
+        }
+    }
+
+    // try backup
+    let config: Vec<String> = redis::cmd("CONFIG")
+        .arg("GET")
+        .arg("dir")
+        .query(&mut conn)
+        .expect("Failed to execute CONFIG");
+
+    let redis_dir = config.get(1).unwrap();
+
+    let mut rdb =  Path::new(redis_dir).to_path_buf();
+    rdb.push("dump.rdb");
+
+    if !rdb.is_file() {
+        // redis-server runs inside WSL
+        rdb = Path::new("dump.rdb").to_path_buf();
+        if !rdb.is_file() {
+            eprintln!("Can't find dump.rdb");
+            return Ok(());
+        }
+    }
+
+    eprintln!("rdb = {:#?}, dest = {:#?}", rdb, file);
+    fs::copy(rdb,Path::new(file))?;
+
+    Ok(())
 }
 
 fn stop() {

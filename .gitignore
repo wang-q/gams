@@ -103,6 +103,6 @@ Cargo.lock
 *.pdf
 
 gars.env
-dump.rdb
+*.rdb
 *.tsv
 *.lst
