@@ -3,6 +3,11 @@
 ## Unreleased - ReleaseDate
 
 * `--range` writes a `range` field before the chr_id field
+* Add --parallel to `gars sliding`
+
+* Bump deps
+  * `clap` v4
+  * `polars` v0.30
 
 ## 0.3.1 - 2022-06-15
 
