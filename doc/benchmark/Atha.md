@@ -3,13 +3,18 @@
 ## `gars`
 
 ```shell
+# Avoid NTFS
+mkdir -p ~/gars
+cd ~/gars
+
+cp -R ~/data/gams/Atha/genome/ .
+cp -R ~/data/gams/Atha/features/ .
+
 # redis
-cd ~/data/gars/Atha/
 rm dump.rdb
-redis-server
+redis-server &
 
 # gars
-cd ~/data/gars/Atha/
 gars env
 
 hyperfine --warmup 1 --export-markdown gars.md.tmp \
@@ -58,6 +63,17 @@ cat gars.md.tmp
 | `d-g; feature;`      | 2.868 ± 0.058 |   2.777 |   2.954 | 2.62 ± 0.06 |
 | `d-g; feature; fsw;` | 9.108 ± 0.153 |   9.015 |   9.519 | 8.32 ± 0.16 |
 | `d-g; sliding;`      | 5.993 ± 0.021 |   5.965 |   6.024 | 5.47 ± 0.05 |
+
+### i5-12500H Windows 11 WSL
+
+| Command              |      Mean [s] | Min [s] | Max [s] |     Relative |
+|:---------------------|--------------:|--------:|--------:|-------------:|
+| `drop; gen;`         | 1.253 ± 0.030 |   1.200 |   1.301 |  9.86 ± 0.73 |
+| `d-g; range;`        | 1.393 ± 0.035 |   1.329 |   1.443 | 10.96 ± 0.82 |
+| `clear; range;`      | 0.127 ± 0.009 |   0.115 |   0.146 |         1.00 |
+| `d-g; feature;`      | 3.216 ± 0.073 |   3.142 |   3.387 | 25.30 ± 1.87 |
+| `d-g; feature; fsw;` | 9.389 ± 0.497 |   9.080 |  10.621 | 73.86 ± 6.51 |
+| `d-g; sliding;`      | 5.927 ± 0.019 |   5.897 |   5.956 | 46.63 ± 3.28 |
 
 ### E5-2680 v3 RHEL 7.7
 
