@@ -1,5 +1,4 @@
 use clap::*;
-use gars::*;
 use redis::Commands;
 
 // Create clap subcommand arguments
@@ -29,22 +28,45 @@ List of actions:
                 .num_args(1)
                 .help("What to do"),
         )
+        .arg(
+            Arg::new("iter")
+                .long("iter")
+                .action(ArgAction::SetTrue)
+                .help("Use a iterator instead of the lua script"),
+        )
 }
 
 // command implementation
 pub fn execute(args: &ArgMatches) -> anyhow::Result<()> {
+    let is_iter = args.get_flag("iter");
+
     match args.get_one::<String>("action").unwrap().as_str() {
         "feature" => {
-            clear("feature:*");
-            clear("cnt:feature:*");
+            if is_iter {
+                clear_iter("feature:*");
+                clear_iter("cnt:feature:*");
+            } else {
+                clear_lua("feature:*");
+                clear_lua("cnt:feature:*");
+            }
         }
         "range" => {
-            clear("range:*");
-            clear("cnt:range:*");
+            if is_iter {
+                clear_iter("range:*");
+                clear_iter("cnt:range:*");
+            } else {
+                clear_lua("range:*");
+                clear_lua("cnt:range:*");
+            }
         }
         "peak" => {
-            clear("peak:*");
-            clear("cnt:peak:*");
+            if is_iter {
+                clear_iter("peak:*");
+                clear_iter("cnt:peak:*");
+            } else {
+                clear_lua("peak:*");
+                clear_lua("cnt:peak:*");
+            }
         }
         _ => unreachable!(),
     };
@@ -52,11 +74,11 @@ pub fn execute(args: &ArgMatches) -> anyhow::Result<()> {
     Ok(())
 }
 
-fn clear(pattern: &str) {
+fn clear_iter(pattern: &str) {
     eprintln!("Clearing pattern {:#?}", pattern);
     // redis connection
-    let mut conn = connect();
-    let mut conn2 = connect(); // can't use one same `conn` inside an iter
+    let mut conn = gars::connect();
+    let mut conn2 = gars::connect(); // can't use one same `conn` inside an iter
 
     let iter: redis::Iter<'_, String> = conn.scan_match(pattern).unwrap();
     let mut i: isize = 0;
@@ -66,4 +88,27 @@ fn clear(pattern: &str) {
     }
 
     eprintln!("\tClear {:#?} keys", i);
+}
+
+fn clear_lua(pattern: &str) {
+    eprintln!("Clearing pattern {:#?}", pattern);
+
+    let mut conn = gars::connect();
+
+    // https://stackoverflow.com/questions/49055655
+    let script = redis::Script::new(
+        r###"
+local matches = redis.call('KEYS', ARGV[1])
+
+local result = 0
+for _,key in ipairs(matches) do
+    result = result + redis.call('DEL', key)
+end
+
+return result
+
+"###,
+    );
+    let res: i32 = script.arg(pattern).invoke(&mut conn).unwrap();
+    eprintln!("\tClear {:#?} keys", res);
 }
