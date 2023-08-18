@@ -1,5 +1,4 @@
 use clap::*;
-use gars::*;
 use redis::{Commands, RedisResult};
 
 use rand::Rng;
@@ -61,7 +60,7 @@ pub fn execute(args: &ArgMatches) -> anyhow::Result<()> {
             info();
         }
         "drop" => {
-            db_drop();
+            gars::db_drop();
         }
         "dump" => {
             dump(file)?;
@@ -78,7 +77,7 @@ pub fn execute(args: &ArgMatches) -> anyhow::Result<()> {
 }
 
 fn info() {
-    let mut conn = connect();
+    let mut conn = gars::connect();
     let info: redis::InfoDict = redis::cmd("INFO")
         .query(&mut conn)
         .expect("Failed to execute INFO");
@@ -109,17 +108,27 @@ fn info() {
 }
 
 fn cli() {
-    match std::process::Command::new("redis-cli")
+    let res_redis = std::process::Command::new("redis-cli")
         .arg("--version")
-        .output()
-    {
-        Ok(o) => println!("Find `{:#?}` in $PATH", String::from_utf8(o.stdout)),
-        Err(_) => println!("`redis-cli` was not found! Check your $PATH!"),
+        .output();
+
+    if let Ok(output) = res_redis {
+        let msg = std::str::from_utf8(output.stdout.as_ref()).unwrap().trim();
+        eprintln!("Find `{:#?}` in $PATH", msg);
+    } else {
+        eprintln!("`redis-cli` not found in $PATH");
+        let res_memurai = std::process::Command::new("memurai-cli")
+            .arg("--version")
+            .output();
+        if let Ok(output) = res_memurai {
+            let msg = std::str::from_utf8(output.stdout.as_ref()).unwrap().trim();
+            eprintln!("Find `{:#?}` in $PATH", msg);
+        }
     }
 }
 
 fn dump(file: &str) -> anyhow::Result<()> {
-    let mut conn = connect();
+    let mut conn = gars::connect();
 
     // When LASTSAVE changed, the saving is completed
     let start: i32 = redis::cmd("LASTSAVE")
@@ -173,7 +182,7 @@ fn dump(file: &str) -> anyhow::Result<()> {
 }
 
 fn stop() {
-    let mut conn = connect();
+    let mut conn = gars::connect();
 
     redis::cmd("SHUTDOWN")
         .arg("SAVE")
@@ -183,7 +192,7 @@ fn stop() {
 }
 
 fn basics() {
-    let mut conn = connect();
+    let mut conn = gars::connect();
     println!("******* Running SET, GET, INCR commands *******");
 
     let _: () = redis::cmd("SET")
@@ -211,7 +220,7 @@ fn basics() {
 }
 
 fn hash() {
-    let mut conn = connect();
+    let mut conn = gars::connect();
 
     println!("******* Running HASH commands *******");
 
@@ -260,7 +269,7 @@ fn hash() {
 }
 
 fn list() {
-    let mut conn = connect();
+    let mut conn = gars::connect();
     println!("******* Running LIST commands *******");
 
     let list_name = "items";
@@ -295,7 +304,7 @@ fn list() {
 }
 
 fn set() {
-    let mut conn = connect();
+    let mut conn = gars::connect();
     println!("******* Running SET commands *******");
 
     let set_name = "users";
@@ -323,7 +332,7 @@ fn set() {
 }
 
 fn sorted_set() {
-    let mut conn = connect();
+    let mut conn = gars::connect();
     println!("******* Running SORTED SET commands *******");
 
     let sorted_set = "leaderboard";
@@ -361,7 +370,7 @@ fn sorted_set() {
 }
 
 fn pipe_atomic() {
-    let mut conn = connect();
+    let mut conn = gars::connect();
     println!("******* Running MULTI EXEC commands *******");
 
     redis::pipe()
@@ -437,7 +446,7 @@ fn pipe_atomic() {
 }
 
 fn script() {
-    let mut conn = connect();
+    let mut conn = gars::connect();
     println!("******* Running Lua Scripts *******");
 
     let script = redis::Script::new(

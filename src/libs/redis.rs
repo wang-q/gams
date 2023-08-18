@@ -436,4 +436,3 @@ pub fn db_drop() {
         .expect("Failed to execute FLUSHDB");
     println!("{}", output);
 }
-
