@@ -427,3 +427,13 @@ pub fn get_gc_content(conn: &mut redis::Connection, rg: &Range) -> f32 {
         }
     };
 }
+
+/// drop the database
+pub fn db_drop() {
+    let mut conn = connect();
+    let output: String = redis::cmd("FLUSHDB")
+        .query(&mut conn)
+        .expect("Failed to execute FLUSHDB");
+    println!("{}", output);
+}
+

@@ -61,7 +61,7 @@ pub fn execute(args: &ArgMatches) -> anyhow::Result<()> {
             info();
         }
         "drop" => {
-            drop();
+            db_drop();
         }
         "dump" => {
             dump(file)?;
@@ -116,14 +116,6 @@ fn cli() {
         Ok(o) => println!("Find `{:#?}` in $PATH", String::from_utf8(o.stdout)),
         Err(_) => println!("`redis-cli` was not found! Check your $PATH!"),
     }
-}
-
-fn drop() {
-    let mut conn = connect();
-    let output: String = redis::cmd("FLUSHDB")
-        .query(&mut conn)
-        .expect("Failed to execute FLUSHDB");
-    println!("{}", output);
 }
 
 fn dump(file: &str) -> anyhow::Result<()> {
