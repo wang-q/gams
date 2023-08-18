@@ -1,7 +1,7 @@
 use criterion::{black_box, criterion_group, criterion_main, Criterion};
 use gars::connect;
 use rand::distributions::{Alphanumeric, DistString};
-use redis::{Commands};
+use redis::Commands;
 use serde::{Deserialize, Serialize};
 
 #[derive(Default, Clone, Debug, Serialize, Deserialize)]
