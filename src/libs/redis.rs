@@ -1,7 +1,6 @@
 use flate2::read::GzDecoder;
 use std::collections::{BTreeMap, HashMap};
-use std::io;
-use std::io::Read;
+use std::io::{self, BufRead, Read};
 
 use intspan::{IntSpan, Range};
 use redis::Commands;
@@ -367,6 +366,37 @@ pub fn get_rg_seq(conn: &mut redis::Connection, rg: &Range) -> String {
     let seq = ctg_seq.get((ctg_start - 1)..(ctg_end)).unwrap();
 
     String::from(seq)
+}
+
+/// Read ranges in the file
+pub fn read_range(
+    infile: &str,
+    lapper_of: &BTreeMap<String, Lapper<u32, String>>,
+) -> BTreeMap<String, Vec<Range>> {
+    let reader = intspan::reader(infile);
+
+    // ctg_id => [Range]
+    let mut ranges_of: BTreeMap<String, Vec<Range>> = BTreeMap::new();
+
+    // processing each line
+    for line in reader.lines().map_while(Result::ok) {
+        let rg = Range::from_str(&line);
+        if !rg.is_valid() {
+            continue;
+        }
+
+        let ctg_id = find_one_idx(lapper_of, &rg);
+        if ctg_id.is_empty() {
+            continue;
+        }
+
+        ranges_of
+            .entry(ctg_id)
+            .and_modify(|v| v.push(rg))
+            .or_insert(Vec::new());
+    }
+
+    ranges_of
 }
 
 /// This is an expensive operation
