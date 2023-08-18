@@ -2,7 +2,6 @@ use clap::*;
 use intspan::*;
 use redis::Commands;
 use std::collections::BTreeMap;
-use std::io::BufRead;
 
 // Create clap subcommand arguments
 pub fn make_subcommand() -> Command {
@@ -33,6 +32,7 @@ ID - format!("range:{}:{}", ctg_id, serial)
 
 // command implementation
 pub fn execute(args: &ArgMatches) -> anyhow::Result<()> {
+    // opts
     let opt_size = *args.get_one::<usize>("size").unwrap();
 
     // redis connection
@@ -43,29 +43,9 @@ pub fn execute(args: &ArgMatches) -> anyhow::Result<()> {
 
     // processing each file
     for infile in args.get_many::<String>("infiles").unwrap() {
-        let reader = reader(infile);
-
-        // ctg_id, Range
+        // ctg_id => [Range]
         // act as a sorter
-        let mut ranges_of: BTreeMap<String, Vec<Range>> = BTreeMap::new();
-
-        for line in reader.lines().map_while(Result::ok) {
-            let mut rg = Range::from_str(&line);
-            if !rg.is_valid() {
-                continue;
-            }
-            *rg.strand_mut() = "".to_string();
-
-            let ctg_id = gars::find_one_idx(&lapper_of, &rg);
-            if ctg_id.is_empty() {
-                continue;
-            }
-
-            ranges_of
-                .entry(ctg_id)
-                .and_modify(|v| v.push(rg))
-                .or_insert(Vec::new());
-        }
+        let ranges_of = gars::read_range(infile, &lapper_of);
 
         // ctg_id, Range
         let mut ctg_ranges: Vec<(String, Range)> = vec![];
@@ -92,7 +72,7 @@ pub fn execute(args: &ArgMatches) -> anyhow::Result<()> {
                 batch.clear();
             }
             if i > 1 && i % (opt_size * 10) == 0 {
-                eprintln!("Read {} records", i);
+                eprintln!("Insert {} records", i);
             }
 
             // serial and id
@@ -119,7 +99,7 @@ pub fn execute(args: &ArgMatches) -> anyhow::Result<()> {
                 .ignore();
         }
 
-        // There could left records in stmts
+        // There could left records in the batch
         {
             let _: () = batch.query(&mut conn).unwrap();
             batch.clear();

@@ -40,7 +40,7 @@ List of actions:
 pub fn execute(args: &ArgMatches) -> anyhow::Result<()> {
     let is_iter = args.get_flag("iter");
 
-    for action in args.get_many::<String>("infiles").unwrap() {
+    for action in args.get_many::<String>("actions").unwrap() {
         match action.as_str() {
             "feature" => {
                 if is_iter {
