@@ -7,8 +7,8 @@
 mkdir -p ~/gars
 cd ~/gars
 
-cp -R ~/data/gams/Atha/genome/ .
-cp -R ~/data/gams/Atha/features/ .
+cp -R ~/data/gars/Atha/genome .
+cp -R ~/data/gars/Atha/features .
 
 # redis
 rm dump.rdb
@@ -82,20 +82,86 @@ cat gars.md.tmp
 
 ### Apple M2 macOS 13.4
 
-| Command              |      Mean [s] | Min [s] | Max [s] |    Relative |
-|:---------------------|--------------:|--------:|--------:|------------:|
-| `drop; gen;`         | 1.256 ± 0.006 |   1.248 |   1.266 |        1.00 |
-| `d-g; range;`        | 2.334 ± 0.010 |   2.322 |   2.350 | 1.86 ± 0.01 |
-| `clear; range;`      | 1.616 ± 0.007 |   1.609 |   1.633 | 1.29 ± 0.01 |
-| `d-g; feature;`      | 2.376 ± 0.020 |   2.343 |   2.409 | 1.89 ± 0.02 |
-| `d-g; feature; fsw;` | 7.840 ± 0.037 |   7.811 |   7.941 | 6.24 ± 0.04 |
-| `d-g; sliding;`      | 4.872 ± 0.014 |   4.854 |   4.895 | 3.88 ± 0.02 |
+| Command           |      Mean [s] | Min [s] | Max [s] |     Relative |
+|:------------------|--------------:|--------:|--------:|-------------:|
+| `drop; gen;`      | 1.171 ± 0.004 |   1.164 |   1.176 | 10.55 ± 0.18 |
+| `d-g; range;`     | 1.274 ± 0.006 |   1.266 |   1.283 | 11.48 ± 0.20 |
+| `clear; range;`   | 0.111 ± 0.002 |   0.109 |   0.117 |         1.00 |
+| `clear; feature;` | 0.144 ± 0.002 |   0.142 |   0.151 |  1.30 ± 0.03 |
+| `clear; sliding;` | 4.217 ± 0.014 |   4.198 |   4.242 | 37.99 ± 0.65 |
+
+## Batch size
+
+```shell
+cd ~/gars/
+
+# redis
+rm dump.rdb
+redis-server &
+
+# gars
+gars env
+
+# feature
+gars status drop; gars gen genome/genome.fa.gz --piece 500000;
+
+hyperfine --warmup 1 --export-markdown batch.md.tmp \
+    -n 'size 1' \
+    '
+    gars clear feature;
+    gars feature features/T-DNA.CSHL.rg --tag CSHL --size 1;
+    ' \
+    -n 'size 10' \
+    '
+    gars clear feature;
+    gars feature features/T-DNA.CSHL.rg --tag CSHL --size 10;
+    ' \
+    -n 'size 50' \
+    '
+    gars clear feature;
+    gars feature features/T-DNA.CSHL.rg --tag CSHL --size 50;
+    ' \
+    -n 'size 100' \
+    '
+    gars clear feature;
+    gars feature features/T-DNA.CSHL.rg --tag CSHL --size 100;
+    ' \
+    -n 'size 1000' \
+    '
+    gars clear feature;
+    gars feature features/T-DNA.CSHL.rg --tag CSHL --size 1000;
+    '
+
+cat batch.md.tmp
+
+```
+
+### i5-12500H Windows 11 WSL
+
+| Command     |      Mean [s] | Min [s] | Max [s] |    Relative |
+|:------------|--------------:|--------:|--------:|------------:|
+| `size 1`    | 1.211 ± 0.060 |   1.111 |   1.322 | 7.66 ± 0.49 |
+| `size 10`   | 0.290 ± 0.019 |   0.264 |   0.315 | 1.83 ± 0.14 |
+| `size 50`   | 0.181 ± 0.008 |   0.168 |   0.197 | 1.14 ± 0.07 |
+| `size 100`  | 0.173 ± 0.013 |   0.157 |   0.201 | 1.09 ± 0.09 |
+| `size 1000` | 0.158 ± 0.006 |   0.149 |   0.178 |        1.00 |
+
+### Apple M2 macOS 13.4
+
+| Command     |   Mean [ms] | Min [ms] | Max [ms] |    Relative |
+|:------------|------------:|---------:|---------:|------------:|
+| `size 1`    | 596.2 ± 2.7 |    592.0 |    600.9 | 4.17 ± 0.08 |
+| `size 10`   | 207.0 ± 2.0 |    204.9 |    212.0 | 1.45 ± 0.03 |
+| `size 50`   | 151.0 ± 1.7 |    149.2 |    156.5 | 1.06 ± 0.02 |
+| `size 100`  | 143.0 ± 2.6 |    140.7 |    152.3 |        1.00 |
+| `size 1000` | 144.8 ± 4.1 |    135.6 |    148.9 | 1.01 ± 0.03 |
 
 ## threads
 
 ```shell
+cd ~/gars/
+
 # redis
-cd ~/data/gars/Atha/
 rm dump.rdb
 redis-server &
 
@@ -193,9 +259,7 @@ hyperfine --warmup 1 --export-markdown threads.md.tmp \
     gars sliding \
         --ctg "ctg:1:*" \
         --size 100 --step 5 \
-        --lag 200 \
-        --threshold 3.0 \
-        --influence 1.0 \
+        --lag 200 --threshold 3.0 --influence 1.0 \
         --parallel 1 \
         > /dev/null
     ' \
@@ -204,9 +268,7 @@ hyperfine --warmup 1 --export-markdown threads.md.tmp \
     gars sliding \
         --ctg "ctg:1:*" \
         --size 100 --step 5 \
-        --lag 200 \
-        --threshold 3.0 \
-        --influence 1.0 \
+        --lag 200 --threshold 3.0 --influence 1.0 \
         --parallel 2 \
         > /dev/null
     ' \
@@ -215,9 +277,7 @@ hyperfine --warmup 1 --export-markdown threads.md.tmp \
     gars sliding \
         --ctg "ctg:1:*" \
         --size 100 --step 5 \
-        --lag 200 \
-        --threshold 3.0 \
-        --influence 1.0 \
+        --lag 200 --threshold 3.0 --influence 1.0 \
         --parallel 4 \
         > /dev/null
     ' \
@@ -226,9 +286,7 @@ hyperfine --warmup 1 --export-markdown threads.md.tmp \
     gars sliding \
         --ctg "ctg:1:*" \
         --size 100 --step 5 \
-        --lag 200 \
-        --threshold 3.0 \
-        --influence 1.0 \
+        --lag 200 --threshold 3.0 --influence 1.0 \
         --parallel 8 \
         > /dev/null
     ' \
@@ -237,9 +295,7 @@ hyperfine --warmup 1 --export-markdown threads.md.tmp \
     gars sliding \
         --ctg "ctg:1:*" \
         --size 100 --step 5 \
-        --lag 200 \
-        --threshold 3.0 \
-        --influence 1.0 \
+        --lag 200 --threshold 3.0 --influence 1.0 \
         --parallel 12 \
         > /dev/null
     ' \
@@ -248,9 +304,7 @@ hyperfine --warmup 1 --export-markdown threads.md.tmp \
     gars sliding \
         --ctg "ctg:1:*" \
         --size 100 --step 5 \
-        --lag 200 \
-        --threshold 3.0 \
-        --influence 1.0 \
+        --lag 200 --threshold 3.0 --influence 1.0 \
         --parallel 16 \
         > /dev/null
     '
@@ -283,12 +337,12 @@ cat threads.md.tmp
 
 * feature
 
-| Command         |       Mean [s] | Min [s] | Max [s] |    Relative |
-|:----------------|---------------:|--------:|--------:|------------:|
-| `serial`        | 13.379 ± 0.540 |  13.035 |  14.839 | 1.59 ± 0.07 |
-| `parallel -j 1` | 14.124 ± 0.552 |  13.698 |  15.358 | 1.67 ± 0.07 |
-| `parallel -j 2` |  8.677 ± 0.192 |   8.472 |   9.057 | 1.03 ± 0.03 |
-| `parallel -j 4` |  8.440 ± 0.104 |   8.272 |   8.628 |        1.00 |
+| Command         |     Mean [ms] | Min [ms] | Max [ms] |    Relative |
+|:----------------|--------------:|---------:|---------:|------------:|
+| `serial`        |  683.1 ± 48.6 |    629.4 |    776.0 |        1.00 |
+| `parallel -j 1` | 1020.4 ± 46.8 |    944.6 |   1078.5 | 1.49 ± 0.13 |
+| `parallel -j 2` |  825.3 ± 66.4 |    739.3 |    919.9 | 1.21 ± 0.13 |
+| `parallel -j 4` |  873.8 ± 82.9 |    775.0 |    998.5 | 1.28 ± 0.15 |
 
 * fsw
 
@@ -343,12 +397,12 @@ cat threads.md.tmp
 
 * feature
 
-| Command         |      Mean [s] | Min [s] | Max [s] |    Relative |
-|:----------------|--------------:|--------:|--------:|------------:|
-| `serial`        | 7.562 ± 0.032 |   7.500 |   7.617 | 1.47 ± 0.01 |
-| `parallel -j 1` | 8.013 ± 0.021 |   7.979 |   8.045 | 1.56 ± 0.01 |
-| `parallel -j 2` | 6.302 ± 0.019 |   6.263 |   6.321 | 1.22 ± 0.01 |
-| `parallel -j 4` | 5.146 ± 0.019 |   5.121 |   5.176 |        1.00 |
+| Command         |   Mean [ms] | Min [ms] | Max [ms] |    Relative |
+|:----------------|------------:|---------:|---------:|------------:|
+| `serial`        | 623.8 ± 6.9 |    616.5 |    634.0 | 1.28 ± 0.02 |
+| `parallel -j 1` | 763.1 ± 6.4 |    756.0 |    775.9 | 1.56 ± 0.02 |
+| `parallel -j 2` | 540.4 ± 5.6 |    534.8 |    551.1 | 1.11 ± 0.01 |
+| `parallel -j 4` | 487.6 ± 4.2 |    481.3 |    493.4 |        1.00 |
 
 * fsw
 
