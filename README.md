@@ -7,7 +7,7 @@
 
 `gars` - **G**enome **A**nalyst with **R**ust and redi**S**
 
-## INSTALL
+## Install
 
 Current release: 0.3.1
 
@@ -26,7 +26,7 @@ cargo build
 
 ```
 
-## SYNOPSIS
+## Synopsis
 
 ### `gars help`
 
@@ -80,7 +80,7 @@ OPTIONS:
 
 ```
 
-## RUNTIME DEPENDENCIES
+## Runtime dependencies
 
 * Command line tools managed by `Linuxbrew`
 
@@ -144,7 +144,7 @@ brew install textql
 
 ```
 
-## EXAMPLES
+## Examples
 
 ### Genomic features and sliding windows
 
@@ -260,6 +260,7 @@ gars sliding \
 ### Env variables
 
 ```shell
+# change redis port
 REDIS_PORT=7379 gars env -o stdout
 
 gars env
@@ -268,11 +269,22 @@ gars status test
 
 ```
 
-## AUTHOR
+## Designing concepts
+
+`Redis` has a low operating cost, but the inter-process communication (IPC) between `gars` and `redis` is
+expensive. After connecting to redis, a `SET` or `HSET` by `gars` consumes about 100 μs. A pipeline
+of 100 `HSET` operations takes almost the same amount of time. Thus, for insert operations, `gars`
+packages hundreds of operations locally and passes them to `redis` at once.
+
+For complex data structures, a local `bincode::serialize()` takes about 50 ns,
+and `bincode::deserialize()` about 100 ns, which is insignificant compared to IPC. Similarly, for
+genome sequences, `gars` gz-compresses them locally before passing them to `redis`.
+
+## Author
 
 Qiang Wang <wang-q@outlook.com>
 
-## LICENSE
+## License
 
 MIT.
 
