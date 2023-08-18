@@ -6,7 +6,7 @@ pub fn make_subcommand() -> Command {
     Command::new("clear")
         .about("Clear some parts from Redis")
         .after_help(
-            r#"
+            r###"
 List of actions:
 
 * feature
@@ -19,13 +19,13 @@ List of actions:
     * peak:*
     * cnt:peak:*
 
-"#,
+"###,
         )
         .arg(
-            Arg::new("action")
+            Arg::new("actions")
                 .required(true)
                 .index(1)
-                .num_args(1)
+                .num_args(1..)
                 .help("What to do"),
         )
         .arg(
@@ -40,36 +40,38 @@ List of actions:
 pub fn execute(args: &ArgMatches) -> anyhow::Result<()> {
     let is_iter = args.get_flag("iter");
 
-    match args.get_one::<String>("action").unwrap().as_str() {
-        "feature" => {
-            if is_iter {
-                clear_iter("feature:*");
-                clear_iter("cnt:feature:*");
-            } else {
-                clear_lua("feature:*");
-                clear_lua("cnt:feature:*");
+    for action in args.get_many::<String>("infiles").unwrap() {
+        match action.as_str() {
+            "feature" => {
+                if is_iter {
+                    clear_iter("feature:*");
+                    clear_iter("cnt:feature:*");
+                } else {
+                    clear_lua("feature:*");
+                    clear_lua("cnt:feature:*");
+                }
             }
-        }
-        "range" => {
-            if is_iter {
-                clear_iter("range:*");
-                clear_iter("cnt:range:*");
-            } else {
-                clear_lua("range:*");
-                clear_lua("cnt:range:*");
+            "range" => {
+                if is_iter {
+                    clear_iter("range:*");
+                    clear_iter("cnt:range:*");
+                } else {
+                    clear_lua("range:*");
+                    clear_lua("cnt:range:*");
+                }
             }
-        }
-        "peak" => {
-            if is_iter {
-                clear_iter("peak:*");
-                clear_iter("cnt:peak:*");
-            } else {
-                clear_lua("peak:*");
-                clear_lua("cnt:peak:*");
+            "peak" => {
+                if is_iter {
+                    clear_iter("peak:*");
+                    clear_iter("cnt:peak:*");
+                } else {
+                    clear_lua("peak:*");
+                    clear_lua("cnt:peak:*");
+                }
             }
-        }
-        _ => unreachable!(),
-    };
+            _ => unreachable!(),
+        };
+    }
 
     Ok(())
 }
@@ -96,6 +98,8 @@ fn clear_lua(pattern: &str) {
     let mut conn = gars::connect();
 
     // https://stackoverflow.com/questions/49055655
+    // KEYS is faster than SCAN MATCH
+    // I'm already preparing to delete the database, where is the concern for blocking?
     let script = redis::Script::new(
         r###"
 local matches = redis.call('KEYS', ARGV[1])
