@@ -2,14 +2,19 @@
 
 ## Unreleased - ReleaseDate
 
+* Make `gars range` and `gars feature` up to 10x times faster by packaging hundreds of redis
+  operations into batches
+
 * `--range` writes a `range` field before the chr_id field
 * Add --parallel to `gars sliding`
+* Using lua scripts in `gars clear`
 
 * Bump deps
-  * `clap` v4
-  * `polars` v0.30
+    * `clap` v4
+    * `polars` v0.30
 
 * Add more benchmarks
+* Update docs
 
 ## 0.3.1 - 2022-06-15
 
