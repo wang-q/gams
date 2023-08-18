@@ -1,6 +1,6 @@
 use clap::*;
 use gars::*;
-use redis::Commands;
+use redis::{Commands, RedisResult};
 
 use rand::Rng;
 use std::collections::{BTreeMap, BTreeSet};
@@ -55,7 +55,7 @@ pub fn execute(args: &ArgMatches) -> anyhow::Result<()> {
             set();
             sorted_set();
             pipe_atomic();
-            // script();
+            script();
         }
         "info" => {
             info();
@@ -444,19 +444,18 @@ fn pipe_atomic() {
     eprintln!("key = {:#?}", key);
 }
 
-// redis = { version = "0.23.2", default-features = false, features = ["script"] }
-// fn script() {
-//     let mut conn = connect();
-//     println!("******* Running Lua Scripts *******");
-//
-//     let script = redis::Script::new(
-//         r#"
-// return tonumber(ARGV[1]) + tonumber(ARGV[2]);
-//
-// "#,
-//     );
-//     let res: RedisResult<i32> = script.arg(1).arg(2).invoke(&mut conn);
-//     eprintln!("res = {:#?}", res);
-//
-//     // https://github.com/redis/redis/issues/7#issuecomment-596464166
-// }
+fn script() {
+    let mut conn = connect();
+    println!("******* Running Lua Scripts *******");
+
+    let script = redis::Script::new(
+        r#"
+return tonumber(ARGV[1]) + tonumber(ARGV[2]);
+
+"#,
+    );
+    let res: RedisResult<i32> = script.arg(1).arg(2).invoke(&mut conn);
+    eprintln!("res = {:#?}", res);
+
+    // https://github.com/redis/redis/issues/7#issuecomment-596464166
+}
