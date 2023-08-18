@@ -65,5 +65,9 @@ rand = "0.8.5"
 name = "serialize"
 harness = false
 
+[[bench]]
+name = "redis_set"
+harness = false
+
 [profile.release]
 lto = true
