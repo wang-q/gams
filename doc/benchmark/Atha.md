@@ -87,10 +87,9 @@ cat gars.md.tmp
 # redis
 cd ~/data/gars/Atha/
 rm dump.rdb
-redis-server
+redis-server &
 
 # gars
-cd ~/data/gars/Atha/
 gars env
 
 # feature
@@ -231,7 +230,7 @@ hyperfine --warmup 1 --export-markdown threads.md.tmp \
         --lag 200 \
         --threshold 3.0 \
         --influence 1.0 \
-        --parallel 8 \
+        --parallel 12 \
         > /dev/null
     ' \
     -n 'parallel 16' \
@@ -323,12 +322,12 @@ cat threads.md.tmp
 
 | Command       |       Mean [s] | Min [s] | Max [s] |    Relative |
 |:--------------|---------------:|--------:|--------:|------------:|
-| `parallel 1`  | 11.618 ± 0.127 |  11.522 |  11.911 | 9.56 ± 0.29 |
-| `parallel 2`  |  6.378 ± 0.040 |   6.314 |   6.450 | 5.25 ± 0.15 |
-| `parallel 4`  |  3.358 ± 0.037 |   3.307 |   3.424 | 2.76 ± 0.08 |
-| `parallel 8`  |  1.879 ± 0.009 |   1.864 |   1.892 | 1.55 ± 0.04 |
-| `parallel 12` |  1.875 ± 0.009 |   1.863 |   1.890 | 1.54 ± 0.04 |
-| `parallel 16` |  1.215 ± 0.035 |   1.160 |   1.276 |        1.00 |
+| `parallel 1`  | 11.400 ± 0.229 |  11.097 |  11.932 | 9.70 ± 0.37 |
+| `parallel 2`  |  6.368 ± 0.101 |   6.135 |   6.467 | 5.42 ± 0.19 |
+| `parallel 4`  |  3.375 ± 0.023 |   3.338 |   3.407 | 2.87 ± 0.09 |
+| `parallel 8`  |  1.837 ± 0.029 |   1.821 |   1.917 | 1.56 ± 0.06 |
+| `parallel 12` |  1.324 ± 0.007 |   1.314 |   1.335 | 1.13 ± 0.04 |
+| `parallel 16` |  1.175 ± 0.038 |   1.108 |   1.246 |        1.00 |
 
 ### Apple M2 macOS 13.4
 
