@@ -29,23 +29,17 @@ hyperfine --warmup 1 --export-markdown gars.md.tmp \
     ' \
     -n 'clear; range;' \
     '
-    gars clear range;
+    gars clear range feature;
     gars range features/T-DNA.CSHL.rg;
     ' \
-    -n 'd-g; feature;' \
+    -n 'clear; feature;' \
     '
-    gars status drop; gars gen genome/genome.fa.gz --piece 500000;
+    gars clear range feature;
     gars feature features/T-DNA.CSHL.rg --tag CSHL;
     ' \
-    -n 'd-g; feature; fsw;' \
+    -n 'clear; sliding;' \
     '
-    gars status drop; gars gen genome/genome.fa.gz --piece 500000;
-    gars feature features/T-DNA.CSHL.rg --tag CSHL;
-    gars fsw;
-    ' \
-    -n 'd-g; sliding;' \
-    '
-    gars status drop; gars gen genome/genome.fa.gz --piece 500000;
+    gars clear range feature;
     gars sliding --size 100 --step 20 --lag 50 > /dev/null;
     '
 
@@ -55,14 +49,14 @@ cat gars.md.tmp
 
 ### R7 5800 Windows 11 WSL
 
-| Command              |      Mean [s] | Min [s] | Max [s] |    Relative |
-|:---------------------|--------------:|--------:|--------:|------------:|
-| `drop; gen;`         | 1.095 ± 0.009 |   1.083 |   1.111 |        1.00 |
-| `d-g; range;`        | 2.929 ± 0.101 |   2.774 |   3.103 | 2.67 ± 0.09 |
-| `clear; range;`      | 2.652 ± 0.123 |   2.446 |   2.858 | 2.42 ± 0.11 |
-| `d-g; feature;`      | 2.868 ± 0.058 |   2.777 |   2.954 | 2.62 ± 0.06 |
-| `d-g; feature; fsw;` | 9.108 ± 0.153 |   9.015 |   9.519 | 8.32 ± 0.16 |
-| `d-g; sliding;`      | 5.993 ± 0.021 |   5.965 |   6.024 | 5.47 ± 0.05 |
+| Command                |      Mean [s] | Min [s] | Max [s] |    Relative |
+|:-----------------------|--------------:|--------:|--------:|------------:|
+| `drop; gen;`           | 1.095 ± 0.009 |   1.083 |   1.111 |        1.00 |
+| `d-g; range;`          | 2.929 ± 0.101 |   2.774 |   3.103 | 2.67 ± 0.09 |
+| `clear; range;`        | 2.652 ± 0.123 |   2.446 |   2.858 | 2.42 ± 0.11 |
+| `clear; feature;`      | 2.868 ± 0.058 |   2.777 |   2.954 | 2.62 ± 0.06 |
+| `clear; feature; fsw;` | 9.108 ± 0.153 |   9.015 |   9.519 | 8.32 ± 0.16 |
+| `clear; sliding;`      | 5.993 ± 0.021 |   5.965 |   6.024 | 5.47 ± 0.05 |
 
 ### i5-12500H Windows 11 WSL
 
@@ -440,13 +434,13 @@ cat threads.md.tmp
 ## `gars locate`
 
 ```shell
+cd ~/gars/
+
 # redis
-cd ~/data/gars/Atha/
 rm dump.rdb
-redis-server
+redis-server &
 
 # gars
-cd ~/data/gars/Atha/
 gars env
 
 gars status drop
@@ -472,6 +466,14 @@ cat locate.md.tmp
 | `idx`    |   22.1 ± 0.5 |     21.3 |     25.8 |         1.00 |
 | `lapper` | 930.5 ± 14.3 |    907.7 |    957.7 | 42.11 ± 1.23 |
 | `zrange` | 2041.1 ± 9.6 |   2029.8 |   2056.4 | 92.37 ± 2.33 |
+
+### i5-12500H Windows 11 WSL
+
+| Command  |      Mean [ms] | Min [ms] | Max [ms] |      Relative |
+|:---------|---------------:|---------:|---------:|--------------:|
+| `idx`    |     21.9 ± 2.1 |     19.3 |     33.0 |          1.00 |
+| `lapper` |   999.9 ± 53.8 |    955.7 |   1108.9 |  45.56 ± 4.94 |
+| `zrange` | 2157.8 ± 135.0 |   2023.2 |   2430.3 | 98.32 ± 11.10 |
 
 ### E5-2680 v3 RHEL 7.7
 
