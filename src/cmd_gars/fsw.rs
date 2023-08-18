@@ -7,7 +7,7 @@ use std::collections::HashMap;
 // Create clap subcommand arguments
 pub fn make_subcommand() -> Command {
     Command::new("fsw")
-        .about("Sliding windows around a feature")
+        .about("Sliding windows around features")
         .arg(
             Arg::new("ctg")
                 .long("ctg")

@@ -250,9 +250,7 @@ time cat ctg.group.lst |
         gars sliding \
             --ctg {} \
             --size 100 --step 1 \
-            --lag 1000 \
-            --threshold 3.0 \
-            --influence 1.0 \
+            --lag 1000 --threshold 3.0 --influence 1.0 \
             --parallel 4 \
             -o stdout |
             tsv-filter -H --ne signal:0 \
