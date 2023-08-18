@@ -2,7 +2,6 @@ use bio::io::fasta;
 use clap::*;
 use flate2::read::GzEncoder;
 use flate2::Compression;
-use gars::*;
 use intspan::*;
 use redis::Commands;
 use std::collections::VecDeque;
@@ -71,7 +70,7 @@ pub fn execute(args: &ArgMatches) -> anyhow::Result<()> {
     let min = *args.get_one::<i32>("min").unwrap();
 
     // redis connection
-    let mut conn = connect();
+    let mut conn = gars::connect();
 
     // common_name
     let _: () = conn.set("common_name", common_name).unwrap();
@@ -147,11 +146,22 @@ pub fn execute(args: &ArgMatches) -> anyhow::Result<()> {
                 let start = regions.pop_front().unwrap() as usize;
                 let end = regions.pop_front().unwrap() as usize;
 
-                let _: () = conn.hset(&ctg_id, "chr_id", chr_id).unwrap();
-                let _: () = conn.hset(&ctg_id, "chr_start", start).unwrap();
-                let _: () = conn.hset(&ctg_id, "chr_end", end).unwrap();
-                let _: () = conn.hset(&ctg_id, "chr_strand", "+").unwrap();
-                let _: () = conn.hset(&ctg_id, "length", end - start + 1).unwrap();
+                // a set() or hset() cost about 100 us
+                // bincode::serialize() for ~50 ns
+                // bincode::deserialize() for ~100 ns
+                let _: () = redis::pipe()
+                    .hset(&ctg_id, "chr_id", chr_id)
+                    .ignore()
+                    .hset(&ctg_id, "chr_start", start)
+                    .ignore()
+                    .hset(&ctg_id, "chr_end", end)
+                    .ignore()
+                    .hset(&ctg_id, "chr_strand", "+")
+                    .ignore()
+                    .hset(&ctg_id, "length", end - start + 1)
+                    .ignore()
+                    .query(&mut conn)
+                    .unwrap();
 
                 let seq: &[u8] = &chr_seq[start - 1..end];
                 let bytes = encode_gz(seq).unwrap();
