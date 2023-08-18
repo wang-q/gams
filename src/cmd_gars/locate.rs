@@ -1,5 +1,4 @@
 use clap::*;
-use gars::*;
 use intspan::*;
 use std::collections::BTreeMap;
 use std::io::BufRead;
@@ -61,7 +60,7 @@ pub fn execute(args: &ArgMatches) -> anyhow::Result<()> {
     let mut writer = intspan::writer(args.get_one::<String>("outfile").unwrap());
 
     // redis connection
-    let mut conn = connect();
+    let mut conn = gars::connect();
 
     // rebuild
     if args.get_flag("rebuild") {

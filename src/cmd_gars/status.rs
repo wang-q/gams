@@ -69,6 +69,8 @@ pub fn execute(args: &ArgMatches) -> anyhow::Result<()> {
         "stop" => {
             stop();
         }
+        // TODO: restore
+        // TODO: server
         _ => unreachable!(),
     };
 
@@ -128,7 +130,7 @@ fn dump(file: &str) -> anyhow::Result<()> {
     let mut conn = connect();
 
     // When LASTSAVE changed, the saving is completed
-    let start : i32 = redis::cmd("LASTSAVE")
+    let start: i32 = redis::cmd("LASTSAVE")
         .query(&mut conn)
         .expect("Failed to execute LASTSAVE");
 
@@ -138,7 +140,7 @@ fn dump(file: &str) -> anyhow::Result<()> {
     println!("{}", output);
 
     loop {
-        let cur : i32 = redis::cmd("LASTSAVE")
+        let cur: i32 = redis::cmd("LASTSAVE")
             .query(&mut conn)
             .expect("Failed to execute LASTSAVE");
 
@@ -160,7 +162,7 @@ fn dump(file: &str) -> anyhow::Result<()> {
 
     let redis_dir = config.get(1).unwrap();
 
-    let mut rdb =  Path::new(redis_dir).to_path_buf();
+    let mut rdb = Path::new(redis_dir).to_path_buf();
     rdb.push("dump.rdb");
 
     if !rdb.is_file() {
@@ -173,7 +175,7 @@ fn dump(file: &str) -> anyhow::Result<()> {
     }
 
     eprintln!("rdb = {:#?}, dest = {:#?}", rdb, file);
-    fs::copy(rdb,Path::new(file))?;
+    fs::copy(rdb, Path::new(file))?;
 
     Ok(())
 }
