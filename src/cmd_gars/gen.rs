@@ -146,9 +146,6 @@ pub fn execute(args: &ArgMatches) -> anyhow::Result<()> {
                 let start = regions.pop_front().unwrap() as usize;
                 let end = regions.pop_front().unwrap() as usize;
 
-                // a set() or hset() cost about 100 us
-                // bincode::serialize() for ~50 ns
-                // bincode::deserialize() for ~100 ns
                 let _: () = redis::pipe()
                     .hset(&ctg_id, "chr_id", chr_id)
                     .ignore()
