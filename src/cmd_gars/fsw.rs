@@ -9,13 +9,6 @@ pub fn make_subcommand() -> Command {
     Command::new("fsw")
         .about("Sliding windows around features")
         .arg(
-            Arg::new("ctg")
-                .long("ctg")
-                .num_args(1)
-                .default_value("ctg:*")
-                .help("Sets the full ID or the prefix of ctgs, `ctg:I:*` or `ctg:I:2`"),
-        )
-        .arg(
             Arg::new("style")
                 .long("style")
                 .num_args(1)

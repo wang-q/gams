@@ -207,10 +207,12 @@ gars status test
 
 ## Designing concepts
 
-`Redis` has a low operating cost, but the inter-process communication (IPC) between `gars` and `redis` is
-expensive. After connecting to redis, a `SET` or `HSET` by `gars` consumes about 100 μs. A pipeline
-of 100 `HSET` operations takes almost the same amount of time. Thus, for insert operations, `gars`
-packages hundreds of operations locally and passes them to `redis` at once.
+`Redis` has a low operating cost, but the inter-process communication (IPC) between `gars`
+and `redis` is expensive. After connecting to redis, a `SET` or `HSET` by `gars` consumes about 100
+μs. A pipeline of 100 `HSET` operations takes almost the same amount of time. If `redis-server`
+and `gars` are running on different hosts, the latency is increased for both physical and virtual
+NICs. Typical latency for a Gigabit Ethernet is about 200 μs. Thus, for insert operations, `gars`
+packages hundreds of operations locally and then passes them to `redis` at once.
 
 For complex data structures, a local `bincode::serialize()` takes about 50 ns,
 and `bincode::deserialize()` about 100 ns, which is insignificant compared to IPC. Similarly, for
