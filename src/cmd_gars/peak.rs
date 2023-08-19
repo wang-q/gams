@@ -83,7 +83,7 @@ pub fn execute(args: &ArgMatches) -> anyhow::Result<()> {
     eprintln!("There are {} peaks\n", n_peak);
 
     // each ctg
-    let ctgs: Vec<String> = gars::get_scan_vec(&mut conn, "ctg:*".to_string());
+    let ctgs: Vec<String> = gars::get_scan_vec(&mut conn, "ctg:*");
     eprintln!("Updating GC-content of peaks...");
     for ctg_id in &ctgs {
         let (chr_id, chr_start, chr_end) = gars::get_key_pos(&mut conn, ctg_id);

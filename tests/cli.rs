@@ -155,7 +155,7 @@ fn command_gen() -> Result<(), Box<dyn std::error::Error>> {
         ("ctg:I:2".to_string(), 230218),
         ("ctg:Mito:1".to_string(), 85779),
     ]);
-    let res = gars::get_scan_int(&mut conn, "ctg:*".to_string(), "chr_end".to_string());
+    let res = gars::get_scan_int(&mut conn, "ctg:*", "chr_end");
     assert_eq!(res.len(), exp.len());
     assert!(res.keys().all(|k| exp.contains_key(k)));
     assert!(res

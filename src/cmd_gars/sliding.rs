@@ -92,10 +92,7 @@ pub fn execute(args: &ArgMatches) -> anyhow::Result<()> {
     //----------------------------
     // redis connection
     let mut conn = gars::connect();
-    let ctgs: Vec<String> = gars::get_scan_vec(
-        &mut conn,
-        args.get_one::<String>("ctg").unwrap().to_string(),
-    );
+    let ctgs: Vec<String> = gars::get_scan_vec(&mut conn, args.get_one::<String>("ctg").unwrap());
 
     if parallel == 1 {
         let mut writer = writer(args.get_one::<String>("outfile").unwrap());
