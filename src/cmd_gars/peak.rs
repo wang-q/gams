@@ -79,7 +79,7 @@ pub fn execute(args: &ArgMatches) -> anyhow::Result<()> {
     }
 
     // number of peaks
-    let n_peak = gars::get_scan_count(&mut conn, "peak:*".to_string());
+    let n_peak = gars::get_scan_count(&mut conn, "peak:*");
     eprintln!("There are {} peaks\n", n_peak);
 
     // each ctg
