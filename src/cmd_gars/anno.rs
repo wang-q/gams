@@ -1,7 +1,5 @@
 use clap::*;
 use intspan::{IntSpan, Range};
-use lazy_static::lazy_static;
-use regex::Regex;
 use std::collections::HashMap;
 use std::ffi::OsStr;
 use std::io::BufRead;
@@ -113,7 +111,7 @@ pub fn execute(args: &ArgMatches) -> anyhow::Result<()> {
             let parts: Vec<&str> = line.split('\t').collect();
 
             let line_id = parts.get(idx_id - 1).unwrap();
-            let ctg_id = match extract_ctg_id(line_id) {
+            let ctg_id = match gars::extract_ctg_id(line_id) {
                 Some(ctg_id) => ctg_id,
                 None => continue,
             }
@@ -142,17 +140,4 @@ pub fn execute(args: &ArgMatches) -> anyhow::Result<()> {
     }
 
     Ok(())
-}
-
-fn extract_ctg_id(input: &str) -> Option<&str> {
-    lazy_static! {
-        static ref RE: Regex = Regex::new(
-            r"(?xi)
-            (?P<ctg>ctg:[\w_]+:\d+)
-            "
-        )
-        .unwrap();
-    }
-    RE.captures(input)
-        .and_then(|cap| cap.name("ctg").map(|ctg| ctg.as_str()))
 }

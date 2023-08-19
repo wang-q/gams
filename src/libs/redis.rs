@@ -498,3 +498,16 @@ pub fn db_drop() {
         .expect("Failed to execute FLUSHDB");
     println!("{}", output);
 }
+
+pub fn extract_ctg_id(input: &str) -> Option<&str> {
+    lazy_static! {
+        static ref RE: Regex = Regex::new(
+            r"(?xi)
+            (?P<ctg>ctg:[\w_]+:\d+)
+            "
+        )
+        .unwrap();
+    }
+    RE.captures(input)
+        .and_then(|cap| cap.name("ctg").map(|ctg| ctg.as_str()))
+}
