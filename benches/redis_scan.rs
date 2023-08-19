@@ -42,22 +42,22 @@ pub fn bench_redis_scan(c: &mut Criterion) {
     });
     c.bench_function("scan_count_10", |b| {
         b.iter(|| {
-            let _: Vec<_> = gars::get_scan_vec(&mut conn, "prefix:*", 10);
+            let _: Vec<_> = gars::get_scan_vec_n(&mut conn, "prefix:*", 10);
         })
     });
     c.bench_function("scan_count_100", |b| {
         b.iter(|| {
-            let _: Vec<_> = gars::get_scan_vec(&mut conn, "prefix:*", 100);
+            let _: Vec<_> = gars::get_scan_vec_n(&mut conn, "prefix:*", 100);
         })
     });
     c.bench_function("scan_count_1000", |b| {
         b.iter(|| {
-            let _: Vec<_> = gars::get_scan_vec(&mut conn, "prefix:*", 1000);
+            let _: Vec<_> = gars::get_scan_vec_n(&mut conn, "prefix:*", 1000);
         })
     });
     c.bench_function("scan_count_10000", |b| {
         b.iter(|| {
-            let _: Vec<_> = gars::get_scan_vec(&mut conn, "prefix:*", 10000);
+            let _: Vec<_> = gars::get_scan_vec_n(&mut conn, "prefix:*", 10000);
         })
     });
 }

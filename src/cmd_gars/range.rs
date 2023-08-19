@@ -99,7 +99,7 @@ pub fn execute(args: &ArgMatches) -> anyhow::Result<()> {
                 .ignore();
         }
 
-        // There could left records in the batch
+        // Possible remaining records in the batch
         {
             let _: () = batch.query(&mut conn).unwrap();
             batch.clear();
