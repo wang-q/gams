@@ -4,7 +4,7 @@ use std::io::{self, BufRead, Read};
 
 use intspan::{IntSpan, Range};
 use redis::Commands;
-use serde::Deserialize;
+use serde::{Deserialize, Serialize};
 
 use rust_lapper::{Interval, Lapper};
 // Interval: represent a range from [start, stop), carrying val
@@ -27,6 +27,18 @@ fn default_redis_host() -> String {
 
 fn default_redis_port() -> u32 {
     6379
+}
+
+// ID	chr_id	chr_start	chr_end	chr_strand	length
+#[derive(Default, Clone, Debug, Serialize, Deserialize)]
+pub struct Ctg {
+    pub id: String,
+    pub range: String,
+    pub chr_id: String,
+    pub chr_start: i32,
+    pub chr_end: i32,
+    pub chr_strand: String,
+    pub length: i32,
 }
 
 pub fn connect() -> redis::Connection {
@@ -126,7 +138,7 @@ pub fn build_idx_ctg(conn: &mut redis::Connection) {
     }
 }
 
-/// seq_name => Lapper => ctg_id
+/// chr_id => Lapper => ctg_id
 pub fn get_idx_ctg(conn: &mut redis::Connection) -> BTreeMap<String, Lapper<u32, String>> {
     let chrs: Vec<String> = get_vec_chr(conn);
 
@@ -142,6 +154,22 @@ pub fn get_idx_ctg(conn: &mut redis::Connection) -> BTreeMap<String, Lapper<u32,
     lapper_of
 }
 
+/// BTreeMap<chr_id, BTreeMap<ctg_id, Ctg>>
+pub fn get_bin_ctg(conn: &mut redis::Connection) -> BTreeMap<String, BTreeMap<String, Ctg>> {
+    let chrs: Vec<String> = get_vec_chr(conn);
+
+    let mut ctgs_of: BTreeMap<String, BTreeMap<String, Ctg>> = BTreeMap::new();
+
+    for chr_id in &chrs {
+        let ctgs_bytes: Vec<u8> = conn.get(format!("bin:ctg:{}", chr_id)).unwrap();
+        let ctgs: BTreeMap<String, Ctg> = bincode::deserialize(&ctgs_bytes).unwrap();
+
+        ctgs_of.insert(chr_id.clone(), ctgs);
+    }
+
+    ctgs_of
+}
+
 pub fn get_key_pos(conn: &mut redis::Connection, key: &str) -> (String, i32, i32) {
     let (chr_id, chr_start, chr_end): (String, i32, i32) =
         conn.hget(key, &["chr_id", "chr_start", "chr_end"]).unwrap();
@@ -149,7 +177,7 @@ pub fn get_key_pos(conn: &mut redis::Connection, key: &str) -> (String, i32, i32
     (chr_id, chr_start, chr_end)
 }
 
-pub fn get_scan_count(conn: &mut redis::Connection, scan: String) -> i32 {
+pub fn get_scan_count(conn: &mut redis::Connection, scan: &str) -> i32 {
     // number of matches
     let mut count = 0;
     let iter: redis::Iter<'_, String> = conn.scan_match(scan).unwrap();
@@ -173,11 +201,11 @@ pub fn get_scan_vec(conn: &mut redis::Connection, scan: String) -> Vec<String> {
 
 pub fn get_scan_str(
     conn: &mut redis::Connection,
-    scan: String,
-    field: String,
+    scan: &str,
+    field: &str,
 ) -> HashMap<String, String> {
     // number of matches
-    let keys: Vec<String> = get_scan_vec(conn, scan);
+    let keys: Vec<String> = get_scan_vec(conn, scan.to_string());
 
     let mut hash: HashMap<String, _> = HashMap::new();
     for key in keys {
