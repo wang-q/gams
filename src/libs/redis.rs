@@ -178,9 +178,19 @@ pub fn get_key_pos(conn: &mut redis::Connection, key: &str) -> (String, i32, i32
 }
 
 pub fn get_scan_count(conn: &mut redis::Connection, scan: &str) -> i32 {
+
+pub fn get_scan_count(conn: &mut redis::Connection, pattern: &str) -> i32 {
     // number of matches
     let mut count = 0;
-    let iter: redis::Iter<'_, String> = conn.scan_match(scan).unwrap();
+    let iter: redis::Iter<'_, String> = redis::cmd("SCAN")
+        .cursor_arg(0)
+        .arg("MATCH")
+        .arg(pattern)
+        .arg("COUNT")
+        .arg(1000) // default is 10
+        .clone()
+        .iter(conn)
+        .unwrap();
     for _ in iter {
         count += 1;
     }
@@ -188,7 +198,33 @@ pub fn get_scan_count(conn: &mut redis::Connection, scan: &str) -> i32 {
     count
 }
 
-pub fn get_scan_vec(conn: &mut redis::Connection, scan: &str) -> Vec<String> {
+///
+/// ```
+/// // let mut conn = gars::connect();
+///
+/// // let keys = gars::get_scan_vec(&mut conn, "prefix:*");
+/// ```
+pub fn get_scan_vec(conn: &mut redis::Connection, pattern: &str, count: usize) -> Vec<String> {
+    // matched keys
+    let mut keys: Vec<String> = Vec::new();
+    let iter: redis::Iter<'_, String> = redis::cmd("SCAN")
+        .cursor_arg(0)
+        .arg("MATCH")
+        .arg(pattern)
+        .arg("COUNT")
+        .arg(count) // default is 10
+        .clone()
+        .iter(conn)
+        .unwrap();
+    for x in iter {
+        keys.push(x);
+    }
+
+    keys
+}
+
+/// Default COUNT is 10
+pub fn get_scan_match_vec(conn: &mut redis::Connection, scan: &str) -> Vec<String> {
     // number of matches
     let mut keys: Vec<String> = Vec::new();
     let iter: redis::Iter<'_, String> = conn.scan_match(scan).unwrap();
@@ -201,11 +237,10 @@ pub fn get_scan_vec(conn: &mut redis::Connection, scan: &str) -> Vec<String> {
 
 pub fn get_scan_str(
     conn: &mut redis::Connection,
-    scan: &str,
+    pattern: &str,
     field: &str,
 ) -> HashMap<String, String> {
-    // number of matches
-    let keys: Vec<String> = get_scan_vec(conn, scan);
+    let keys: Vec<String> = get_scan_vec(conn, pattern, 1000);
 
     let mut hash: HashMap<String, _> = HashMap::new();
     for key in keys {
@@ -216,9 +251,12 @@ pub fn get_scan_str(
     hash
 }
 
-pub fn get_scan_int(conn: &mut redis::Connection, scan: &str, field: &str) -> HashMap<String, i32> {
-    // number of matches
-    let keys: Vec<String> = get_scan_vec(conn, scan);
+pub fn get_scan_int(
+    conn: &mut redis::Connection,
+    pattern: &str,
+    field: &str,
+) -> HashMap<String, i32> {
+    let keys: Vec<String> = get_scan_vec(conn, pattern, 1000);
 
     let mut hash: HashMap<String, _> = HashMap::new();
     for key in keys {
