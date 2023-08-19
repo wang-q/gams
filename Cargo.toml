@@ -69,5 +69,9 @@ harness = false
 name = "redis_set"
 harness = false
 
+[[bench]]
+name = "redis_scan"
+harness = false
+
 [profile.release]
 lto = true
