@@ -1,7 +1,7 @@
 use clap::*;
+use gars::Feature;
 use intspan::{IntSpan, Range};
 use itertools::Itertools;
-use redis::Commands;
 use std::collections::HashMap;
 
 // Create clap subcommand arguments
@@ -108,12 +108,14 @@ pub fn execute(args: &ArgMatches) -> anyhow::Result<()> {
         let seq: String = gars::get_ctg_seq(&mut conn, ctg_id);
 
         // All features in this ctg
-        let features: Vec<String> = gars::get_vec_feature(&mut conn, ctg_id);
+        let features: Vec<Feature> = gars::get_bin_feature(&mut conn, ctg_id);
         eprintln!("\tThere are {} features", features.len());
 
-        for feature_id in &features {
-            let (_, range_start, range_end) = gars::get_key_pos(&mut conn, &feature_id);
-            let tag: String = conn.hget(&feature_id, "tag").unwrap();
+        for feature in &features {
+            let feature_id = &feature.id;
+            let range_start = feature.chr_start;
+            let range_end = feature.chr_end;
+            let tag = &feature.tag;
 
             // No need to use Redis counters
             let mut serial: isize = 1;

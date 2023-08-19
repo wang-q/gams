@@ -12,7 +12,7 @@
 Current release: 0.3.1
 
 ```shell
-cargo install --force --offline --path .
+cargo install --path . --force --offline
 
 # test
 cargo test -- --test-threads=1
@@ -77,70 +77,6 @@ OPTIONS:
     -h, --help                 Print help information
     -o, --outfile <outfile>    Output filename. [stdout] for screen [default: stdout]
     -V, --version              Print version information
-
-```
-
-## Runtime dependencies
-
-* Command line tools managed by `Linuxbrew`
-
-```shell
-brew install redis
-
-brew install parallel wget aria2 pigz
-brew install datamash miller
-
-brew tap wang-q/tap
-brew install wang-q/tap/tsv-utils wang-q/tap/intspan wang-q/tap/faops
-
-```
-
-* R (4.2) packages
-
-```shell
-# R packages
-parallel -j 1 -k --line-buffer '
-    Rscript -e '\''
-        if (!requireNamespace("{}", quietly = TRUE)) {
-            install.packages("{}", repos="https://mirrors.tuna.tsinghua.edu.cn/CRAN")
-        }
-    '\''
-    ' ::: \
-        getopt \
-        extrafont ggplot2 gridExtra \
-        tidyverse
-
-```
-
-* Querying tools
-
-```shell
-# Redis GUI
-# winget install qishibo.AnotherRedisDesktopManager
-# brew install --cask another-redis-desktop-manager
-
-# Clickhouse
-# Linux
-export LTS=21.8.4.51
-curl -LO https://repo.clickhouse.tech/tgz/lts/clickhouse-common-static-${LTS}.tgz
-
-tar -xzvf clickhouse-common-static-${LTS}.tgz
-sudo bash clickhouse-common-static-${LTS}/install/doinst.sh
-
-# mac
-#brew tap altinity/clickhouse
-#brew install altinity/clickhouse/clickhouse@21.8-altinity-stable
-
-aria2c 'https://builds.clickhouse.com/master/macos/clickhouse'
-mv clickhouse ~/bin
-chmod a+x ~/bin/clickhouse
-
-# Clickhouse GUI
-git clone https://github.com/VKCOM/lighthouse
-browser lighthouse/index.html
-
-# textql as an alternative
-brew install textql
 
 ```
 
@@ -279,6 +215,70 @@ packages hundreds of operations locally and passes them to `redis` at once.
 For complex data structures, a local `bincode::serialize()` takes about 50 ns,
 and `bincode::deserialize()` about 100 ns, which is insignificant compared to IPC. Similarly, for
 genome sequences, `gars` gz-compresses them locally before passing them to `redis`.
+
+## Runtime dependencies
+
+* Command line tools managed by `Linuxbrew`
+
+```shell
+brew install redis
+
+brew install parallel wget aria2 pigz
+brew install datamash miller
+
+brew tap wang-q/tap
+brew install wang-q/tap/tsv-utils wang-q/tap/intspan wang-q/tap/faops
+
+```
+
+* R (4.2) packages
+
+```shell
+# R packages
+parallel -j 1 -k --line-buffer '
+    Rscript -e '\''
+        if (!requireNamespace("{}", quietly = TRUE)) {
+            install.packages("{}", repos="https://mirrors.tuna.tsinghua.edu.cn/CRAN")
+        }
+    '\''
+    ' ::: \
+        getopt \
+        extrafont ggplot2 gridExtra \
+        tidyverse
+
+```
+
+* Querying tools
+
+```shell
+# Redis GUI
+# winget install qishibo.AnotherRedisDesktopManager
+# brew install --cask another-redis-desktop-manager
+
+# Clickhouse
+# Linux
+export LTS=21.8.4.51
+curl -LO https://repo.clickhouse.tech/tgz/lts/clickhouse-common-static-${LTS}.tgz
+
+tar -xzvf clickhouse-common-static-${LTS}.tgz
+sudo bash clickhouse-common-static-${LTS}/install/doinst.sh
+
+# mac
+#brew tap altinity/clickhouse
+#brew install altinity/clickhouse/clickhouse@21.8-altinity-stable
+
+aria2c 'https://builds.clickhouse.com/master/macos/clickhouse'
+mv clickhouse ~/bin
+chmod a+x ~/bin/clickhouse
+
+# Clickhouse GUI
+git clone https://github.com/VKCOM/lighthouse
+browser lighthouse/index.html
+
+# textql as an alternative
+brew install textql
+
+```
 
 ## Author
 

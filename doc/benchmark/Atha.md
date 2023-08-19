@@ -37,6 +37,12 @@ hyperfine --warmup 1 --export-markdown gars.md.tmp \
     gars clear range feature;
     gars feature features/T-DNA.CSHL.rg --tag CSHL;
     ' \
+    -n 'clear; feature; fsw;' \
+    '
+    gars clear range feature;
+    gars feature features/T-DNA.CSHL.rg --tag CSHL;
+    gars fsw;
+    ' \
     -n 'clear; sliding;' \
     '
     gars clear range feature;
@@ -60,14 +66,14 @@ cat gars.md.tmp
 
 ### i5-12500H Windows 11 WSL
 
-| Command              |      Mean [s] | Min [s] | Max [s] |     Relative |
-|:---------------------|--------------:|--------:|--------:|-------------:|
-| `drop; gen;`         | 1.253 ± 0.030 |   1.200 |   1.301 |  9.86 ± 0.73 |
-| `d-g; range;`        | 1.393 ± 0.035 |   1.329 |   1.443 | 10.96 ± 0.82 |
-| `clear; range;`      | 0.127 ± 0.009 |   0.115 |   0.146 |         1.00 |
-| `d-g; feature;`      | 3.216 ± 0.073 |   3.142 |   3.387 | 25.30 ± 1.87 |
-| `d-g; feature; fsw;` | 9.389 ± 0.497 |   9.080 |  10.621 | 73.86 ± 6.51 |
-| `d-g; sliding;`      | 5.927 ± 0.019 |   5.897 |   5.956 | 46.63 ± 3.28 |
+| Command                |      Mean [s] | Min [s] | Max [s] |     Relative |
+|:-----------------------|--------------:|--------:|--------:|-------------:|
+| `drop; gen;`           | 1.242 ± 0.023 |   1.209 |   1.271 | 10.14 ± 0.43 |
+| `d-g; range;`          | 1.372 ± 0.022 |   1.331 |   1.407 | 11.20 ± 0.46 |
+| `clear; range;`        | 0.122 ± 0.005 |   0.114 |   0.133 |         1.00 |
+| `clear; feature;`      | 0.155 ± 0.005 |   0.145 |   0.162 |  1.26 ± 0.06 |
+| `clear; feature; fsw;` | 6.272 ± 0.044 |   6.206 |   6.350 | 51.22 ± 1.98 |
+| `clear; sliding;`      | 4.870 ± 0.050 |   4.800 |   4.960 | 39.76 ± 1.57 |
 
 ### E5-2680 v3 RHEL 7.7
 
