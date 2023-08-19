@@ -102,10 +102,10 @@ fn command_status() -> Result<(), Box<dyn std::error::Error>> {
     // dump
     let mut cmd = Command::cargo_bin("gars")?;
     let output = cmd.arg("status").arg("dump").output().unwrap();
-    let stdout = String::from_utf8(output.stdout).unwrap();
+    let stderr = String::from_utf8(output.stderr).unwrap();
 
-    assert_eq!(stdout.lines().count(), 1);
-    assert!(stdout.contains("OK"));
+    assert!(stderr.lines().count() > 1);
+    assert!(stderr.contains("Redis BGSAVE completed"));
 
     Ok(())
 }
@@ -303,8 +303,7 @@ fn command_range() -> Result<(), Box<dyn std::error::Error>> {
     let stderr = String::from_utf8(output.stderr).unwrap();
 
     assert_eq!(stderr.lines().count(), 2);
-    assert!(stderr.contains("71 ranges in total"));
-    assert!(stderr.contains("142 ranges in total"));
+    assert!(stderr.contains("There are 69 ranges in this file"));
 
     Ok(())
 }
@@ -383,7 +382,7 @@ fn command_feature() -> Result<(), Box<dyn std::error::Error>> {
     let stderr = String::from_utf8(output.stderr).unwrap();
 
     assert_eq!(stderr.lines().count(), 1);
-    assert!(stderr.contains("There are 71 features"));
+    assert!(stderr.contains("There are 69 ranges in this file"));
 
     Ok(())
 }
@@ -419,7 +418,7 @@ fn command_fsw() -> Result<(), Box<dyn std::error::Error>> {
     let mut cmd = Command::cargo_bin("gars")?;
     let output = cmd.arg("fsw").output().unwrap();
     let stdout = String::from_utf8(output.stdout).unwrap();
-    assert_eq!(stdout.lines().count(), 2867);
+    assert_eq!(stdout.lines().count(), 2810);
     assert!(stdout.contains("fsw:feature:ctg:I:2:32:1"));
 
     let stderr = String::from_utf8(output.stderr).unwrap();

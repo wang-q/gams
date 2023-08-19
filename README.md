@@ -185,7 +185,7 @@ gars feature tests/S288c/spo11_hot.rg
 gars fsw
 
 # add ranges
-gars range tests/S288c/spo11_hot.rg
+gars range tests/S288c/spo11_hot.rg tests/S288c/spo11_hot.rg
 
 # clear
 gars clear range
