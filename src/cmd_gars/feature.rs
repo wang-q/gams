@@ -1,4 +1,5 @@
 use clap::*;
+use gars::Feature;
 use intspan::*;
 use redis::Commands;
 use std::collections::BTreeMap;
@@ -9,8 +10,10 @@ pub fn make_subcommand() -> Command {
         .about("Add genomic features from a range file")
         .after_help(
             r#"
-Serial - format!("cnt:feature:{}", ctg_id)
-ID - format!("feature:{}:{}", ctg_id, serial)
+feature:
+Serial  format!("cnt:feature:{}", ctg_id)
+ID      format!("feature:{}:{}", ctg_id, serial)
+bincode format!("bin:feature:{}", ctg_id)       Redis set => Feature
 
 "#,
         )
@@ -56,7 +59,7 @@ pub fn execute(args: &ArgMatches) -> anyhow::Result<()> {
         // act as a sorter
         let ranges_of = gars::read_range(infile, &lapper_of);
 
-        // ctg_id, Range
+        // (ctg_id, Range)
         let mut ctg_ranges: Vec<(String, Range)> = vec![];
         for k in ranges_of.keys() {
             for r in ranges_of.get(k).unwrap() {
@@ -65,7 +68,7 @@ pub fn execute(args: &ArgMatches) -> anyhow::Result<()> {
         }
 
         // total number of ranges
-        eprintln!("There are {} ranges in this file", ctg_ranges.len());
+        eprintln!("There are {} features in this file", ctg_ranges.len());
 
         // start serial of each ctg
         // To minimize expensive Redis operations, locally increment the serial number
@@ -99,6 +102,22 @@ pub fn execute(args: &ArgMatches) -> anyhow::Result<()> {
             *serial += 1;
             let feature_id = format!("feature:{}:{}", ctg_id, serial);
 
+            let feature = Feature {
+                id: feature_id.clone(),
+                range: rg.to_string(),
+                chr_id: rg.chr().to_string(),
+                chr_start: *rg.start(),
+                chr_end: *rg.end(),
+                chr_strand: "+".to_string(),
+                length: rg.end() - rg.start() + 1,
+                ctg_id: ctg_id.clone(),
+                tag: opt_tag.to_string(),
+            };
+
+            // Add serialized struct Feature to a Redis set
+            let set_name = format!("bin:feature:{}", ctg_id);
+            let bytes = bincode::serialize(&feature).unwrap();
+
             batch = batch
                 .hset(&feature_id, "chr_id", rg.chr())
                 .ignore()
@@ -109,19 +128,21 @@ pub fn execute(args: &ArgMatches) -> anyhow::Result<()> {
                 .hset(&feature_id, "length", rg.end() - rg.start() + 1)
                 .ignore()
                 .hset(&feature_id, "tag", opt_tag)
+                .ignore()
+                .sadd(&set_name, bytes)
                 .ignore();
         }
 
-        // There could left records in the batch
+        // Possible remaining records in the batch
         {
             let _: () = batch.query(&mut conn).unwrap();
             batch.clear();
         }
     }
 
-    // // number of ranges
-    // let n_feature = gars::get_scan_count(&mut conn, "feature:*".to_string());
-    // eprintln!("There are {} features", n_feature);
+    // number of ranges
+    let n_feature = gars::get_scan_count(&mut conn, "feature:*");
+    eprintln!("There are {} features in the database", n_feature);
 
     Ok(())
 }

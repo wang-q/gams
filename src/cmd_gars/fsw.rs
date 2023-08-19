@@ -111,7 +111,7 @@ pub fn execute(args: &ArgMatches) -> anyhow::Result<()> {
         let features: Vec<String> = gars::get_vec_feature(&mut conn, ctg_id);
         eprintln!("\tThere are {} features", features.len());
 
-        for feature_id in features {
+        for feature_id in &features {
             let (_, range_start, range_end) = gars::get_key_pos(&mut conn, &feature_id);
             let tag: String = conn.hget(&feature_id, "tag").unwrap();
 
@@ -120,17 +120,17 @@ pub fn execute(args: &ArgMatches) -> anyhow::Result<()> {
 
             let windows = gars::center_sw(&parent, range_start, range_end, size, max);
 
-            for (sw_intspan, sw_type, sw_distance) in windows {
+            for (sw_ints, sw_type, sw_distance) in windows {
                 let fsw_id = format!("fsw:{}:{}", feature_id, serial);
 
                 let gc_content = gars::cache_gc_content(
-                    &Range::from(&ctg.chr_id, sw_intspan.min(), sw_intspan.max()),
+                    &Range::from(&ctg.chr_id, sw_ints.min(), sw_ints.max()),
                     &parent,
                     &seq,
                     &mut cache,
                 );
 
-                let resized = gars::center_resize(&parent, &sw_intspan, resize);
+                let resized = gars::center_resize(&parent, &sw_ints, resize);
                 let re_rg = Range::from(&ctg.chr_id, resized.min(), resized.max());
                 let (gc_mean, gc_stddev, gc_cv) =
                     gars::cache_gc_stat(&re_rg, &parent, &seq, &mut cache, size, size);
@@ -139,13 +139,11 @@ pub fn execute(args: &ArgMatches) -> anyhow::Result<()> {
                 let mut values: Vec<String> = vec![];
 
                 if is_range {
-                    values.push(
-                        Range::from(&ctg.chr_id, sw_intspan.min(), sw_intspan.max()).to_string(),
-                    );
+                    values.push(Range::from(&ctg.chr_id, sw_ints.min(), sw_ints.max()).to_string());
                 }
                 values.push(ctg.chr_id.to_string());
-                values.push(format!("{}", sw_intspan.min()));
-                values.push(format!("{}", sw_intspan.max()));
+                values.push(format!("{}", sw_ints.min()));
+                values.push(format!("{}", sw_ints.max()));
                 values.push(sw_type.to_string());
                 values.push(format!("{}", sw_distance));
                 values.push(tag.to_string());

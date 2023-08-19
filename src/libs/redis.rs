@@ -1,4 +1,6 @@
 use flate2::read::GzDecoder;
+use lazy_static::lazy_static;
+use regex::Regex;
 use std::collections::{BTreeMap, HashMap};
 use std::io::{self, BufRead, Read};
 
@@ -29,7 +31,7 @@ fn default_redis_port() -> u32 {
     6379
 }
 
-// ID	chr_id	chr_start	chr_end	chr_strand	length
+// ID   range   chr_id	chr_start	chr_end	chr_strand	length
 #[derive(Default, Clone, Debug, Serialize, Deserialize)]
 pub struct Ctg {
     pub id: String,
@@ -39,6 +41,19 @@ pub struct Ctg {
     pub chr_end: i32,
     pub chr_strand: String,
     pub length: i32,
+}
+
+#[derive(Default, Clone, Debug, Serialize, Deserialize)]
+pub struct Feature {
+    pub id: String,
+    pub range: String,
+    pub chr_id: String,
+    pub chr_start: i32,
+    pub chr_end: i32,
+    pub chr_strand: String,
+    pub length: i32,
+    pub ctg_id: String,
+    pub tag: String,
 }
 
 pub fn connect() -> redis::Connection {
@@ -70,7 +85,7 @@ pub fn get_vec_chr(conn: &mut redis::Connection) -> Vec<String> {
 }
 
 /// generated from cnt:ctg:
-pub fn get_vec_ctg(conn: &mut redis::Connection, chr_id: &String) -> Vec<String> {
+pub fn get_vec_ctg(conn: &mut redis::Connection, chr_id: &str) -> Vec<String> {
     let cnt = conn.get(format!("cnt:ctg:{}", chr_id)).unwrap_or(0);
 
     let list: Vec<String> = if cnt == 0 {
@@ -83,7 +98,7 @@ pub fn get_vec_ctg(conn: &mut redis::Connection, chr_id: &String) -> Vec<String>
 }
 
 /// generated from cnt:feature:
-pub fn get_vec_feature(conn: &mut redis::Connection, ctg_id: &String) -> Vec<String> {
+pub fn get_vec_feature(conn: &mut redis::Connection, ctg_id: &str) -> Vec<String> {
     let cnt = conn.get(format!("cnt:feature:{}", ctg_id)).unwrap_or(0);
 
     let list: Vec<String> = if cnt == 0 {
@@ -98,7 +113,7 @@ pub fn get_vec_feature(conn: &mut redis::Connection, ctg_id: &String) -> Vec<Str
 }
 
 /// generated from cnt:peak:
-pub fn get_vec_peak(conn: &mut redis::Connection, ctg_id: &String) -> Vec<String> {
+pub fn get_vec_peak(conn: &mut redis::Connection, ctg_id: &str) -> Vec<String> {
     let cnt = conn.get(format!("cnt:peak:{}", ctg_id)).unwrap_or(0);
 
     let list: Vec<String> = if cnt == 0 {
@@ -170,6 +185,18 @@ pub fn get_bin_ctg(conn: &mut redis::Connection) -> BTreeMap<String, Ctg> {
     ctg_of
 }
 
+/// bincode stored in a Redis set
+pub fn get_bin_feature(conn: &mut redis::Connection, ctg_id: &str) -> Vec<Feature> {
+    let features_bytes: Vec<Vec<u8>> = conn
+        .smembers(format!("bin:feature:{}", ctg_id))
+        .unwrap_or(vec![]);
+
+    features_bytes
+        .iter()
+        .map(|e| bincode::deserialize(e).unwrap())
+        .collect()
+}
+
 pub fn get_key_pos(conn: &mut redis::Connection, key: &str) -> (String, i32, i32) {
     let (chr_id, chr_start, chr_end): (String, i32, i32) =
         conn.hget(key, &["chr_id", "chr_start", "chr_end"]).unwrap();
@@ -177,7 +204,32 @@ pub fn get_key_pos(conn: &mut redis::Connection, key: &str) -> (String, i32, i32
     (chr_id, chr_start, chr_end)
 }
 
-pub fn get_scan_count(conn: &mut redis::Connection, scan: &str) -> i32 {
+// Can't do this
+// Response was of incompatible type - TypeError: "Bulk response of wrong dimension"
+// pub fn batch_key_pos(conn: &mut redis::Connection, keys: &Vec<String>) -> Vec<(String, i32, i32)> {
+//     let mut result: Vec<(String, i32, i32)> = vec![];
+//
+//     let mut batch = &mut redis::pipe();
+//
+//     for (i, key) in keys.iter().enumerate() {
+//         if i > 1 && i % 100 == 0 {
+//             let ary: Vec<(String, i32, i32)> = batch.query(conn).unwrap();
+//             result.extend(ary);
+//             batch.clear();
+//         }
+//
+//         batch = batch
+//             .hget(key, &["chr_id", "chr_start", "chr_end"]);
+//     }
+//     // Possible remaining records in the batch
+//     {
+//         let ary: Vec<(String, i32, i32)> = batch.query(conn).unwrap();
+//         result.extend(ary);
+//         batch.clear();
+//     }
+//
+//     result
+// }
 
 pub fn get_scan_count(conn: &mut redis::Connection, pattern: &str) -> i32 {
     // number of matches
