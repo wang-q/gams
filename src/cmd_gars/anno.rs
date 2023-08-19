@@ -1,6 +1,5 @@
 use clap::*;
-use gars::*;
-use intspan::*;
+use intspan::{IntSpan, Range};
 use lazy_static::lazy_static;
 use regex::Regex;
 use std::collections::HashMap;
@@ -72,7 +71,7 @@ pub fn execute(args: &ArgMatches) -> anyhow::Result<()> {
     //----------------------------
     // Options
     //----------------------------
-    let mut writer = writer(args.get_one::<String>("outfile").unwrap());
+    let mut writer = intspan::writer(args.get_one::<String>("outfile").unwrap());
 
     let is_header = args.get_flag("header");
     let idx_id = *args.get_one::<usize>("id").unwrap();
@@ -82,10 +81,10 @@ pub fn execute(args: &ArgMatches) -> anyhow::Result<()> {
     // Loading
     //----------------------------
     // redis connection
-    let mut conn = connect();
+    let mut conn = gars::connect();
 
-    let json = read_json(args.get_one::<String>("runlist").unwrap());
-    let set = json2set(&json);
+    let json = intspan::read_json(args.get_one::<String>("runlist").unwrap());
+    let set = intspan::json2set(&json);
 
     // local caches of the feature IntSpan for each ctg
     let mut cache: HashMap<String, IntSpan> = HashMap::new();
@@ -94,7 +93,7 @@ pub fn execute(args: &ArgMatches) -> anyhow::Result<()> {
     // Operating
     //----------------------------
     for infile in args.get_many::<String>("infiles").unwrap() {
-        let reader = reader(infile);
+        let reader = intspan::reader(infile);
         'LINE: for (i, line) in reader.lines().map_while(Result::ok).enumerate() {
             if is_header && i == 0 {
                 let prefix = Path::new(args.get_one::<String>("runlist").unwrap())
