@@ -99,12 +99,10 @@ done
 ### Contigs
 
 ```shell
-# start redis-server
-rm ~/data/gars/Atha/dump.rdb
-redis-server --appendonly no --dir ~/data/gars/Atha/
-
 cd ~/data/gars/Atha/
 
+# start redis-server
+redis-server &
 gars env --all
 
 gars status drop
@@ -150,7 +148,7 @@ time gars tsv -s 'range:*' --range |
 #user    0m4.481s
 #sys     0m4.459s
 
-gars status dump && sync dump.rdb && cp dump.rdb dumps/range.dump.rdb
+gars status dump dumps/range.rdb
 
 # stop the server
 gars status stop
