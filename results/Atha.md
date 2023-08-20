@@ -224,8 +224,8 @@ Restores from ctg.dump.rdb
 ```shell
 cd ~/data/gars/Atha/
 
-cp dumps/ctg.dump.rdb ./dump.rdb
-redis-server --appendonly no --dir ~/data/gars/Atha/
+cp dumps/ctg.rdb ./dump.rdb
+redis-server &
 
 gars env
 
@@ -251,23 +251,18 @@ time cat ctg.group.lst |
             --lag 1000 --threshold 3.0 --influence 1.0 \
             --parallel 4 \
             -o stdout |
-            tsv-filter -H --ne signal:0 \
-            > ${prefix}.gc.tsv
-
-        rgr pl-2rmp -c 0.8 ${prefix}.gc.tsv -o ${prefix}.replace
-
-        cat ${prefix}.replace |
+            tsv-filter -H --ne signal:0 |
+            rgr sort -H stdin |
+            rgr pl-2rmp -c 0.8 stdin |
             tsv-uniq -H -f 1 \
             > tsvs/${prefix}.peak.tsv
 
         tsv-summarize tsvs/${prefix}.peak.tsv \
             -H --group-by signal --count
-
-        rm ${prefix}.gc.tsv ${prefix}.replace
     '
-#real    3m55.356s
-#user    15m31.976s
-#sys     0m7.637s
+#real    1m23.736s
+#user    10m3.180s
+#sys     0m16.014s
 
 # Don't need to be sorted
 tsv-append -H $(
@@ -283,8 +278,8 @@ rm tsvs/ctg*.peak.tsv
 tsv-summarize tsvs/peak.tsv \
     -H --group-by signal --count
 #signal  count
-#1       32361
-#-1      26944
+#1       32924
+#-1      27371
 
 # Loading peaks
 time gars peak tsvs/peak.tsv
