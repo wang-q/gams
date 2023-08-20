@@ -1,5 +1,5 @@
 use clap::*;
-use gars::Feature;
+use gars::{Ctg, Feature};
 use intspan::{IntSpan, Range};
 use itertools::Itertools;
 use std::collections::HashMap;
@@ -37,11 +37,13 @@ pub fn make_subcommand() -> Command {
                 .default_value("500"),
         )
         .arg(
-            Arg::new("range")
-                .long("range")
-                .short('r')
-                .action(ArgAction::SetTrue)
-                .help("Write a `range` field before the chr_id field"),
+            Arg::new("parallel")
+                .long("parallel")
+                .short('p')
+                .value_parser(value_parser!(usize))
+                .num_args(1)
+                .default_value("1")
+                .help("Running in parallel mode, the number of threads"),
         )
         .arg(
             Arg::new("outfile")
@@ -55,7 +57,50 @@ pub fn make_subcommand() -> Command {
 
 // command implementation
 pub fn execute(args: &ArgMatches) -> anyhow::Result<()> {
-    // opts
+    //----------------------------
+    // Args
+    //----------------------------
+    let parallel = *args.get_one::<usize>("parallel").unwrap();
+
+    //----------------------------
+    // Operating
+    //----------------------------
+    // redis connection
+    let mut conn = gars::connect();
+    let ctg_of = gars::get_bin_ctg(&mut conn);
+
+    if parallel == 1 {
+        let mut writer = intspan::writer(args.get_one::<String>("outfile").unwrap());
+
+        // headers
+        let mut headers = vec![
+            "range",
+            "type",
+            "distance",
+            "tag",
+            "gc_content",
+            "gc_mean",
+            "gc_stddev",
+            "gc_cv",
+        ];
+        writer.write_all(format!("{}\t{}\n", "ID", headers.join("\t")).as_ref())?;
+
+        // process each contig
+        eprintln!("{} contigs to be processed", ctg_of.len());
+        for ctg_id in ctg_of.keys().into_iter().sorted() {
+            let ctg = ctg_of.get(ctg_id).unwrap();
+            let out_string = proc_ctg(ctg, args)?;
+            writer.write_all(out_string.as_ref())?;
+        }
+    }
+
+    Ok(())
+}
+
+fn proc_ctg(ctg: &Ctg, args: &ArgMatches) -> anyhow::Result<String> {
+    //----------------------------
+    // Args
+    //----------------------------
     let size = *args.get_one::<i32>("size").unwrap();
     let max = *args.get_one::<i32>("max").unwrap();
     let resize = *args.get_one::<i32>("resize").unwrap();
@@ -64,96 +109,66 @@ pub fn execute(args: &ArgMatches) -> anyhow::Result<()> {
     // redis connection
     let mut conn = gars::connect();
 
-    // headers
-    let mut writer = intspan::writer(args.get_one::<String>("outfile").unwrap());
-    let mut headers = vec![];
-    if is_range {
-        headers.push("range");
-    }
-    headers.append(&mut vec![
-        "chr_id",
-        "chr_start",
-        "chr_end",
-        "type",
-        "distance",
-        "tag",
-        "gc_content",
-        "gc_mean",
-        "gc_stddev",
-        "gc_cv",
-    ]);
-    writer.write_all(format!("{}\t{}\n", "ID", headers.join("\t")).as_ref())?;
+    eprintln!(
+        "Process {} {}:{}-{}",
+        ctg.id, ctg.chr_id, ctg.chr_start, ctg.chr_end
+    );
 
-    // process each contig
-    let ctg_of = gars::get_bin_ctg(&mut conn);
-    eprintln!("{} contigs to be processed", ctg_of.len());
-    for ctg_id in ctg_of.keys().into_iter().sorted() {
-        let ctg = ctg_of.get(ctg_id).unwrap();
-        eprintln!(
-            "Process {} {}:{}-{}",
-            ctg_id, ctg.chr_id, ctg.chr_start, ctg.chr_end
-        );
+    // local caches of GC-content for each ctg
+    let mut cache: HashMap<String, f32> = HashMap::new();
 
-        // local caches of GC-content for each ctg
-        let mut cache: HashMap<String, f32> = HashMap::new();
+    let parent = IntSpan::from_pair(ctg.chr_start, ctg.chr_end);
+    let seq: String = gars::get_ctg_seq(&mut conn, &ctg.id);
 
-        let parent = IntSpan::from_pair(ctg.chr_start, ctg.chr_end);
-        let seq: String = gars::get_ctg_seq(&mut conn, ctg_id);
+    // All features in this ctg
+    let features: Vec<Feature> = gars::get_bin_feature(&mut conn, &ctg.id);
+    eprintln!("\tThere are {} features", features.len());
 
-        // All features in this ctg
-        let features: Vec<Feature> = gars::get_bin_feature(&mut conn, ctg_id);
-        eprintln!("\tThere are {} features", features.len());
+    let mut out_string = "".to_string();
+    for feature in &features {
+        let feature_id = &feature.id;
+        let range_start = feature.chr_start;
+        let range_end = feature.chr_end;
+        let tag = &feature.tag;
 
-        for feature in &features {
-            let feature_id = &feature.id;
-            let range_start = feature.chr_start;
-            let range_end = feature.chr_end;
-            let tag = &feature.tag;
+        // No need to use Redis counters
+        let mut serial: isize = 1;
 
-            // No need to use Redis counters
-            let mut serial: isize = 1;
+        let windows = gars::center_sw(&parent, range_start, range_end, size, max);
 
-            let windows = gars::center_sw(&parent, range_start, range_end, size, max);
+        for (sw_ints, sw_type, sw_distance) in windows {
+            let fsw_id = format!("fsw:{}:{}", feature_id, serial);
 
-            for (sw_ints, sw_type, sw_distance) in windows {
-                let fsw_id = format!("fsw:{}:{}", feature_id, serial);
+            let gc_content = gars::cache_gc_content(
+                &Range::from(&ctg.chr_id, sw_ints.min(), sw_ints.max()),
+                &parent,
+                &seq,
+                &mut cache,
+            );
 
-                let gc_content = gars::cache_gc_content(
-                    &Range::from(&ctg.chr_id, sw_ints.min(), sw_ints.max()),
-                    &parent,
-                    &seq,
-                    &mut cache,
-                );
+            let resized = gars::center_resize(&parent, &sw_ints, resize);
+            let re_rg = Range::from(&ctg.chr_id, resized.min(), resized.max());
+            let (gc_mean, gc_stddev, gc_cv) =
+                gars::cache_gc_stat(&re_rg, &parent, &seq, &mut cache, size, size);
 
-                let resized = gars::center_resize(&parent, &sw_ints, resize);
-                let re_rg = Range::from(&ctg.chr_id, resized.min(), resized.max());
-                let (gc_mean, gc_stddev, gc_cv) =
-                    gars::cache_gc_stat(&re_rg, &parent, &seq, &mut cache, size, size);
+            // prepare to output
+            let mut values: Vec<String> = vec![];
 
-                // prepare to output
-                let mut values: Vec<String> = vec![];
+            values.push(Range::from(&ctg.chr_id, sw_ints.min(), sw_ints.max()).to_string());
+            values.push(sw_type.to_string());
+            values.push(format!("{}", sw_distance));
+            values.push(tag.to_string());
+            values.push(format!("{:.4}", gc_content));
+            values.push(format!("{:.4}", gc_mean));
+            values.push(format!("{:.4}", gc_stddev));
+            values.push(format!("{:.4}", gc_cv));
 
-                if is_range {
-                    values.push(Range::from(&ctg.chr_id, sw_ints.min(), sw_ints.max()).to_string());
-                }
-                values.push(ctg.chr_id.to_string());
-                values.push(format!("{}", sw_ints.min()));
-                values.push(format!("{}", sw_ints.max()));
-                values.push(sw_type.to_string());
-                values.push(format!("{}", sw_distance));
-                values.push(tag.to_string());
-                values.push(format!("{:.5}", gc_content));
-                values.push(format!("{:.5}", gc_mean));
-                values.push(format!("{:.5}", gc_stddev));
-                values.push(format!("{:.5}", gc_cv));
+            serial += 1;
 
-                let line = values.join("\t");
-                writer.write_all(format!("{}\t{}\n", fsw_id, line).as_ref())?;
-
-                serial += 1;
-            }
+            // outputs
+            out_string += &format!("{}\t{}\n", fsw_id, values.join("\t"));
         }
     }
 
-    Ok(())
+    Ok(out_string)
 }
