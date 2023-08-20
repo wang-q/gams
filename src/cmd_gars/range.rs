@@ -91,11 +91,15 @@ pub fn execute(args: &ArgMatches) -> anyhow::Result<()> {
             let range_id = format!("range:{}:{}", ctg_id, serial);
 
             batch = batch
+                .hset(&range_id, "range", rg.to_string())
+                .ignore()
                 .hset(&range_id, "chr_id", rg.chr())
                 .ignore()
                 .hset(&range_id, "chr_start", *rg.start())
                 .ignore()
                 .hset(&range_id, "chr_end", *rg.end())
+                .ignore()
+                .hset(&range_id, "ctg_id", ctg_id)
                 .ignore();
         }
 
