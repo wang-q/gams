@@ -1,4 +1,5 @@
 use clap::*;
+use crossbeam::channel::bounded;
 use gars::{Ctg, Feature};
 use intspan::{IntSpan, Range};
 use itertools::Itertools;
@@ -73,7 +74,7 @@ pub fn execute(args: &ArgMatches) -> anyhow::Result<()> {
         let mut writer = intspan::writer(args.get_one::<String>("outfile").unwrap());
 
         // headers
-        let mut headers = vec![
+        let headers = vec![
             "range",
             "type",
             "distance",
@@ -92,6 +93,12 @@ pub fn execute(args: &ArgMatches) -> anyhow::Result<()> {
             let out_string = proc_ctg(ctg, args)?;
             writer.write_all(out_string.as_ref())?;
         }
+    } else {
+        let mut ctgs = vec![];
+        for ctg_id in ctg_of.keys().into_iter().sorted() {
+            ctgs.push(ctg_of.get(ctg_id).unwrap().clone())
+        }
+        proc_ctg_p(&ctgs, args)?;
     }
 
     Ok(())
@@ -104,7 +111,6 @@ fn proc_ctg(ctg: &Ctg, args: &ArgMatches) -> anyhow::Result<String> {
     let size = *args.get_one::<i32>("size").unwrap();
     let max = *args.get_one::<i32>("max").unwrap();
     let resize = *args.get_one::<i32>("resize").unwrap();
-    let is_range = args.get_flag("range");
 
     // redis connection
     let mut conn = gars::connect();
@@ -171,4 +177,71 @@ fn proc_ctg(ctg: &Ctg, args: &ArgMatches) -> anyhow::Result<String> {
     }
 
     Ok(out_string)
+}
+
+// Adopt from https://rust-lang-nursery.github.io/rust-cookbook/concurrency/threads.html#create-a-parallel-pipeline
+fn proc_ctg_p(ctgs: &Vec<Ctg>, args: &ArgMatches) -> anyhow::Result<()> {
+    let parallel = *args.get_one::<usize>("parallel").unwrap();
+    let mut writer = intspan::writer(args.get_one::<String>("outfile").unwrap());
+
+    // headers
+    let headers = vec![
+        "range",
+        "type",
+        "distance",
+        "tag",
+        "gc_content",
+        "gc_mean",
+        "gc_stddev",
+        "gc_cv",
+    ];
+    writer.write_all(format!("{}\t{}\n", "ID", headers.join("\t")).as_ref())?;
+
+    eprintln!("{} contigs to be processed", ctgs.len());
+
+    // Channel 1 - Contigs
+    let (snd1, rcv1) = bounded::<Ctg>(10);
+    // Channel 2 - Results
+    let (snd2, rcv2) = bounded(10);
+
+    crossbeam::scope(|s| {
+        //----------------------------
+        // Reader thread
+        //----------------------------
+        s.spawn(|_| {
+            for ctg in ctgs {
+                snd1.send(ctg.clone()).unwrap();
+            }
+            // Close the channel - this is necessary to exit the for-loop in the worker
+            drop(snd1);
+        });
+
+        //----------------------------
+        // Worker threads
+        //----------------------------
+        for _ in 0..parallel {
+            // Send to sink, receive from source
+            let (sendr, recvr) = (snd2.clone(), rcv1.clone());
+            // Spawn workers in separate threads
+            s.spawn(move |_| {
+                // Receive until channel closes
+                for ctg in recvr.iter() {
+                    let out_string = proc_ctg(&ctg, args).unwrap();
+                    sendr.send(out_string).unwrap();
+                }
+            });
+        }
+        // Close the channel, otherwise sink will never exit the for-loop
+        drop(snd2);
+
+        //----------------------------
+        // Writer (main) thread
+        //----------------------------
+        for out_string in rcv2.iter() {
+            writer.write_all(out_string.as_ref()).unwrap();
+        }
+    })
+    .unwrap();
+
+    Ok(())
 }

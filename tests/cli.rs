@@ -381,8 +381,8 @@ fn command_feature() -> Result<(), Box<dyn std::error::Error>> {
         .unwrap();
     let stderr = String::from_utf8(output.stderr).unwrap();
 
-    assert_eq!(stderr.lines().count(), 1);
-    assert!(stderr.contains("There are 69 ranges in this file"));
+    assert_eq!(stderr.lines().count(), 2);
+    assert!(stderr.contains("There are 69 features in this file"));
 
     Ok(())
 }

@@ -215,44 +215,36 @@ hyperfine --warmup 1 --export-markdown threads.md.tmp \
 cat threads.md.tmp
 
 # fsw
-gars status drop; gars gen genome/genome.fa.gz --piece 500000;
+gars status drop
+gars gen genome/genome.fa.gz --piece 500000
 
 gars feature features/T-DNA.CSHL.rg --tag CSHL;
 gars feature features/T-DNA.FLAG.rg --tag FLAG;
-gars feature features/T-DNA.MX.rg   --tag MX;
-gars feature features/T-DNA.RATM.rg --tag RATM;
 
 hyperfine --warmup 1 --export-markdown threads.md.tmp \
-    -n 'serial' \
+    -n 'parallel 1' \
     '
-    gars fsw > /dev/null;
+    gars fsw --parallel 1 > /dev/null;
     ' \
-    -n 'parallel -j 1' \
+    -n 'parallel 2' \
     '
-    cat genome/chr.sizes |
-        cut -f 1 |
-        parallel -j 1 '\''
-            gars fsw --ctg "ctg:{}:*"
-            '\'' \
-        > /dev/null
+    gars fsw --parallel 2 > /dev/null;
     ' \
-    -n 'parallel -j 2' \
+    -n 'parallel 4' \
     '
-    cat genome/chr.sizes |
-        cut -f 1 |
-        parallel -j 2 '\''
-            gars fsw --ctg "ctg:{}:*"
-            '\'' \
-        > /dev/null
+    gars fsw --parallel 4 > /dev/null;
     ' \
-    -n 'parallel -j 4' \
+    -n 'parallel 8' \
     '
-    cat genome/chr.sizes |
-        cut -f 1 |
-        parallel -j 4 '\''
-            gars fsw --ctg "ctg:{}:*"
-            '\'' \
-        > /dev/null
+    gars fsw --parallel 8 > /dev/null;
+    ' \
+    -n 'parallel 12' \
+    '
+    gars fsw --parallel 12 > /dev/null;
+    ' \
+    -n 'parallel 16' \
+    '
+    gars fsw --parallel 16 > /dev/null;
     '
 
 cat threads.md.tmp
@@ -353,21 +345,25 @@ cat threads.md.tmp
 
 * fsw
 
-| Command         |       Mean [s] | Min [s] | Max [s] |    Relative |
-|:----------------|---------------:|--------:|--------:|------------:|
-| `serial`        | 24.958 ± 0.809 |  23.794 |  26.062 | 2.04 ± 0.08 |
-| `parallel -j 1` | 30.466 ± 0.687 |  29.646 |  32.267 | 2.49 ± 0.08 |
-| `parallel -j 2` | 16.563 ± 0.521 |  15.954 |  17.413 | 1.35 ± 0.05 |
-| `parallel -j 4` | 12.247 ± 0.274 |  11.902 |  12.745 |        1.00 |
+| Command       |       Mean [s] | Min [s] | Max [s] |    Relative |
+|:--------------|---------------:|--------:|--------:|------------:|
+| `parallel 1`  | 11.384 ± 0.129 |  11.269 |  11.660 | 5.60 ± 0.10 |
+| `parallel 2`  |  6.502 ± 0.101 |   6.390 |   6.753 | 3.20 ± 0.07 |
+| `parallel 4`  |  3.928 ± 0.062 |   3.872 |   4.090 | 1.93 ± 0.04 |
+| `parallel 8`  |  2.657 ± 0.049 |   2.594 |   2.746 | 1.31 ± 0.03 |
+| `parallel 12` |  2.237 ± 0.016 |   2.203 |   2.254 | 1.10 ± 0.02 |
+| `parallel 16` |  2.034 ± 0.029 |   1.991 |   2.072 |        1.00 |
 
 * sliding
 
-| Command      |      Mean [s] | Min [s] | Max [s] |    Relative |
-|:-------------|--------------:|--------:|--------:|------------:|
-| `parallel 1` | 5.914 ± 0.070 |   5.820 |   6.039 | 4.42 ± 0.10 |
-| `parallel 2` | 3.240 ± 0.032 |   3.181 |   3.273 | 2.42 ± 0.05 |
-| `parallel 4` | 1.823 ± 0.018 |   1.802 |   1.865 | 1.36 ± 0.03 |
-| `parallel 8` | 1.337 ± 0.025 |   1.306 |   1.384 |        1.00 |
+| Command       |      Mean [s] | Min [s] | Max [s] |    Relative |
+|:--------------|--------------:|--------:|--------:|------------:|
+| `parallel 1`  | 6.209 ± 0.087 |   6.115 |   6.345 | 4.71 ± 0.15 |
+| `parallel 2`  | 3.410 ± 0.030 |   3.374 |   3.472 | 2.59 ± 0.08 |
+| `parallel 4`  | 2.013 ± 0.022 |   1.979 |   2.044 | 1.53 ± 0.05 |
+| `parallel 8`  | 1.470 ± 0.037 |   1.421 |   1.544 | 1.11 ± 0.04 |
+| `parallel 12` | 1.319 ± 0.037 |   1.285 |   1.400 |        1.00 |
+| `parallel 16` | 1.346 ± 0.050 |   1.294 |   1.415 | 1.02 ± 0.05 |
 
 ### E5-2680 v3 RHEL 7.7
 

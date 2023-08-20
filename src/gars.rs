@@ -47,4 +47,3 @@ fn main() -> anyhow::Result<()> {
 
 // TODO: sliding windows of waves
 // TODO: `gars count`
-// TODO： gars fsw --parallel
