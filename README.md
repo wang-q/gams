@@ -31,31 +31,28 @@ cargo build
 ### `gars help`
 
 ```text
-gars 0.3.1
-wang-q <wang-q@outlook.com>
 Genome Analyst with Rust and rediS
 
-USAGE:
-    gars [SUBCOMMAND]
+Usage: gars [COMMAND]
 
-OPTIONS:
-    -h, --help       Print help information
-    -V, --version    Print version information
+Commands:
+  env      Create a .env file
+  status   Test Redis config and connection
+  gen      Generate the database from (gzipped) fasta files
+  locate   Locate the given ranges to the corresponding ctgs
+  range    Add range files for counting
+  clear    Clear some parts from Redis
+  feature  Add genomic features from a range file
+  fsw      Sliding windows around features
+  anno     Annotate anything that contains a ctg_id and a range
+  sliding  Sliding windows along a chromosome
+  peak     Add peaks of GC-waves
+  tsv      Export Redis hashes to a tsv file
+  help     Print this message or the help of the given subcommand(s)
 
-SUBCOMMANDS:
-    anno       Annotate anything that contains a ctg_id and a range
-    clear      Clear some parts from Redis
-    env        Create a .env file
-    feature    Add genomic features from range files
-    fsw        Sliding windows around a feature
-    gen        Generate the database from (gzipped) fasta files
-    help       Print this message or the help of the given subcommand(s)
-    locate     Locate the given ranges to the corresponding ctgs
-    peak       Add peaks of GC-waves
-    range      Add range files for counting
-    sliding    Sliding windows along a chromosome
-    status     Test Redis config and connection
-    tsv        Export Redis hashes to a tsv file
+Options:
+  -h, --help     Print help
+  -V, --version  Print version
 
 ```
 
