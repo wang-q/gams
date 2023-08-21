@@ -133,9 +133,9 @@ time parallel -j 4 -k --line-buffer '
     echo {}
     gars range features/T-DNA.{}.rg
     ' ::: CSHL FLAG MX RATM
-#real    0m3.663s
-#user    0m2.096s
-#sys     0m2.666s
+#real    0m1.086s
+#user    0m0.423s
+#sys     0m0.225s
 
 time gars tsv -s 'range:*' --range |
     gars anno genome/cds.json stdin -H |

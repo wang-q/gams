@@ -5,9 +5,13 @@
 * Make `gars range` and `gars feature` up to 10x times faster by packaging hundreds of redis
   operations into batches
 
+* Add structs `Ctg`, `Feature`, and `Range`
+* Rewrite some functions in `redis.rs`
+
 * `--range` writes a `range` field before the chr_id field
-* Add --parallel to `gars sliding`
+* Add --parallel to `gars sliding` and `gars fsw`
 * Using lua scripts in `gars clear`
+* Enhance `gars status dump`
 
 * Bump deps
     * `clap` v4
