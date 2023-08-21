@@ -217,33 +217,46 @@ genome sequences, `gars` gz-compresses them locally before passing them to `redi
 
 ### Contents stored in Redis
 
-| Namespace                 |  Type   | Fields     | Description                                                                  |
-|:--------------------------|:-------:|:-----------|:-----------------------------------------------------------------------------|
-| common_name               | STRING  |            | The common name, e.g. S288c, Human                                           |
-| chr                       |  HASH   |            | Length of each chromosome                                                    |
-|                           |         | chr_id     |                                                                              |
-| **ctg**                   |         |            | *A contiguous range on chromosome*                                           |
-| cnt:ctg:{chr_id}          | INTEGER |            | Serial number. An internal counter of ctgs on this chr                       |
-| ctg:{chr_id}:{serial}     |  HASH   |            | ID, ctg_id                                                                   |
-|                           |         | range      | 1:4000001-4500000                                                            |
-|                           |         | chr_id     |                                                                              |
-|                           |         | chr_start  |                                                                              |
-|                           |         | chr_end    |                                                                              |
-|                           |         | chr_strand |                                                                              |
-|                           |         | length     | All other namespaces of type HASH contain these fields                       |
-| idx:ctg:{chr_id}          | BINARY  |            | A serialized structure of `Lapper<u32, String>` for indexing ctgs on chr     |
-| bin:ctg:{chr_id}          | BINARY  |            | A serialized structure of `BTreeMap<String, Ctg>`                            |
-| seq:{ctg_id}              | BINARY  |            | Compressed genomic sequence of ctg                                           |
-| **feature**               |         |            | *A generic genomic feature of interest*                                      |
-| cnt:feature:{ctg_id}      | INTEGER |            | Serial number. An internal counter of features locating on this ctg          |
-| feature:{ctg_id}:{serial} |  HASH   |            | ID, feature_id                                                               |
-|                           |         | ...        | Standard fields similar to ctg                                               |
-|                           |         | tag        | Feature tags                                                                 |
-| bin:feature:{ctg_id}      |   SET   |            | A Redis SET contains all serialized features on this ctg                     |
-| **range**                 |         |            | *Genomic features used for counting, i.e., relationship to certain features* |
-| cnt:range:{ctg_id}        | INTEGER |            | Serial number. An internal counter of ranges locating on this ctg            |
-| range:{ctg_id}:{serial}   |  HASH   |            | ID, range_id                                                                 |
-|                           |         | ...        | Standard fields similar to ctg                                               |
+| Namespace                 |  Type   | Fields            | Description                                                                  |
+|:--------------------------|:-------:|:------------------|:-----------------------------------------------------------------------------|
+| common_name               | STRING  |                   | The common name, e.g. S288c, Human                                           |
+| chr                       |  HASH   |                   | Length of each chromosome                                                    |
+|                           |         | chr_id            |                                                                              |
+| **ctg**                   |         |                   | *A contiguous range on chromosome*                                           |
+| cnt:ctg:{chr_id}          | INTEGER |                   | Serial number. An internal counter of ctgs on this chr                       |
+| ctg:{chr_id}:{serial}     |  HASH   |                   | ID, ctg_id                                                                   |
+|                           |         | range             | 1:4000001-4500000                                                            |
+|                           |         | chr_id            |                                                                              |
+|                           |         | chr_start         |                                                                              |
+|                           |         | chr_end           |                                                                              |
+|                           |         | chr_strand        |                                                                              |
+|                           |         | length            | All other namespaces of type HASH contain these fields                       |
+| idx:ctg:{chr_id}          | BINARY  |                   | A serialized structure of `Lapper<u32, String>` for indexing ctgs on chr     |
+| bin:ctg:{chr_id}          | BINARY  |                   | A serialized structure of `BTreeMap<String, Ctg>`                            |
+| seq:{ctg_id}              | BINARY  |                   | Compressed genomic sequence of ctg                                           |
+| **feature**               |         |                   | *A generic genomic feature of interest*                                      |
+| cnt:feature:{ctg_id}      | INTEGER |                   | Serial number. Counter of features locating on this ctg                      |
+| feature:{ctg_id}:{serial} |  HASH   |                   | ID, feature_id                                                               |
+|                           |         | ...               | Standard fields similar to ctg                                               |
+|                           |         | tag               | Feature tags                                                                 |
+| bin:feature:{ctg_id}      |   SET   |                   | A Redis SET contains all serialized features on this ctg                     |
+| **range**                 |         |                   | *Genomic features used for counting, i.e., relationship to certain features* |
+| cnt:range:{ctg_id}        | INTEGER |                   | Serial number. Counter of ranges locating on this ctg                        |
+| range:{ctg_id}:{serial}   |  HASH   |                   | ID, range_id                                                                 |
+|                           |         | ...               | Standard fields similar to ctg                                               |
+| idx:range:{ctg_id}        | BINARY  |                   | A serialized structure of `Lapper<u32, String>` for indexing ranges on ctg   |
+| **peak**                  |         |                   | Peaks of GC-wave                                                             |
+| cnt:peak:{ctg_id}         | INTEGER |                   | Serial number. Counter of peaks locating on this ctg                         |
+| peak:{ctg_id}:{serial}    |  HASH   |                   | ID, peak_id                                                                  |
+|                           |         | ...               | Standard fields similar to ctg                                               |
+|                           |         | signal            | 1 for crest, -1 for trough                                                   |
+|                           |         | gc                | GC-content                                                                   |
+|                           |         | left_signal       | Signal of previous peak                                                      |
+|                           |         | left_wave_length  | Distance to previous peak                                                    |
+|                           |         | left_amplitude    | Difference of GC-content to previous peak                                    |
+|                           |         | right_signal      | Signal of next peak                                                          |
+|                           |         | right_wave_length | distance to next peak                                                        |
+|                           |         | right_amplitude   | Difference of GC-content to next peak                                        |
 
 ## Runtime dependencies
 
