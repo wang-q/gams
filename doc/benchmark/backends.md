@@ -90,3 +90,20 @@ mv dragonfly-x86_64 ~/bin/dragonfly
 dragonfly --logtostderr
 
 ```
+
+## garnet
+
+```shell
+brew install dotnet nuget
+
+#curl -LO https://github.com/microsoft/garnet/releases/download/v1.0.0/Microsoft.Garnet.1.0.0.nupkg
+#winget install --id "Microsoft.DotNet.SDK.8"
+
+cd Scripts
+curl -L https://github.com/microsoft/garnet/archive/refs/tags/v1.0.0.tar.gz |
+    tar xvz
+
+cd garnet-1.0.0/main/GarnetServer/
+dotnet run -c Release -f net8.0 -- --port 6379
+
+```
