@@ -106,7 +106,7 @@ gars tsv -s 'ctg:*' --range > tests/S288c/ctg.range.tsv
 gars-stat tests/S288c/ctg.tsv ctg
 
 # annotate
-gars anno tests/S288c/intergenic.yml tests/S288c/ctg.range.tsv -H
+gars anno tests/S288c/intergenic.json tests/S288c/ctg.range.tsv -H
 
 # locate an range
 gars locate "I(+):1000-1100"
