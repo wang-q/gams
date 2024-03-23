@@ -8,6 +8,8 @@
 * Add structs `Ctg`, `Feature`, and `Range`
 * Rewrite some functions in `redis.rs`
 
+* Add `gars-sql` as an alternative to `gars-stat`
+
 * `--range` writes a `range` field before the chr_id field
 * Add --parallel to `gars sliding` and `gars fsw`
 * Using lua scripts in `gars clear`
