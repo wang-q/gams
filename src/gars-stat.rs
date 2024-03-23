@@ -52,7 +52,7 @@ fn execute(args: &ArgMatches) -> anyhow::Result<()> {
         .unwrap()
         .infer_schema(None)
         .has_header(true)
-        .with_delimiter(b'\t')
+        .with_separator(b'\t')
         .finish()
         .unwrap();
 
@@ -63,8 +63,7 @@ fn execute(args: &ArgMatches) -> anyhow::Result<()> {
 
     // write DataFrame to file
     CsvWriter::new(writer)
-        .has_header(true)
-        .with_delimiter(b'\t')
+        .with_separator(b'\t')
         .finish(&mut res)
         .unwrap();
 
@@ -74,9 +73,9 @@ fn execute(args: &ArgMatches) -> anyhow::Result<()> {
 fn query_ctg(df: DataFrame) -> DataFrame {
     let res = df
         .lazy()
-        .groupby(["chr_id"])
+        .group_by(["chr_id"])
         .agg([
-            count(),
+            col("ID").count().alias("COUNT"),
             col("length").mean().alias("length_mean"),
             col("length").sum().alias("length_sum"),
         ])
@@ -86,6 +85,7 @@ fn query_ctg(df: DataFrame) -> DataFrame {
                 descending: false,
                 nulls_last: true,
                 multithreaded: true,
+                maintain_order: false,
             },
         )
         .collect();
