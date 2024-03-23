@@ -5,7 +5,7 @@ use datafusion::arrow::csv;
 use datafusion::prelude::*;
 use intspan::writer;
 
-#[tokio::main]
+#[tokio::main(flavor = "current_thread")]
 async fn main() -> anyhow::Result<()> {
     let app = Command::new("gars-sql")
         .version(crate_version!())
@@ -45,10 +45,10 @@ async fn main() -> anyhow::Result<()> {
 async fn execute(args: &ArgMatches) -> anyhow::Result<()> {
     // opts
     let infile = args.get_one::<String>("infile").unwrap();
-    let query = args.get_one::<String>("query").unwrap().as_str();
+    let query_file = args.get_one::<String>("query").unwrap();
+    let query = std::fs::read_to_string(query_file).unwrap();
 
     let writer = writer(args.get_one::<String>("outfile").unwrap());
-
 
     // Initialize query interface
     let ctx = SessionContext::new();
@@ -67,14 +67,16 @@ async fn execute(args: &ArgMatches) -> anyhow::Result<()> {
     // TODO: await makes the compilation extremely slow
     let results = df.collect().await?;
 
-    eprintln!("{:?}", results);
+    // eprintln!("{:?}", results);
 
     // create a builder and writer
     let builder = csv::WriterBuilder::new()
         .with_header(true)
         .with_delimiter(b'\t');
     let mut csv_writer = builder.build(writer);
-    csv_writer.write(&results[0]).unwrap();
+    for res in results {
+        csv_writer.write(&res).unwrap();
+    }
 
     Ok(())
 }
