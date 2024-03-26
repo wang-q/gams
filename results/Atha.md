@@ -7,9 +7,9 @@ mkdir -p ~/data/gars/Atha/genome
 cd ~/data/gars/Atha/genome
 
 # download
-curl -LO http://ftp.ensemblgenomes.org/pub/release-52/plants/fasta/arabidopsis_thaliana/dna/Arabidopsis_thaliana.TAIR10.dna_sm.toplevel.fa.gz
+wget -N https://ftp.ensemblgenomes.ebi.ac.uk/pub/plants/release-58/fasta/arabidopsis_thaliana/dna/Arabidopsis_thaliana.TAIR10.dna_sm.toplevel.fa.gz
 
-curl -LO http://ftp.ensemblgenomes.org/pub/release-52/plants/gff3/arabidopsis_thaliana/Arabidopsis_thaliana.TAIR10.52.gff3.gz
+wget -N https://ftp.ensemblgenomes.ebi.ac.uk/pub/plants/release-58/gff3/arabidopsis_thaliana/Arabidopsis_thaliana.TAIR10.58.gff3.gz
 
 # chromosomes
 gzip -dcf *dna_sm.toplevel* |
@@ -18,7 +18,7 @@ gzip -dcf *dna_sm.toplevel* |
 faops size genome.fa.gz > chr.sizes
 
 # annotaions
-gzip -dcf Arabidopsis_thaliana.TAIR10.52.gff3.gz |
+gzip -dcf Arabidopsis_thaliana.TAIR10.58.gff3.gz |
     grep -v '^#' |
     cut -f 1 |
     sort | uniq -c
@@ -30,7 +30,7 @@ gzip -dcf Arabidopsis_thaliana.TAIR10.52.gff3.gz |
 #    615 Mt
 #    528 Pt
 
-gzip -dcf Arabidopsis_thaliana.TAIR10.52.gff3.gz |
+gzip -dcf Arabidopsis_thaliana.TAIR10.58.gff3.gz |
     grep -v '^#' |
     cut -f 3 |
     sort | uniq -c
@@ -50,7 +50,7 @@ gzip -dcf Arabidopsis_thaliana.TAIR10.52.gff3.gz |
 #  48308 three_prime_UTR
 #    689 tRNA
 
-spanr gff Arabidopsis_thaliana.TAIR10.52.gff3.gz --tag CDS -o cds.json
+spanr gff Arabidopsis_thaliana.TAIR10.58.gff3.gz --tag CDS -o cds.json
 
 faops masked genome.fa.gz |
     spanr cover stdin -o repeats.json
@@ -60,7 +60,7 @@ spanr merge repeats.json cds.json -o anno.json
 spanr stat chr.sizes anno.json --all
 #key,chrLength,size,coverage
 #cds,119667750,33775569,0.2822
-#repeats,119667750,28237829,0.2360
+#repeats,119667750,38274794,0.3198
 
 ```
 
@@ -113,8 +113,8 @@ gars status dump dumps/ctg.rdb
 
 # tsv exports
 time gars tsv -s 'ctg:*' --range |
-    gars anno genome/cds.json stdin -H |
-    gars anno genome/repeats.json stdin -H |
+    gars anno -H genome/cds.json stdin |
+    gars anno -H genome/repeats.json stdin |
     rgr sort -H -f 2 stdin |
     tsv-select -H -e range |
     pigz \
