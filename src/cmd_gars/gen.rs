@@ -157,7 +157,7 @@ pub fn execute(args: &ArgMatches) -> anyhow::Result<()> {
                 let start = regions.pop_front().unwrap();
                 let end = regions.pop_front().unwrap();
 
-                let range = Range::from(&chr_id, start, end);
+                let range = Range::from(chr_id, start, end);
 
                 // ID	chr_id	chr_start	chr_end	chr_strand	length
                 let ctg = gars::Ctg {

@@ -128,13 +128,13 @@ fn proc_ctg(ctg_id: &String, args: &ArgMatches) -> anyhow::Result<String> {
     // redis connection
     let mut conn = gars::connect();
 
-    let (chr_id, chr_start, chr_end) = gars::get_key_pos(&mut conn, &ctg_id);
+    let (chr_id, chr_start, chr_end) = gars::get_key_pos(&mut conn, ctg_id);
     eprintln!("Process {} {}:{}-{}", ctg_id, chr_id, chr_start, chr_end);
 
     let parent = IntSpan::from_pair(chr_start, chr_end);
     let windows = gars::sliding(&parent, size, step);
 
-    let ctg_seq: String = gars::get_ctg_seq(&mut conn, &ctg_id);
+    let ctg_seq: String = gars::get_ctg_seq(&mut conn, ctg_id);
 
     let mut gcs: Vec<f32> = Vec::with_capacity(windows.len());
     for window in &windows {

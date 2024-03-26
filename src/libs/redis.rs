@@ -300,7 +300,7 @@ pub fn get_scan_str(
 
     let mut hash: HashMap<String, _> = HashMap::new();
     for key in keys {
-        let val: String = conn.hget(&key, &field).unwrap();
+        let val: String = conn.hget(&key, field).unwrap();
         hash.insert(key.clone(), val);
     }
 
@@ -316,7 +316,7 @@ pub fn get_scan_int(
 
     let mut hash: HashMap<String, _> = HashMap::new();
     for key in keys {
-        let val: i32 = conn.hget(&key, &field).unwrap();
+        let val: i32 = conn.hget(&key, field).unwrap();
         hash.insert(key.clone(), val);
     }
 
@@ -511,7 +511,7 @@ pub fn read_range(
         ranges_of
             .entry(ctg_id)
             .and_modify(|v| v.push(rg))
-            .or_insert(Vec::new());
+            .or_default();
     }
 
     ranges_of

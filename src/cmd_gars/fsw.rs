@@ -74,7 +74,7 @@ pub fn execute(args: &ArgMatches) -> anyhow::Result<()> {
         let mut writer = intspan::writer(args.get_one::<String>("outfile").unwrap());
 
         // headers
-        let headers = vec![
+        let headers = [
             "range",
             "type",
             "distance",
@@ -88,14 +88,14 @@ pub fn execute(args: &ArgMatches) -> anyhow::Result<()> {
 
         // process each contig
         eprintln!("{} contigs to be processed", ctg_of.len());
-        for ctg_id in ctg_of.keys().into_iter().sorted() {
+        for ctg_id in ctg_of.keys().sorted() {
             let ctg = ctg_of.get(ctg_id).unwrap();
             let out_string = proc_ctg(ctg, args)?;
             writer.write_all(out_string.as_ref())?;
         }
     } else {
         let mut ctgs = vec![];
-        for ctg_id in ctg_of.keys().into_iter().sorted() {
+        for ctg_id in ctg_of.keys().sorted() {
             ctgs.push(ctg_of.get(ctg_id).unwrap().clone())
         }
         proc_ctg_p(&ctgs, args)?;
@@ -185,7 +185,7 @@ fn proc_ctg_p(ctgs: &Vec<Ctg>, args: &ArgMatches) -> anyhow::Result<()> {
     let mut writer = intspan::writer(args.get_one::<String>("outfile").unwrap());
 
     // headers
-    let headers = vec![
+    let headers = [
         "range",
         "type",
         "distance",

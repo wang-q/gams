@@ -38,12 +38,12 @@ pub fn gc_stat(gcs: &[f32]) -> (f32, f32, f32) {
     (mean, stddev, cv)
 }
 
-pub fn thresholding_algo(data: &Vec<f32>, lag: usize, threshold: f32, influence: f32) -> Vec<i32> {
+pub fn thresholding_algo(data: &[f32], lag: usize, threshold: f32, influence: f32) -> Vec<i32> {
     //  the results (peaks, 1 or -1)
     let mut signals: Vec<i32> = vec![0; data.len()];
 
     // filter out the signals (peaks) from original list (using influence arg)
-    let mut filtered_data: Vec<f32> = data.clone();
+    let mut filtered_data: Vec<f32> = data.to_owned();
 
     // the current average of the rolling window
     let mut avg_filter: Vec<f32> = vec![0.; data.len()];
