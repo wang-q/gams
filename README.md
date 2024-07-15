@@ -1,9 +1,8 @@
 # gams
 
-[![Build](https://github.com/wang-q/gars/actions/workflows/build.yml/badge.svg)](https://github.com/wang-q/gars/actions)
-[![codecov](https://codecov.io/gh/wang-q/gars/branch/main/graph/badge.svg?token=LtxYK5Fff0)](https://codecov.io/gh/wang-q/gars)
+[![Build](https://github.com/wang-q/gams/actions/workflows/build.yml/badge.svg)](https://github.com/wang-q/gams/actions)
+[![codecov](https://codecov.io/gh/wang-q/gams/branch/main/graph/badge.svg?token=LtxYK5Fff0)](https://codecov.io/gh/wang-q/gams)
 [![license](https://img.shields.io/github/license/wang-q/intspan)](https://github.com//wang-q/intspan)
-[![Lines of code](https://tokei.rs/b1/github/wang-q/gars?category=code)](https://github.com//wang-q/gars)
 
 `gams` - **G**enome **A**nalyst with in-**M**emory **S**torage
 
@@ -17,7 +16,7 @@ cargo install --path . --force --offline
 # test
 cargo test -- --test-threads=1
 
-# gars-stat
+# gams-stat
 cargo install --force --offline --path . --features stat
 
 # build under WSL 2
@@ -28,12 +27,12 @@ cargo build
 
 ## Synopsis
 
-### `gars help`
+### `gams help`
 
 ```text
 Genome Analyst with Rust and rediS
 
-Usage: gars [COMMAND]
+Usage: gams [COMMAND]
 
 Commands:
   env      Create a .env file
@@ -56,15 +55,15 @@ Options:
 
 ```
 
-### `gars-stat --help`
+### `gams-stat --help`
 
 ```text
-gars-stat 0.3.1
+gams-stat 0.3.1
 wang-q <wang-q@outlook.com>
-Build-in stats for gars
+Build-in stats for gams
 
 USAGE:
-    gars-stat [OPTIONS] <infile> <query>
+    gams-stat [OPTIONS] <infile> <query>
 
 ARGS:
     <infile>    Sets the input file to use
@@ -86,45 +85,45 @@ OPTIONS:
 redis-server
 
 # start with dump file
-# redis-server --appendonly no --dir ~/Scripts/rust/gars/tests/S288c/
+# redis-server --appendonly no --dir ~/Scripts/rust/gams/tests/S288c/
 
-# create gars.env
-gars env
+# create gams.env
+gams env
 
 # check DB
-gars status test
+gams status test
 
 # drop DB
-gars status drop
+gams status drop
 
 # generate DB
-gars gen tests/S288c/genome.fa.gz --piece 100000
+gams gen tests/S288c/genome.fa.gz --piece 100000
 
-gars tsv -s 'ctg:*' > tests/S288c/ctg.tsv
-gars tsv -s 'ctg:*' --range > tests/S288c/ctg.range.tsv
+gams tsv -s 'ctg:*' > tests/S288c/ctg.tsv
+gams tsv -s 'ctg:*' --range > tests/S288c/ctg.range.tsv
 
-gars-stat tests/S288c/ctg.tsv ctg
+gams-stat tests/S288c/ctg.tsv ctg
 
 # annotate
-gars anno tests/S288c/intergenic.json tests/S288c/ctg.range.tsv -H
+gams anno tests/S288c/intergenic.json tests/S288c/ctg.range.tsv -H
 
 # locate an range
-gars locate "I(+):1000-1100"
+gams locate "I(+):1000-1100"
 
 # add features
-gars feature tests/S288c/spo11_hot.rg
+gams feature tests/S288c/spo11_hot.rg
 
 # sliding windows around ranges
-gars fsw
+gams fsw
 
 # add ranges
-gars range tests/S288c/spo11_hot.rg tests/S288c/spo11_hot.rg
+gams range tests/S288c/spo11_hot.rg tests/S288c/spo11_hot.rg
 
 # clear
-gars clear range
+gams clear range
 
 # dump DB to redis-server start dir as dump.rdb
-gars status dump
+gams status dump
 
 ```
 
@@ -134,15 +133,15 @@ gars status dump
 # start redis-server
 redis-server &
 
-# gars
-gars env
+# gams
+gams env
 
-gars status drop
+gams status drop
 
-gars gen tests/S288c/genome.fa.gz --piece 500000
+gams gen tests/S288c/genome.fa.gz --piece 500000
 
 # GC-content of 100 bp sliding window in steps of 1 bp
-gars sliding \
+gams sliding \
     --ctg 'ctg:I:*' \
     --size 100 --step 1 \
     --lag 1000 \
@@ -175,10 +174,10 @@ tsv-summarize tests/S288c/I.peaks.tsv \
 #-1      94
 #1       61
 
-gars peak tests/S288c/I.peaks.tsv
+gams peak tests/S288c/I.peaks.tsv
 
 # --parallel
-gars sliding \
+gams sliding \
     --ctg 'ctg:I:*' \
     --size 100 --step 10 \
     --lag 100 \
@@ -194,26 +193,26 @@ gars sliding \
 
 ```shell
 # change redis port
-REDIS_PORT=7379 gars env -o stdout
+REDIS_PORT=7379 gams env -o stdout
 
-gars env
+gams env
 
-gars status test
+gams status test
 
 ```
 
 ## Designing concepts
 
-`Redis` has a low operating cost, but the inter-process communication (IPC) between `gars`
-and `redis` is expensive. After connecting to redis, a `SET` or `HSET` by `gars` consumes about 100
+`Redis` has a low operating cost, but the inter-process communication (IPC) between `gams`
+and `redis` is expensive. After connecting to redis, a `SET` or `HSET` by `gams` consumes about 100
 μs. A pipeline of 100 `HSET` operations takes almost the same amount of time. If `redis-server`
-and `gars` are running on different hosts, the latency is increased for both physical and virtual
-NICs. Typical latency for a Gigabit Ethernet is about 200 μs. Thus, for insert operations, `gars`
+and `gams` are running on different hosts, the latency is increased for both physical and virtual
+NICs. Typical latency for a Gigabit Ethernet is about 200 μs. Thus, for insert operations, `gams`
 packages hundreds of operations locally and then passes them to `redis` at once.
 
 For complex data structures, a local `bincode::serialize()` takes about 50 ns,
 and `bincode::deserialize()` about 100 ns, which is insignificant compared to IPC. Similarly, for
-genome sequences, `gars` gz-compresses them locally before passing them to `redis`.
+genome sequences, `gams` gz-compresses them locally before passing them to `redis`.
 
 ### Contents stored in Redis
 

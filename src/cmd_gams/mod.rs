@@ -1,4 +1,4 @@
-//! Subcommand modules for the `gars` binary.
+//! Subcommand modules for the `gams` binary.
 
 pub mod anno;
 pub mod clear;

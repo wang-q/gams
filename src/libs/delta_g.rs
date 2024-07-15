@@ -3,7 +3,7 @@
 //! # SYNOPSIS
 //!
 //! ```
-//! use gars::DeltaG;
+//! use gams::DeltaG;
 //!
 //! let dg = DeltaG::new();
 //! let seq = "TAACAAGCAATGAGATAGAGAAAGAAATATATCCA";
@@ -46,7 +46,7 @@ impl DeltaG {
     /// Constructed from default temperature and salt concentration
     ///
     /// ```
-    /// # use gars::DeltaG;
+    /// # use gams::DeltaG;
     /// let dg = DeltaG::new();
     /// assert_eq!(*dg.temp(), 37.0);
     /// assert_eq!(*dg.salt(), 1.0);
@@ -62,7 +62,7 @@ impl DeltaG {
     /// Constructed from temperature and salt concentration values
     ///
     /// ```
-    /// # use gars::DeltaG;
+    /// # use gams::DeltaG;
     /// let dg = DeltaG::from(30.0, 0.5);
     /// # assert_eq!(*dg.temp(), 30.0);
     /// # assert_eq!(*dg.salt(), 0.5);

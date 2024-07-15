@@ -57,7 +57,7 @@ pub struct Feature {
 }
 
 pub fn connect() -> redis::Connection {
-    dotenv::from_filename("gars.env").expect("Failed to read gars.env file");
+    dotenv::from_filename("gams.env").expect("Failed to read gams.env file");
 
     let redis_host = dotenv::var("REDIS_HOST").unwrap();
     let redis_port = dotenv::var("REDIS_PORT").unwrap();
@@ -252,9 +252,9 @@ pub fn get_scan_count(conn: &mut redis::Connection, pattern: &str) -> i32 {
 
 ///
 /// ```
-/// // let mut conn = gars::connect();
+/// // let mut conn = gams::connect();
 ///
-/// // let keys = gars::get_scan_vec(&mut conn, "prefix:*");
+/// // let keys = gams::get_scan_vec(&mut conn, "prefix:*");
 /// ```
 pub fn get_scan_vec_n(conn: &mut redis::Connection, pattern: &str, count: usize) -> Vec<String> {
     // matched keys

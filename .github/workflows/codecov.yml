@@ -8,7 +8,7 @@ env:
 
 jobs:
   check:
-    name: codecov gars
+    name: codecov gams
     runs-on: ubuntu-latest
     steps:
       - name: Cache redis

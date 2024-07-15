@@ -1,5 +1,5 @@
 use clap::*;
-use gars::*;
+use gams::*;
 use std::collections::HashMap;
 use std::fs;
 use tera::{Context, Tera};
@@ -28,7 +28,7 @@ Default values:
                 .long("outfile")
                 .short('o')
                 .num_args(1)
-                .default_value("gars.env")
+                .default_value("gams.env")
                 .help("Output filename. [stdout] for screen"),
         )
 }
@@ -54,7 +54,7 @@ pub fn execute(args: &ArgMatches) -> anyhow::Result<()> {
     // create .env
     eprintln!("Create {}", opt.get("outfile").unwrap());
     let mut tera = Tera::default();
-    tera.add_raw_templates(vec![("t", include_str!("../../templates/gars.tera.env"))])
+    tera.add_raw_templates(vec![("t", include_str!("../../templates/gams.tera.env"))])
         .unwrap();
     let rendered = tera.render("t", &context).unwrap();
     intspan::write_lines(opt.get("outfile").unwrap(), &vec![rendered.as_str()])?;

@@ -1,5 +1,5 @@
 use clap::*;
-use gars::Feature;
+use gams::Feature;
 use intspan::*;
 use redis::Commands;
 use std::collections::BTreeMap;
@@ -49,15 +49,15 @@ pub fn execute(args: &ArgMatches) -> anyhow::Result<()> {
     let opt_size = *args.get_one::<usize>("size").unwrap();
 
     // redis connection
-    let mut conn = gars::connect();
+    let mut conn = gams::connect();
 
     // index of ctgs
-    let lapper_of = gars::get_idx_ctg(&mut conn);
+    let lapper_of = gams::get_idx_ctg(&mut conn);
 
     {
         // ctg_id => [Range]
         // act as a sorter
-        let ranges_of = gars::read_range(infile, &lapper_of);
+        let ranges_of = gams::read_range(infile, &lapper_of);
 
         // (ctg_id, Range)
         let mut ctg_ranges: Vec<(String, Range)> = vec![];
@@ -141,7 +141,7 @@ pub fn execute(args: &ArgMatches) -> anyhow::Result<()> {
     }
 
     // number of ranges
-    let n_feature = gars::get_scan_count(&mut conn, "feature:*");
+    let n_feature = gams::get_scan_count(&mut conn, "feature:*");
     eprintln!("There are {} features in the database", n_feature);
 
     Ok(())

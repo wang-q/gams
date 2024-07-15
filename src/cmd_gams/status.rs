@@ -60,7 +60,7 @@ pub fn execute(args: &ArgMatches) -> anyhow::Result<()> {
             info();
         }
         "drop" => {
-            gars::db_drop();
+            gams::db_drop();
         }
         "dump" => {
             dump(file)?;
@@ -77,7 +77,7 @@ pub fn execute(args: &ArgMatches) -> anyhow::Result<()> {
 }
 
 fn info() {
-    let mut conn = gars::connect();
+    let mut conn = gams::connect();
     let info: redis::InfoDict = redis::cmd("INFO")
         .query(&mut conn)
         .expect("Failed to execute INFO");
@@ -128,7 +128,7 @@ fn cli() {
 }
 
 fn dump(file: &str) -> anyhow::Result<()> {
-    let mut conn = gars::connect();
+    let mut conn = gams::connect();
 
     // When LASTSAVE changed, the saving is completed
     let start: i32 = redis::cmd("LASTSAVE")
@@ -182,7 +182,7 @@ fn dump(file: &str) -> anyhow::Result<()> {
 }
 
 fn stop() {
-    let mut conn = gars::connect();
+    let mut conn = gams::connect();
 
     redis::cmd("SHUTDOWN")
         .arg("SAVE")
@@ -192,7 +192,7 @@ fn stop() {
 }
 
 fn basics() {
-    let mut conn = gars::connect();
+    let mut conn = gams::connect();
     println!("******* Running SET, GET, INCR commands *******");
 
     let _: () = redis::cmd("SET")
@@ -220,7 +220,7 @@ fn basics() {
 }
 
 fn hash() {
-    let mut conn = gars::connect();
+    let mut conn = gams::connect();
 
     println!("******* Running HASH commands *******");
 
@@ -269,7 +269,7 @@ fn hash() {
 }
 
 fn list() {
-    let mut conn = gars::connect();
+    let mut conn = gams::connect();
     println!("******* Running LIST commands *******");
 
     let list_name = "items";
@@ -304,7 +304,7 @@ fn list() {
 }
 
 fn set() {
-    let mut conn = gars::connect();
+    let mut conn = gams::connect();
     println!("******* Running SET commands *******");
 
     let set_name = "users";
@@ -332,7 +332,7 @@ fn set() {
 }
 
 fn sorted_set() {
-    let mut conn = gars::connect();
+    let mut conn = gams::connect();
     println!("******* Running SORTED SET commands *******");
 
     let sorted_set = "leaderboard";
@@ -370,7 +370,7 @@ fn sorted_set() {
 }
 
 fn pipe_atomic() {
-    let mut conn = gars::connect();
+    let mut conn = gams::connect();
     println!("******* Running MULTI EXEC commands *******");
 
     redis::pipe()
@@ -446,7 +446,7 @@ fn pipe_atomic() {
 }
 
 fn script() {
-    let mut conn = gars::connect();
+    let mut conn = gams::connect();
     println!("******* Running Lua Scripts *******");
 
     let script = redis::Script::new(

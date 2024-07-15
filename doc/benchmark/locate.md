@@ -1,41 +1,41 @@
-# `gars locate`
+# `gams locate`
 
 ## ZRANGE and Lapper
 
 ```shell
 redis-server
 
-gars env
+gams env
 
-gars status drop
+gams status drop
 
 # generate DB
-gars gen tests/S288c/genome.fa.gz --piece 100000
+gams gen tests/S288c/genome.fa.gz --piece 100000
 
 # rebuild the lapper index of ctgs
-gars locate -r "I(+):1000-1100" "II:1000-1100" "Mito:1000-1100"
+gams locate -r "I(+):1000-1100" "II:1000-1100" "Mito:1000-1100"
 
 # cached index
-gars locate "I(+):1000-1100" "II:1000-1100" "Mito:1000-1100"
+gams locate "I(+):1000-1100" "II:1000-1100" "Mito:1000-1100"
 
 # Deserialize the index on request
-gars locate --lapper "I(+):1000-1100" "II:1000-1100" "Mito:1000-1100"
+gams locate --lapper "I(+):1000-1100" "II:1000-1100" "Mito:1000-1100"
 
 # ZRANGE
-gars locate --zrange "I(+):1000-1100" "II:1000-1100" "Mito:1000-1100"
+gams locate --zrange "I(+):1000-1100" "II:1000-1100" "Mito:1000-1100"
 
 # spo11
-gars locate -f tests/S288c/spo11_hot.rg
+gams locate -f tests/S288c/spo11_hot.rg
 
 hyperfine -N --export-markdown locate.md.tmp \
     -n idx \
-    'gars locate -f tests/S288c/spo11_hot.rg' \
+    'gams locate -f tests/S288c/spo11_hot.rg' \
     -n "rebuild; idx" \
-    'gars locate -r -f tests/S288c/spo11_hot.rg' \
+    'gams locate -r -f tests/S288c/spo11_hot.rg' \
     -n lapper \
-    'gars locate --lapper -f tests/S288c/spo11_hot.rg' \
+    'gams locate --lapper -f tests/S288c/spo11_hot.rg' \
     -n zrange \
-    'gars locate --zrange -f tests/S288c/spo11_hot.rg'
+    'gams locate --zrange -f tests/S288c/spo11_hot.rg'
 
 cat locate.md.tmp
 
@@ -90,12 +90,12 @@ cp /usr/lib/redis/modules/redisearch.so .
 docker run -p 6379:6379 redislabs/redisearch
 # redis-server --loadmodule ~/redisearch.so
 
-gars env
+gams env
 
-gars status drop
+gams status drop
 
 # generate DB
-gars gen tests/S288c/genome.fa.gz --piece 100000
+gams gen tests/S288c/genome.fa.gz --piece 100000
 
 # ZRANGE
 redis-cli --raw <<EOF

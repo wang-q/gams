@@ -19,7 +19,7 @@ fn rand_str(len: usize) -> String {
 }
 
 fn rand_insert(size: usize) {
-    let mut conn = gars::connect();
+    let mut conn = gams::connect();
 
     for _ in 0..size {
         let _: () = conn
@@ -30,34 +30,34 @@ fn rand_insert(size: usize) {
 }
 
 pub fn bench_redis_scan(c: &mut Criterion) {
-    let mut conn = gars::connect();
+    let mut conn = gams::connect();
 
-    gars::db_drop();
+    gams::db_drop();
     rand_insert(black_box(5000));
 
     c.bench_function("scan_match_10", |b| {
         b.iter(|| {
-            let _: Vec<_> = gars::get_scan_match_vec(&mut conn, "prefix:*");
+            let _: Vec<_> = gams::get_scan_match_vec(&mut conn, "prefix:*");
         })
     });
     c.bench_function("scan_count_10", |b| {
         b.iter(|| {
-            let _: Vec<_> = gars::get_scan_vec_n(&mut conn, "prefix:*", 10);
+            let _: Vec<_> = gams::get_scan_vec_n(&mut conn, "prefix:*", 10);
         })
     });
     c.bench_function("scan_count_100", |b| {
         b.iter(|| {
-            let _: Vec<_> = gars::get_scan_vec_n(&mut conn, "prefix:*", 100);
+            let _: Vec<_> = gams::get_scan_vec_n(&mut conn, "prefix:*", 100);
         })
     });
     c.bench_function("scan_count_1000", |b| {
         b.iter(|| {
-            let _: Vec<_> = gars::get_scan_vec_n(&mut conn, "prefix:*", 1000);
+            let _: Vec<_> = gams::get_scan_vec_n(&mut conn, "prefix:*", 1000);
         })
     });
     c.bench_function("scan_count_10000", |b| {
         b.iter(|| {
-            let _: Vec<_> = gars::get_scan_vec_n(&mut conn, "prefix:*", 10000);
+            let _: Vec<_> = gams::get_scan_vec_n(&mut conn, "prefix:*", 10000);
         })
     });
 }

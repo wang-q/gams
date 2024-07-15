@@ -1,61 +1,61 @@
 # Atha
 
-## `gars`
+## `gams`
 
 ```shell
 # Avoid NTFS
-mkdir -p ~/gars
-cd ~/gars
+mkdir -p ~/gams
+cd ~/gams
 
-cp -R ~/data/gars/Atha/genome .
-cp -R ~/data/gars/Atha/features .
+cp -R ~/data/gams/Atha/genome .
+cp -R ~/data/gams/Atha/features .
 
 # redis
 rm dump.rdb
 redis-server &
 
-# gars
-gars env
+# gams
+gams env
 
 # flamegraph
 #sudo apt install linux-tools-generic
 #export PERF=/usr/lib/linux-tools/5.4.0-174-generic/perf
-#flamegraph -- gars status drop
-#flamegraph -- gars gen genome/genome.fa.gz --piece 500000
+#flamegraph -- gams status drop
+#flamegraph -- gams gen genome/genome.fa.gz --piece 500000
 
-hyperfine --warmup 1 --export-markdown gars.md.tmp \
+hyperfine --warmup 1 --export-markdown gams.md.tmp \
     -n 'drop; gen;' \
     '
-    gars status drop; gars gen genome/genome.fa.gz --piece 500000;
+    gams status drop; gams gen genome/genome.fa.gz --piece 500000;
     ' \
     -n 'd-g; range;' \
     '
-    gars status drop; gars gen genome/genome.fa.gz --piece 500000;
-    gars range features/T-DNA.CSHL.rg;
+    gams status drop; gams gen genome/genome.fa.gz --piece 500000;
+    gams range features/T-DNA.CSHL.rg;
     ' \
     -n 'clear; range;' \
     '
-    gars clear range feature;
-    gars range features/T-DNA.CSHL.rg;
+    gams clear range feature;
+    gams range features/T-DNA.CSHL.rg;
     ' \
     -n 'clear; feature;' \
     '
-    gars clear range feature;
-    gars feature features/T-DNA.CSHL.rg --tag CSHL;
+    gams clear range feature;
+    gams feature features/T-DNA.CSHL.rg --tag CSHL;
     ' \
     -n 'clear; feature; fsw;' \
     '
-    gars clear range feature;
-    gars feature features/T-DNA.CSHL.rg --tag CSHL;
-    gars fsw;
+    gams clear range feature;
+    gams feature features/T-DNA.CSHL.rg --tag CSHL;
+    gams fsw;
     ' \
     -n 'clear; sliding;' \
     '
-    gars clear range feature;
-    gars sliding --size 100 --step 20 --lag 50 > /dev/null;
+    gams clear range feature;
+    gams sliding --size 100 --step 20 --lag 50 > /dev/null;
     '
 
-cat gars.md.tmp
+cat gams.md.tmp
 
 ```
 
@@ -106,43 +106,43 @@ cat gars.md.tmp
 ## Batch size
 
 ```shell
-cd ~/gars/
+cd ~/gams/
 
 # redis
 rm dump.rdb
 redis-server &
 
-# gars
-gars env
+# gams
+gams env
 
 # feature
-gars status drop; gars gen genome/genome.fa.gz --piece 500000;
+gams status drop; gams gen genome/genome.fa.gz --piece 500000;
 
 hyperfine --warmup 1 --export-markdown batch.md.tmp \
     -n 'size 1' \
     '
-    gars clear feature;
-    gars feature features/T-DNA.CSHL.rg --tag CSHL --size 1;
+    gams clear feature;
+    gams feature features/T-DNA.CSHL.rg --tag CSHL --size 1;
     ' \
     -n 'size 10' \
     '
-    gars clear feature;
-    gars feature features/T-DNA.CSHL.rg --tag CSHL --size 10;
+    gams clear feature;
+    gams feature features/T-DNA.CSHL.rg --tag CSHL --size 10;
     ' \
     -n 'size 50' \
     '
-    gars clear feature;
-    gars feature features/T-DNA.CSHL.rg --tag CSHL --size 50;
+    gams clear feature;
+    gams feature features/T-DNA.CSHL.rg --tag CSHL --size 50;
     ' \
     -n 'size 100' \
     '
-    gars clear feature;
-    gars feature features/T-DNA.CSHL.rg --tag CSHL --size 100;
+    gams clear feature;
+    gams feature features/T-DNA.CSHL.rg --tag CSHL --size 100;
     ' \
     -n 'size 1000' \
     '
-    gars clear feature;
-    gars feature features/T-DNA.CSHL.rg --tag CSHL --size 1000;
+    gams clear feature;
+    gams feature features/T-DNA.CSHL.rg --tag CSHL --size 1000;
     '
 
 cat batch.md.tmp
@@ -172,96 +172,96 @@ cat batch.md.tmp
 ## threads
 
 ```shell
-cd ~/gars/
+cd ~/gams/
 
 # redis
 rm dump.rdb
 redis-server &
 
-# gars
-gars env
+# gams
+gams env
 
 # feature
-gars status drop; gars gen genome/genome.fa.gz --piece 500000;
+gams status drop; gams gen genome/genome.fa.gz --piece 500000;
 
 hyperfine --warmup 1 --export-markdown threads.md.tmp \
     -n 'serial' \
     '
-    gars clear feature;
-    gars feature features/T-DNA.CSHL.rg --tag CSHL;
-    gars feature features/T-DNA.FLAG.rg --tag FLAG;
-    gars feature features/T-DNA.MX.rg   --tag MX;
-    gars feature features/T-DNA.RATM.rg --tag RATM;
+    gams clear feature;
+    gams feature features/T-DNA.CSHL.rg --tag CSHL;
+    gams feature features/T-DNA.FLAG.rg --tag FLAG;
+    gams feature features/T-DNA.MX.rg   --tag MX;
+    gams feature features/T-DNA.RATM.rg --tag RATM;
     ' \
     -n 'parallel -j 1' \
     '
-    gars clear feature;
+    gams clear feature;
     parallel -j 1 "
         echo {}
-        gars feature features/T-DNA.{}.rg --tag {}
+        gams feature features/T-DNA.{}.rg --tag {}
         " ::: CSHL FLAG MX RATM
     ' \
     -n 'parallel -j 2' \
     '
-    gars clear feature;
+    gams clear feature;
     parallel -j 2 "
         echo {}
-        gars feature features/T-DNA.{}.rg --tag {}
+        gams feature features/T-DNA.{}.rg --tag {}
         " ::: CSHL FLAG MX RATM
     ' \
     -n 'parallel -j 4' \
     '
-    gars clear feature;
+    gams clear feature;
     parallel -j 4 "
         echo {}
-        gars feature features/T-DNA.{}.rg --tag {}
+        gams feature features/T-DNA.{}.rg --tag {}
         " ::: CSHL FLAG MX RATM
     '
 
 cat threads.md.tmp
 
 # fsw
-gars status drop
-gars gen genome/genome.fa.gz --piece 500000
+gams status drop
+gams gen genome/genome.fa.gz --piece 500000
 
-gars feature features/T-DNA.CSHL.rg --tag CSHL;
-gars feature features/T-DNA.FLAG.rg --tag FLAG;
+gams feature features/T-DNA.CSHL.rg --tag CSHL;
+gams feature features/T-DNA.FLAG.rg --tag FLAG;
 
 hyperfine --warmup 1 --export-markdown threads.md.tmp \
     -n 'parallel 1' \
     '
-    gars fsw --parallel 1 > /dev/null;
+    gams fsw --parallel 1 > /dev/null;
     ' \
     -n 'parallel 2' \
     '
-    gars fsw --parallel 2 > /dev/null;
+    gams fsw --parallel 2 > /dev/null;
     ' \
     -n 'parallel 4' \
     '
-    gars fsw --parallel 4 > /dev/null;
+    gams fsw --parallel 4 > /dev/null;
     ' \
     -n 'parallel 8' \
     '
-    gars fsw --parallel 8 > /dev/null;
+    gams fsw --parallel 8 > /dev/null;
     ' \
     -n 'parallel 12' \
     '
-    gars fsw --parallel 12 > /dev/null;
+    gams fsw --parallel 12 > /dev/null;
     ' \
     -n 'parallel 16' \
     '
-    gars fsw --parallel 16 > /dev/null;
+    gams fsw --parallel 16 > /dev/null;
     '
 
 cat threads.md.tmp
 
 # sliding
-gars status drop; gars gen genome/genome.fa.gz --piece 500000;
+gams status drop; gams gen genome/genome.fa.gz --piece 500000;
 
 hyperfine --warmup 1 --export-markdown threads.md.tmp \
     -n 'parallel 1' \
     '
-    gars sliding \
+    gams sliding \
         --ctg "ctg:1:*" \
         --size 100 --step 5 \
         --lag 200 --threshold 3.0 --influence 1.0 \
@@ -270,7 +270,7 @@ hyperfine --warmup 1 --export-markdown threads.md.tmp \
     ' \
     -n 'parallel 2' \
     '
-    gars sliding \
+    gams sliding \
         --ctg "ctg:1:*" \
         --size 100 --step 5 \
         --lag 200 --threshold 3.0 --influence 1.0 \
@@ -279,7 +279,7 @@ hyperfine --warmup 1 --export-markdown threads.md.tmp \
     ' \
     -n 'parallel 4' \
     '
-    gars sliding \
+    gams sliding \
         --ctg "ctg:1:*" \
         --size 100 --step 5 \
         --lag 200 --threshold 3.0 --influence 1.0 \
@@ -288,7 +288,7 @@ hyperfine --warmup 1 --export-markdown threads.md.tmp \
     ' \
     -n 'parallel 8' \
     '
-    gars sliding \
+    gams sliding \
         --ctg "ctg:1:*" \
         --size 100 --step 5 \
         --lag 200 --threshold 3.0 --influence 1.0 \
@@ -297,7 +297,7 @@ hyperfine --warmup 1 --export-markdown threads.md.tmp \
     ' \
     -n 'parallel 12' \
     '
-    gars sliding \
+    gams sliding \
         --ctg "ctg:1:*" \
         --size 100 --step 5 \
         --lag 200 --threshold 3.0 --influence 1.0 \
@@ -306,7 +306,7 @@ hyperfine --warmup 1 --export-markdown threads.md.tmp \
     ' \
     -n 'parallel 16' \
     '
-    gars sliding \
+    gams sliding \
         --ctg "ctg:1:*" \
         --size 100 --step 5 \
         --lag 200 --threshold 3.0 --influence 1.0 \
@@ -435,29 +435,29 @@ cat threads.md.tmp
 | `parallel 12` | 1.089 ± 0.013 |   1.072 |   1.109 | 1.01 ± 0.02 |
 | `parallel 16` | 1.076 ± 0.012 |   1.063 |   1.092 |        1.00 |
 
-## `gars locate`
+## `gams locate`
 
 ```shell
-cd ~/gars/
+cd ~/gams/
 
 # redis
 rm dump.rdb
 redis-server &
 
-# gars
-gars env
+# gams
+gams env
 
-gars status drop
+gams status drop
 
-gars gen genome/genome.fa.gz --piece 500000
+gams gen genome/genome.fa.gz --piece 500000
 
 hyperfine --warmup 1 --export-markdown locate.md.tmp \
     -n 'idx' \
-    'gars locate -f features/T-DNA.CSHL.rg' \
+    'gams locate -f features/T-DNA.CSHL.rg' \
     -n 'lapper' \
-    'gars locate --lapper -f features/T-DNA.CSHL.rg' \
+    'gams locate --lapper -f features/T-DNA.CSHL.rg' \
     -n 'zrange' \
-    'gars locate --zrange -f features/T-DNA.CSHL.rg'
+    'gams locate --zrange -f features/T-DNA.CSHL.rg'
 
 cat locate.md.tmp
 
@@ -499,39 +499,39 @@ cat locate.md.tmp
 
 ```shell
 # redis
-cd ~/data/gars/Atha/
+cd ~/data/gams/Atha/
 rm dump.rdb
 redis-server
 
-# gars
-cd ~/data/gars/Atha/
-gars env
+# gams
+cd ~/data/gams/Atha/
+gams env
 
-gars status drop
+gams status drop
 
-gars gen genome/genome.fa.gz --piece 500000
+gams gen genome/genome.fa.gz --piece 500000
 
-gars range features/T-DNA.CSHL.rg
+gams range features/T-DNA.CSHL.rg
 
 hyperfine --warmup 1 --export-markdown rgr.md.tmp \
     -n 'ctg - tsv-sort' \
     '
-    gars tsv -s "ctg:*" |
+    gams tsv -s "ctg:*" |
         keep-header -- tsv-sort -k2,2 -k3,3n -k4,4n
     ' \
     -n 'ctg - rgr sort' \
     '
-    gars tsv -s "ctg:*" --range |
+    gams tsv -s "ctg:*" --range |
         rgr sort -H -f 2 stdin
     ' \
     -n 'range - tsv-sort' \
     '
-    gars tsv -s "range:*" |
+    gams tsv -s "range:*" |
         keep-header -- tsv-sort -k2,2 -k3,3n -k4,4n
     ' \
     -n 'range - rgr sort' \
     '
-    gars tsv -s "range:*" --range |
+    gams tsv -s "range:*" --range |
         rgr sort -H -f 2 stdin
     '
 
@@ -566,64 +566,64 @@ cat rgr.md.tmp
 | `range - tsv-sort` |   663.1 ± 3.3 |    656.4 |    667.3 | 10.13 ± 0.17 |
 | `range - rgr sort` | 1147.0 ± 11.4 |   1122.8 |   1169.8 | 17.53 ± 0.34 |
 
-## `rgr prop` and `gars anno`
+## `rgr prop` and `gams anno`
 
 ```shell
 # redis
-cd ~/data/gars/Atha/
+cd ~/data/gams/Atha/
 rm dump.rdb
 redis-server
 
-# gars
-cd ~/data/gars/Atha/
-gars env
+# gams
+cd ~/data/gams/Atha/
+gams env
 
-gars status drop
+gams status drop
 
-gars gen genome/genome.fa.gz --piece 500000
+gams gen genome/genome.fa.gz --piece 500000
 
-gars range features/T-DNA.CSHL.rg
+gams range features/T-DNA.CSHL.rg
 
 hyperfine --warmup 1 --export-markdown prop.md.tmp \
     -n 'ctg - cds - rgr prop' \
     '
-    gars tsv -s "ctg:*" --range |
+    gams tsv -s "ctg:*" --range |
         rgr prop genome/cds.yml stdin -H -f 2 --prefix
     ' \
-    -n 'ctg - cds - gars anno' \
+    -n 'ctg - cds - gams anno' \
     '
-    gars tsv -s "ctg:*" --range |
-        gars anno genome/cds.yml stdin -H
+    gams tsv -s "ctg:*" --range |
+        gams anno genome/cds.yml stdin -H
     ' \
     -n 'ctg - repeats - rgr prop' \
     '
-    gars tsv -s "ctg:*" --range |
+    gams tsv -s "ctg:*" --range |
         rgr prop genome/repeats.yml stdin -H -f 2 --prefix
     ' \
-    -n 'ctg - repeats - gars anno' \
+    -n 'ctg - repeats - gams anno' \
     '
-    gars tsv -s "ctg:*" --range |
-        gars anno genome/repeats.yml stdin -H
+    gams tsv -s "ctg:*" --range |
+        gams anno genome/repeats.yml stdin -H
     ' \
     -n 'range - cds - rgr prop' \
     '
-    gars tsv -s "range:*" --range |
+    gams tsv -s "range:*" --range |
         rgr prop genome/cds.yml stdin -H -f 2 --prefix
     ' \
-    -n 'range - cds - gars anno' \
+    -n 'range - cds - gams anno' \
     '
-    gars tsv -s "range:*" --range |
-        gars anno genome/cds.yml stdin -H
+    gams tsv -s "range:*" --range |
+        gams anno genome/cds.yml stdin -H
     ' \
     -n 'range - repeats - rgr prop' \
     '
-    gars tsv -s "range:*" --range |
+    gams tsv -s "range:*" --range |
         rgr prop genome/repeats.yml stdin -H -f 2 --prefix
     ' \
-    -n 'range - repeats - gars anno' \
+    -n 'range - repeats - gams anno' \
     '
-    gars tsv -s "range:*" --range |
-        gars anno genome/repeats.yml stdin -H
+    gams tsv -s "range:*" --range |
+        gams anno genome/repeats.yml stdin -H
     '
 
 cat prop.md.tmp
@@ -635,36 +635,36 @@ cat prop.md.tmp
 | Command                       |     Mean [ms] | Min [ms] | Max [ms] |     Relative |
 |:------------------------------|--------------:|---------:|---------:|-------------:|
 | `ctg - cds - rgr prop`        |   388.5 ± 2.9 |    383.8 |    392.6 |         1.00 |
-| `ctg - cds - gars anno`       |  418.0 ± 11.8 |    410.0 |    449.7 |  1.08 ± 0.03 |
+| `ctg - cds - gams anno`       |  418.0 ± 11.8 |    410.0 |    449.7 |  1.08 ± 0.03 |
 | `ctg - repeats - rgr prop`    |   731.7 ± 9.4 |    720.0 |    748.1 |  1.88 ± 0.03 |
-| `ctg - repeats - gars anno`   |   753.7 ± 3.0 |    748.8 |    759.4 |  1.94 ± 0.02 |
+| `ctg - repeats - gams anno`   |   753.7 ± 3.0 |    748.8 |    759.4 |  1.94 ± 0.02 |
 | `range - cds - rgr prop`      | 5686.0 ± 13.0 |   5669.5 |   5713.4 | 14.63 ± 0.11 |
-| `range - cds - gars anno`     | 1760.8 ± 49.7 |   1705.4 |   1887.6 |  4.53 ± 0.13 |
+| `range - cds - gams anno`     | 1760.8 ± 49.7 |   1705.4 |   1887.6 |  4.53 ± 0.13 |
 | `range - repeats - rgr prop`  |  8776.2 ± 8.8 |   8765.1 |   8796.1 | 22.59 ± 0.17 |
-| `range - repeats - gars anno` | 2088.1 ± 54.3 |   2032.1 |   2179.1 |  5.37 ± 0.15 |
+| `range - repeats - gams anno` | 2088.1 ± 54.3 |   2032.1 |   2179.1 |  5.37 ± 0.15 |
 
 ### E5-2680 v3 RHEL 7.7
 
 | Command                       |     Mean [ms] | Min [ms] | Max [ms] |    Relative |
 |:------------------------------|--------------:|---------:|---------:|------------:|
 | `ctg - cds - rgr prop`        |   807.6 ± 9.9 |    790.9 |    821.8 |        1.00 |
-| `ctg - cds - gars anno`       |   864.0 ± 8.0 |    847.1 |    872.2 | 1.07 ± 0.02 |
+| `ctg - cds - gams anno`       |   864.0 ± 8.0 |    847.1 |    872.2 | 1.07 ± 0.02 |
 | `ctg - repeats - rgr prop`    | 1750.2 ± 25.0 |   1733.5 |   1818.1 | 2.17 ± 0.04 |
-| `ctg - repeats - gars anno`   | 1856.0 ± 30.1 |   1807.6 |   1892.9 | 2.30 ± 0.05 |
+| `ctg - repeats - gams anno`   | 1856.0 ± 30.1 |   1807.6 |   1892.9 | 2.30 ± 0.05 |
 | `range - cds - rgr prop`      | 4319.9 ± 85.2 |   4227.6 |   4455.6 | 5.35 ± 0.12 |
-| `range - cds - gars anno`     | 1816.9 ± 24.8 |   1761.9 |   1852.8 | 2.25 ± 0.04 |
+| `range - cds - gams anno`     | 1816.9 ± 24.8 |   1761.9 |   1852.8 | 2.25 ± 0.04 |
 | `range - repeats - rgr prop`  | 5088.4 ± 58.3 |   5003.0 |   5158.6 | 6.30 ± 0.11 |
-| `range - repeats - gars anno` | 2771.8 ± 25.3 |   2736.0 |   2819.2 | 3.43 ± 0.05 |
+| `range - repeats - gams anno` | 2771.8 ± 25.3 |   2736.0 |   2819.2 | 3.43 ± 0.05 |
 
 ### Apple M2 macOS 13.4
 
 | Command                       |     Mean [ms] | Min [ms] | Max [ms] |    Relative |
 |:------------------------------|--------------:|---------:|---------:|------------:|
 | `ctg - cds - rgr prop`        |   498.2 ± 5.7 |    486.9 |    504.7 |        1.00 |
-| `ctg - cds - gars anno`       |   512.9 ± 2.9 |    510.1 |    517.5 | 1.03 ± 0.01 |
+| `ctg - cds - gams anno`       |   512.9 ± 2.9 |    510.1 |    517.5 | 1.03 ± 0.01 |
 | `ctg - repeats - rgr prop`    |  1057.5 ± 3.2 |   1053.6 |   1064.4 | 2.12 ± 0.03 |
-| `ctg - repeats - gars anno`   |  1082.4 ± 5.8 |   1077.1 |   1097.5 | 2.17 ± 0.03 |
+| `ctg - repeats - gams anno`   |  1082.4 ± 5.8 |   1077.1 |   1097.5 | 2.17 ± 0.03 |
 | `range - cds - rgr prop`      | 3102.5 ± 12.2 |   3085.7 |   3118.3 | 6.23 ± 0.08 |
-| `range - cds - gars anno`     |  1479.7 ± 5.7 |   1471.3 |   1489.5 | 2.97 ± 0.04 |
+| `range - cds - gams anno`     |  1479.7 ± 5.7 |   1471.3 |   1489.5 | 2.97 ± 0.04 |
 | `range - repeats - rgr prop`  | 4221.7 ± 18.5 |   4186.9 |   4252.5 | 8.47 ± 0.10 |
-| `range - repeats - gars anno` |  2013.6 ± 9.3 |   2007.8 |   2039.6 | 4.04 ± 0.05 |
+| `range - repeats - gams anno` |  2013.6 ± 9.3 |   2007.8 |   2039.6 | 4.04 ± 0.05 |

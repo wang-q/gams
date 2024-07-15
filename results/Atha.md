@@ -3,8 +3,8 @@
 ## genome
 
 ```shell
-mkdir -p ~/data/gars/Atha/genome
-cd ~/data/gars/Atha/genome
+mkdir -p ~/data/gams/Atha/genome
+cd ~/data/gams/Atha/genome
 
 # download
 wget -N https://ftp.ensemblgenomes.ebi.ac.uk/pub/plants/release-58/fasta/arabidopsis_thaliana/dna/Arabidopsis_thaliana.TAIR10.dna_sm.toplevel.fa.gz
@@ -67,8 +67,8 @@ spanr stat chr.sizes anno.json --all
 ## T-DNA
 
 ```shell
-mkdir -p ~/data/gars/Atha/features/
-cd ~/data/gars/Atha/features/
+mkdir -p ~/data/gams/Atha/features/
+cd ~/data/gams/Atha/features/
 
 for name in CSHL FLAG MX RATM; do
     aria2c -j 4 -x 4 -s 2 --file-allocation=none -c \
@@ -94,27 +94,27 @@ done
 
 ```
 
-## `gars`
+## `gams`
 
 ### Contigs
 
 ```shell
-cd ~/data/gars/Atha/
+cd ~/data/gams/Atha/
 
 # start redis-server
 redis-server &
-gars env --all
+gams env --all
 
-gars status drop
+gams status drop
 
-gars gen genome/genome.fa.gz --piece 500000
+gams gen genome/genome.fa.gz --piece 500000
 
-gars status dump dumps/ctg.rdb
+gams status dump dumps/ctg.rdb
 
 # tsv exports
-time gars tsv -s 'ctg:*' --range |
-    gars anno -H genome/cds.json stdin |
-    gars anno -H genome/repeats.json stdin |
+time gams tsv -s 'ctg:*' --range |
+    gams anno -H genome/cds.json stdin |
+    gams anno -H genome/repeats.json stdin |
     rgr sort -H -f 2 stdin |
     tsv-select -H -e range |
     pigz \
@@ -131,15 +131,15 @@ gzip -dcf tsvs/ctg.tsv.gz |
 # ranges
 time parallel -j 4 -k --line-buffer '
     echo {}
-    gars range features/T-DNA.{}.rg
+    gams range features/T-DNA.{}.rg
     ' ::: CSHL FLAG MX RATM
 #real    0m1.086s
 #user    0m0.423s
 #sys     0m0.225s
 
-time gars tsv -s 'range:*' --range |
-    gars anno genome/cds.json stdin -H |
-    gars anno genome/repeats.json stdin -H |
+time gams tsv -s 'range:*' --range |
+    gams anno genome/cds.json stdin -H |
+    gams anno genome/repeats.json stdin -H |
     rgr sort -H -f 2 stdin |
     tsv-select -H -e range |
     pigz \
@@ -148,35 +148,35 @@ time gars tsv -s 'range:*' --range |
 #user    0m4.481s
 #sys     0m4.459s
 
-gars status dump dumps/range.rdb
+gams status dump dumps/range.rdb
 
 # stop the server
-gars status stop
+gams status stop
 
 ```
 
 ### Features and fsw
 
 ```shell
-cd ~/data/gars/Atha/
+cd ~/data/gams/Atha/
 
 rm ./dump.rdb
-redis-server --appendonly no --dir ~/data/gars/Atha/
+redis-server --appendonly no --dir ~/data/gams/Atha/
 
-gars env --all
+gams env --all
 
-gars status drop
+gams status drop
 
-gars gen genome/genome.fa.gz --piece 500000
+gams gen genome/genome.fa.gz --piece 500000
 
 parallel -j 4 -k --line-buffer '
     echo {}
-    gars feature features/T-DNA.{}.rg --tag {}
+    gams feature features/T-DNA.{}.rg --tag {}
     ' ::: CSHL FLAG MX RATM
 
-time gars tsv -s 'feature:*' --range |
-    gars anno genome/cds.json stdin -H |
-    gars anno genome/repeats.json stdin -H |
+time gams tsv -s 'feature:*' --range |
+    gams anno genome/cds.json stdin -H |
+    gams anno genome/repeats.json stdin -H |
     rgr sort -H -f 2 stdin |
     tsv-select -H -e range |
     pigz \
@@ -185,10 +185,10 @@ time gars tsv -s 'feature:*' --range |
 #user    0m5.084s
 #sys     0m4.266s
 
-gars status dump && sync dump.rdb && cp dump.rdb dumps/feature.dump.rdb
+gams status dump && sync dump.rdb && cp dump.rdb dumps/feature.dump.rdb
 
 # fsw
-time gars fsw --range |
+time gams fsw --range |
     rgr sort -H -f 2 stdin |
     pigz \
     > tsvs/fsw.tsv.gz
@@ -199,9 +199,9 @@ time gars fsw --range |
 time cat genome/chr.sizes |
     cut -f 1 |
     parallel -j 4 -k --line-buffer '
-        gars fsw --ctg "ctg:{}:*" --range |
-            gars anno genome/cds.json stdin -H |
-            gars anno genome/repeats.json stdin -H |
+        gams fsw --ctg "ctg:{}:*" --range |
+            gams anno genome/cds.json stdin -H |
+            gams anno genome/repeats.json stdin -H |
             rgr sort -H -f 2 stdin
         ' |
     rgr sort -H -f 2 stdin |
@@ -213,7 +213,7 @@ time cat genome/chr.sizes |
 #user    2m52.237s
 #sys     0m9.119s
 
-gars status stop
+gams status stop
 
 ```
 
@@ -222,12 +222,12 @@ gars status stop
 Restores from ctg.dump.rdb
 
 ```shell
-cd ~/data/gars/Atha/
+cd ~/data/gams/Atha/
 
 cp dumps/ctg.rdb ./dump.rdb
 redis-server &
 
-gars env
+gams env
 
 # split a chr to 10
 cat ctg.lst |
@@ -245,7 +245,7 @@ time cat ctg.group.lst |
         prefix=$(echo {} | sed "s/[^[:alnum:]-]/_/g")
         export prefix
 
-        gars sliding \
+        gams sliding \
             --ctg {} \
             --size 100 --step 1 \
             --lag 1000 --threshold 3.0 --influence 1.0 \
@@ -282,12 +282,12 @@ tsv-summarize tsvs/peak.tsv \
 #-1      27371
 
 # Loading peaks
-time gars peak tsvs/peak.tsv
+time gams peak tsvs/peak.tsv
 #real    0m23.482s
 #user    0m5.295s
 #sys     0m13.237s
 
-gars tsv -s "peak:*" |
+gams tsv -s "peak:*" |
     keep-header -- tsv-sort -k2,2 -k3,3n -k4,4n \
     > tsvs/wave.tsv
 
@@ -308,7 +308,7 @@ tsv-filter tsvs/wave.tsv -H --or \
     tsv-summarize -H --count
 # 13003
 
-gars status stop
+gams status stop
 
 ```
 
@@ -317,7 +317,7 @@ gars status stop
 * server
 
 ```shell
-cd ~/data/gars/Atha/
+cd ~/data/gams/Atha/
 
 mkdir -p clickhouse
 cd clickhouse
@@ -328,7 +328,7 @@ clickhouse server
 * load
 
 ```shell
-cd ~/data/gars/Atha/
+cd ~/data/gams/Atha/
 
 for q in ctg fsw; do
     clickhouse client --query "DROP TABLE IF EXISTS ${q}"
@@ -346,7 +346,7 @@ done
 * queries
 
 ```shell
-cd ~/data/gars/Atha/
+cd ~/data/gams/Atha/
 
 mkdir -p stats
 
@@ -388,7 +388,7 @@ done
 ### fsw-distance-tag
 
 ```shell
-cd ~/data/gars/Atha/
+cd ~/data/gams/Atha/
 
 mkdir -p plots
 

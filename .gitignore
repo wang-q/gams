@@ -102,7 +102,7 @@ Cargo.lock
 *.tex
 *.pdf
 
-gars.env
+gams.env
 *.rdb
 *.tsv
 *.lst

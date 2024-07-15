@@ -1,13 +1,13 @@
 [package]
-name = "gars"
+name = "gams"
 version = "0.3.1"
 authors = ["wang-q <wang-q@outlook.com>"]
 edition = "2018"
 description = "Genome Analyst with Rust and rediS"
-documentation = "https://github.com/wang-q/gars"
+documentation = "https://github.com/wang-q/gams"
 readme = "README.md"
-homepage = "https://github.com/wang-q/gars"
-repository = "https://github.com/wang-q/gars"
+homepage = "https://github.com/wang-q/gams"
+repository = "https://github.com/wang-q/gams"
 license = "MIT"
 categories = ["command-line-utilities", "science"]
 publish = false
@@ -28,9 +28,6 @@ envy = "0.4.2"
 dotenv = "0.15.0"
 crossbeam = "0.8.4"
 
-#log = "0.4"
-#simplelog = "^0.10.0"
-
 intspan = "0.7.5"
 bio = "1.5.0"
 
@@ -47,17 +44,17 @@ tokio = { version = "1.36.0", optional = true, features = ["rt"] }
 stat = ["polars", "datafusion", "tokio"]
 
 [[bin]]
-name = "gars"
-path = "src/gars.rs"
+name = "gams"
+path = "src/gams.rs"
 
 [[bin]]
-name = "gars-stat"
-path = "src/gars-stat.rs"
+name = "gams-stat"
+path = "src/gams-stat.rs"
 required-features = ["stat"]
 
 [[bin]]
-name = "gars-sql"
-path = "src/gars-sql.rs"
+name = "gams-sql"
+path = "src/gams-sql.rs"
 required-features = ["stat"]
 
 [build-dependencies]

@@ -2,7 +2,7 @@ use bio::io::fasta;
 use clap::*;
 use flate2::read::GzEncoder;
 use flate2::Compression;
-use gars::Ctg;
+use gams::Ctg;
 use intspan::{IntSpan, Range};
 use redis::Commands;
 use std::collections::{BTreeMap, VecDeque};
@@ -79,7 +79,7 @@ pub fn execute(args: &ArgMatches) -> anyhow::Result<()> {
     let min = *args.get_one::<i32>("min").unwrap();
 
     // redis connection
-    let mut conn = gars::connect();
+    let mut conn = gams::connect();
 
     // common_name
     let _: () = conn.set("common_name", common_name).unwrap();
@@ -160,7 +160,7 @@ pub fn execute(args: &ArgMatches) -> anyhow::Result<()> {
                 let range = Range::from(chr_id, start, end);
 
                 // ID	chr_id	chr_start	chr_end	chr_strand	length
-                let ctg = gars::Ctg {
+                let ctg = gams::Ctg {
                     id: ctg_id.clone(),
                     range: range.to_string(),
                     chr_id: chr_id.to_string(),
@@ -206,14 +206,14 @@ pub fn execute(args: &ArgMatches) -> anyhow::Result<()> {
     } // fasta file
 
     eprintln!("Building the lapper index of ctgs...\n");
-    gars::build_idx_ctg(&mut conn);
+    gams::build_idx_ctg(&mut conn);
 
     // number of chr
     let n_chr: i32 = conn.hlen("chr").unwrap();
     eprintln!("There are {} chromosomes", n_chr);
 
     // number of ctg
-    let n_ctg: i32 = gars::get_scan_count(&mut conn, "ctg:*");
+    let n_ctg: i32 = gams::get_scan_count(&mut conn, "ctg:*");
     eprintln!("There are {} contigs", n_ctg);
 
     Ok(())

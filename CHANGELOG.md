@@ -2,18 +2,18 @@
 
 ## Unreleased - ReleaseDate
 
-* Make `gars range` and `gars feature` up to 10x times faster by packaging hundreds of redis
+* Make `gams range` and `gams feature` up to 10x times faster by packaging hundreds of redis
   operations into batches
 
 * Add structs `Ctg`, `Feature`, and `Range`
 * Rewrite some functions in `redis.rs`
 
-* Add `gars-sql` as an alternative to `gars-stat`
+* Add `gams-sql` as an alternative to `gams-stat`
 
 * `--range` writes a `range` field before the chr_id field
-* Add --parallel to `gars sliding` and `gars fsw`
-* Using lua scripts in `gars clear`
-* Enhance `gars status dump`
+* Add --parallel to `gams sliding` and `gams fsw`
+* Using lua scripts in `gams clear`
+* Enhance `gams status dump`
 
 * Bump deps
     * `clap` v4
@@ -24,8 +24,8 @@
 
 ## 0.3.1 - 2022-06-15
 
-* Add `gars anno`
-* Add `--range` to `gars tsv`
+* Add `gams anno`
+* Add `--range` to `gams tsv`
 
 * Switch to `clap` v3.2
 * Switch to `intspan` v0.7.1
@@ -39,18 +39,18 @@
 
 ## 0.3.0 - 2022-05-13
 
-* Rename `gars range` to `gars feature`
-* Rename `gars rsw` to `gars fsw`
-* Rename `gars pos` to `gars range`
-* Rename `gars wave` to `gars peak`
-* Add `gars locate`
-* Add `gars clear`
+* Rename `gams range` to `gams feature`
+* Rename `gams rsw` to `gams fsw`
+* Rename `gams pos` to `gams range`
+* Rename `gams wave` to `gams peak`
+* Add `gams locate`
+* Add `gams clear`
 
 * Avoid get_scan_vec() inside loops
-    * Speedup `gars feature`
-    * Speedup `gars fsw`
-    * Speedup `gars range`
-    * Speedup `gars peak`
+    * Speedup `gams feature`
+    * Speedup `gams fsw`
+    * Speedup `gams range`
+    * Speedup `gams peak`
 
 * Rename .pos.txt to .ranges
 * Rename chr_name to chr_id
@@ -70,22 +70,22 @@
 
 ## 0.2.1 - 2022-05-10
 
-* Separate gars-stat
+* Separate gams-stat
 * Restructuring of documents
 * Store gzipped seq to redis
 * cache_gc_content and cache_gc_stat()
 
 ## 0.2.0 - 2022-04-23
 
-* Renamed to `gars`
+* Renamed to `gams`
 
-* Add `gars status stop`
+* Add `gams status stop`
 
 * Queries done by clickhouse
-    * `gars env` creates sqls
+    * `gams env` creates sqls
     * Stats of ctg and rsw
 
-* `gars stat`
+* `gams stat`
     * `Polars` can't read sqls, so use the built-in queries
     * `Datafusion` makes the compilation extremely slow
 

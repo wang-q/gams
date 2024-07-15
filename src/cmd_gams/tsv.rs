@@ -1,5 +1,5 @@
 use clap::*;
-use gars::*;
+use gams::*;
 use intspan::*;
 use redis::Commands;
 use std::collections::BTreeMap;
@@ -120,7 +120,7 @@ pub fn execute(args: &ArgMatches) -> anyhow::Result<()> {
                 values.push(val.clone());
             }
         } else {
-            let (chr_id, chr_start, chr_end) = gars::get_key_pos(&mut conn2, &id);
+            let (chr_id, chr_start, chr_end) = gams::get_key_pos(&mut conn2, &id);
             let range = Range::from(&chr_id, chr_start, chr_end);
             values.push(range.to_string());
 

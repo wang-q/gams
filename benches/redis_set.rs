@@ -31,10 +31,10 @@ fn rand_ctg() -> Ctg {
 }
 
 pub fn bench_redis_set(c: &mut Criterion) {
-    let mut conn = gars::connect();
+    let mut conn = gams::connect();
     let ctg = rand_ctg();
 
-    gars::db_drop();
+    gams::db_drop();
     c.bench_function("redis_hset", |b| {
         b.iter(|| {
             // a short length makes the total number of randomized combinations not too large
@@ -60,7 +60,7 @@ pub fn bench_redis_set(c: &mut Criterion) {
         })
     });
 
-    gars::db_drop();
+    gams::db_drop();
     c.bench_function("redis_set_bincode", |b| {
         b.iter(|| {
             let ctg_id = rand_str(4);
@@ -69,7 +69,7 @@ pub fn bench_redis_set(c: &mut Criterion) {
         })
     });
 
-    gars::db_drop();
+    gams::db_drop();
     c.bench_function("redis_hset_multiple", |b| {
         b.iter(|| {
             let ctg_id = rand_str(4);
@@ -98,10 +98,10 @@ pub fn bench_redis_set(c: &mut Criterion) {
 }
 
 pub fn bench_redis_pipe(c: &mut Criterion) {
-    let mut conn = gars::connect();
+    let mut conn = gams::connect();
     let ctg = rand_ctg();
 
-    gars::db_drop();
+    gams::db_drop();
     c.bench_function("redis_hset_pipe", |b| {
         b.iter(|| {
             let ctg_id = rand_str(4);
@@ -123,7 +123,7 @@ pub fn bench_redis_pipe(c: &mut Criterion) {
         })
     });
 
-    gars::db_drop();
+    gams::db_drop();
     c.bench_function("redis_hset_pipe_10", |b| {
         b.iter(|| {
             let mut batch = &mut redis::pipe();

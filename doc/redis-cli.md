@@ -1,6 +1,6 @@
 # `redis-cli`
 
-A `redis-cli` implementation that is functionally equivalent to `gars gen`
+A `redis-cli` implementation that is functionally equivalent to `gams gen`
 
 ```shell
 # start redis-server

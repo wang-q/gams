@@ -36,16 +36,16 @@ pub fn execute(args: &ArgMatches) -> anyhow::Result<()> {
     let opt_size = *args.get_one::<usize>("size").unwrap();
 
     // redis connection
-    let mut conn = gars::connect();
+    let mut conn = gams::connect();
 
     // index of ctgs
-    let lapper_of = gars::get_idx_ctg(&mut conn);
+    let lapper_of = gams::get_idx_ctg(&mut conn);
 
     // processing each file
     for infile in args.get_many::<String>("infiles").unwrap() {
         // ctg_id => [Range]
         // act as a sorter
-        let ranges_of = gars::read_range(infile, &lapper_of);
+        let ranges_of = gams::read_range(infile, &lapper_of);
 
         // ctg_id, Range
         let mut ctg_ranges: Vec<(String, Range)> = vec![];

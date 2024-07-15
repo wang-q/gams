@@ -79,8 +79,8 @@ pub fn execute(args: &ArgMatches) -> anyhow::Result<()> {
 fn clear_iter(pattern: &str) {
     eprintln!("Clearing pattern {:#?}", pattern);
     // redis connection
-    let mut conn = gars::connect();
-    let mut conn2 = gars::connect(); // can't use one same `conn` inside an iter
+    let mut conn = gams::connect();
+    let mut conn2 = gams::connect(); // can't use one same `conn` inside an iter
 
     let iter: redis::Iter<'_, String> = conn.scan_match(pattern).unwrap();
     let mut i: isize = 0;
@@ -95,7 +95,7 @@ fn clear_iter(pattern: &str) {
 fn clear_lua(pattern: &str) {
     eprintln!("Clearing pattern {:#?}", pattern);
 
-    let mut conn = gars::connect();
+    let mut conn = gams::connect();
 
     // https://stackoverflow.com/questions/49055655
     // KEYS is faster than SCAN MATCH

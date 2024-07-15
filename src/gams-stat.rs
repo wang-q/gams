@@ -5,10 +5,10 @@ use intspan::writer;
 use polars::prelude::*;
 
 fn main() -> anyhow::Result<()> {
-    let app = Command::new("gars-stat")
+    let app = Command::new("gams-stat")
         .version(crate_version!())
         .author(crate_authors!())
-        .about("Build-in stats for gars")
+        .about("Build-in stats for gams")
         .arg_required_else_help(true)
         .color(ColorChoice::Auto)
         .arg(

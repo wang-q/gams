@@ -60,11 +60,11 @@ pub fn execute(args: &ArgMatches) -> anyhow::Result<()> {
     let mut writer = intspan::writer(args.get_one::<String>("outfile").unwrap());
 
     // redis connection
-    let mut conn = gars::connect();
+    let mut conn = gams::connect();
 
     // rebuild
     if args.get_flag("rebuild") {
-        gars::build_idx_ctg(&mut conn);
+        gams::build_idx_ctg(&mut conn);
     }
 
     // all ranges
@@ -88,7 +88,7 @@ pub fn execute(args: &ArgMatches) -> anyhow::Result<()> {
     // index of ctgs
     let mut lapper_of = BTreeMap::new();
     if !args.get_flag("lapper") || !args.get_flag("zrange") {
-        lapper_of = gars::get_idx_ctg(&mut conn);
+        lapper_of = gams::get_idx_ctg(&mut conn);
     }
 
     // processing each range
@@ -100,11 +100,11 @@ pub fn execute(args: &ArgMatches) -> anyhow::Result<()> {
         *rg.strand_mut() = "".to_string();
 
         let ctg_id = if args.get_flag("lapper") {
-            gars::find_one_l(&mut conn, &rg)
+            gams::find_one_l(&mut conn, &rg)
         } else if args.get_flag("zrange") {
-            gars::find_one_z(&mut conn, &rg)
+            gams::find_one_z(&mut conn, &rg)
         } else {
-            gars::find_one_idx(&lapper_of, &rg)
+            gams::find_one_idx(&lapper_of, &rg)
         };
 
         if ctg_id.is_empty() {

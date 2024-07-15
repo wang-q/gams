@@ -1,6 +1,6 @@
 use clap::*;
 use crossbeam::channel::bounded;
-use gars::{Ctg, Feature};
+use gams::{Ctg, Feature};
 use intspan::{IntSpan, Range};
 use itertools::Itertools;
 use std::collections::HashMap;
@@ -67,8 +67,8 @@ pub fn execute(args: &ArgMatches) -> anyhow::Result<()> {
     // Operating
     //----------------------------
     // redis connection
-    let mut conn = gars::connect();
-    let ctg_of = gars::get_bin_ctg(&mut conn);
+    let mut conn = gams::connect();
+    let ctg_of = gams::get_bin_ctg(&mut conn);
 
     if parallel == 1 {
         let mut writer = intspan::writer(args.get_one::<String>("outfile").unwrap());
@@ -113,7 +113,7 @@ fn proc_ctg(ctg: &Ctg, args: &ArgMatches) -> anyhow::Result<String> {
     let resize = *args.get_one::<i32>("resize").unwrap();
 
     // redis connection
-    let mut conn = gars::connect();
+    let mut conn = gams::connect();
 
     eprintln!(
         "Process {} {}:{}-{}",
@@ -124,10 +124,10 @@ fn proc_ctg(ctg: &Ctg, args: &ArgMatches) -> anyhow::Result<String> {
     let mut cache: HashMap<String, f32> = HashMap::new();
 
     let parent = IntSpan::from_pair(ctg.chr_start, ctg.chr_end);
-    let seq: String = gars::get_ctg_seq(&mut conn, &ctg.id);
+    let seq: String = gams::get_ctg_seq(&mut conn, &ctg.id);
 
     // All features in this ctg
-    let features: Vec<Feature> = gars::get_bin_feature(&mut conn, &ctg.id);
+    let features: Vec<Feature> = gams::get_bin_feature(&mut conn, &ctg.id);
     eprintln!("\tThere are {} features", features.len());
 
     let mut out_string = "".to_string();
@@ -140,22 +140,22 @@ fn proc_ctg(ctg: &Ctg, args: &ArgMatches) -> anyhow::Result<String> {
         // No need to use Redis counters
         let mut serial: isize = 1;
 
-        let windows = gars::center_sw(&parent, range_start, range_end, size, max);
+        let windows = gams::center_sw(&parent, range_start, range_end, size, max);
 
         for (sw_ints, sw_type, sw_distance) in windows {
             let fsw_id = format!("fsw:{}:{}", feature_id, serial);
 
-            let gc_content = gars::cache_gc_content(
+            let gc_content = gams::cache_gc_content(
                 &Range::from(&ctg.chr_id, sw_ints.min(), sw_ints.max()),
                 &parent,
                 &seq,
                 &mut cache,
             );
 
-            let resized = gars::center_resize(&parent, &sw_ints, resize);
+            let resized = gams::center_resize(&parent, &sw_ints, resize);
             let re_rg = Range::from(&ctg.chr_id, resized.min(), resized.max());
             let (gc_mean, gc_stddev, gc_cv) =
-                gars::cache_gc_stat(&re_rg, &parent, &seq, &mut cache, size, size);
+                gams::cache_gc_stat(&re_rg, &parent, &seq, &mut cache, size, size);
 
             // prepare to output
             let mut values: Vec<String> = vec![];

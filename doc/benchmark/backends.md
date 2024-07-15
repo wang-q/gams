@@ -6,47 +6,47 @@ keydb is as fast/slow as redis
 
 ```shell
 # brew install keydb
-cd ~/gars
+cd ~/gams
 rm dump.rdb
 keydb-server
 
-# gars
-cd ~/gars
-gars env
+# gams
+cd ~/gams
+gams env
 
-gars status drop; gars gen genome/genome.fa.gz --piece 500000;
+gams status drop; gams gen genome/genome.fa.gz --piece 500000;
 
 hyperfine --warmup 1 --export-markdown threads.md.tmp \
     -n 'serial' \
     '
-    gars clear feature;
-    gars feature features/T-DNA.CSHL.rg --tag CSHL;
-    gars feature features/T-DNA.FLAG.rg --tag FLAG;
-    gars feature features/T-DNA.MX.rg   --tag MX;
-    gars feature features/T-DNA.RATM.rg --tag RATM;
+    gams clear feature;
+    gams feature features/T-DNA.CSHL.rg --tag CSHL;
+    gams feature features/T-DNA.FLAG.rg --tag FLAG;
+    gams feature features/T-DNA.MX.rg   --tag MX;
+    gams feature features/T-DNA.RATM.rg --tag RATM;
     ' \
     -n 'parallel -j 1' \
     '
-    gars clear feature;
+    gams clear feature;
     parallel -j 1 "
         echo {}
-        gars feature features/T-DNA.{}.rg --tag {}
+        gams feature features/T-DNA.{}.rg --tag {}
         " ::: CSHL FLAG MX RATM
     ' \
     -n 'parallel -j 2' \
     '
-    gars clear feature;
+    gams clear feature;
     parallel -j 2 "
         echo {}
-        gars feature features/T-DNA.{}.rg --tag {}
+        gams feature features/T-DNA.{}.rg --tag {}
         " ::: CSHL FLAG MX RATM
     ' \
     -n 'parallel -j 4' \
     '
-    gars clear feature;
+    gams clear feature;
     parallel -j 4 "
         echo {}
-        gars feature features/T-DNA.{}.rg --tag {}
+        gams feature features/T-DNA.{}.rg --tag {}
         " ::: CSHL FLAG MX RATM
     '
 
