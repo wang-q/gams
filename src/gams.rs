@@ -7,7 +7,7 @@ fn main() -> anyhow::Result<()> {
     let app = Command::new("gams")
         .version(crate_version!())
         .author(crate_authors!())
-        .about("Genome Analyst with Rust and rediS")
+        .about("Genome Analyst with in-Memory Storage")
         .propagate_version(true)
         .arg_required_else_help(true)
         .color(ColorChoice::Auto)

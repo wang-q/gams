@@ -30,7 +30,7 @@ cargo build
 ### `gams help`
 
 ```text
-Genome Analyst with Rust and rediS
+Genome Analyst with in-Memory Storage
 
 Usage: gams [COMMAND]
 
