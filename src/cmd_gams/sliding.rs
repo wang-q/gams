@@ -85,7 +85,7 @@ pub fn execute(args: &ArgMatches) -> anyhow::Result<()> {
     //----------------------------
     // Args
     //----------------------------
-    let parallel = *args.get_one::<usize>("parallel").unwrap();
+    let opt_parallel = *args.get_one::<usize>("parallel").unwrap();
 
     //----------------------------
     // Operating
@@ -94,7 +94,7 @@ pub fn execute(args: &ArgMatches) -> anyhow::Result<()> {
     let mut conn = gams::connect();
     let ctgs: Vec<String> = gams::get_scan_vec(&mut conn, args.get_one::<String>("ctg").unwrap());
 
-    if parallel == 1 {
+    if opt_parallel == 1 {
         let mut writer = writer(args.get_one::<String>("outfile").unwrap());
 
         // headers
@@ -119,11 +119,11 @@ fn proc_ctg(ctg_id: &String, args: &ArgMatches) -> anyhow::Result<String> {
     //----------------------------
     // Args
     //----------------------------
-    let size = *args.get_one::<i32>("size").unwrap();
-    let step = *args.get_one::<i32>("step").unwrap();
-    let lag = *args.get_one::<usize>("lag").unwrap();
-    let threshold = *args.get_one::<f32>("threshold").unwrap();
-    let influence = *args.get_one::<f32>("influence").unwrap();
+    let opt_size = *args.get_one::<i32>("size").unwrap();
+    let opt_step = *args.get_one::<i32>("step").unwrap();
+    let opt_lag = *args.get_one::<usize>("lag").unwrap();
+    let opt_threshold = *args.get_one::<f32>("threshold").unwrap();
+    let opt_influence = *args.get_one::<f32>("influence").unwrap();
 
     // redis connection
     let mut conn = gams::connect();
@@ -132,7 +132,7 @@ fn proc_ctg(ctg_id: &String, args: &ArgMatches) -> anyhow::Result<String> {
     eprintln!("Process {} {}:{}-{}", ctg_id, chr_id, chr_start, chr_end);
 
     let parent = IntSpan::from_pair(chr_start, chr_end);
-    let windows = gams::sliding(&parent, size, step);
+    let windows = gams::sliding(&parent, opt_size, opt_step);
 
     let ctg_seq: String = gams::get_seq(&mut conn, ctg_id);
 
@@ -148,7 +148,7 @@ fn proc_ctg(ctg_id: &String, args: &ArgMatches) -> anyhow::Result<String> {
         gcs.push(gc_content);
     }
 
-    let signals = gams::thresholding_algo(&gcs, lag, threshold, influence);
+    let signals = gams::thresholding_algo(&gcs, opt_lag, opt_threshold, opt_influence);
 
     // outputs
     let mut out_string = "".to_string();
