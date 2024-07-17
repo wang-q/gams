@@ -2,13 +2,14 @@ use flate2::read::GzDecoder;
 use lazy_static::lazy_static;
 use regex::Regex;
 use std::collections::{BTreeMap, HashMap};
-use std::io::{self, BufRead, Read};
+use std::io::{BufRead, Read};
 
 use intspan::{IntSpan, Range};
 use redis::Commands;
 use serde::{Deserialize, Serialize};
 
 use rust_lapper::{Interval, Lapper};
+
 // Interval: represent a range from [start, stop), carrying val
 type Iv = Interval<u32, String>; // the first type should be Unsigned
 
@@ -79,9 +80,48 @@ pub fn connect() -> redis::Connection {
         .expect("Failed to connect to Redis")
 }
 
+pub fn insert_str(conn: &mut redis::Connection, key: &str, val: &str) -> () {
+    conn.set(key, val).unwrap()
+}
+
+pub fn insert_bin(conn: &mut redis::Connection, key: &str, val: &[u8]) -> () {
+    conn.set(key, val).unwrap()
+}
+
+pub fn get_bin(conn: &mut redis::Connection, key: &str) -> Vec<u8> {
+    conn.get(key).unwrap()
+}
+
+pub fn incr_serial(conn: &mut redis::Connection, key: &str) -> isize {
+    conn.incr(key, 1).unwrap()
+}
+
+pub fn insert_ctg(conn: &mut redis::Connection, ctg_id: &str, ctg: &Ctg) {
+    let ctg_bytes = bincode::serialize(ctg).unwrap();
+    insert_bin(conn, ctg_id, &ctg_bytes);
+}
+
+pub fn get_ctg(conn: &mut redis::Connection, ctg_id: &str) -> Ctg {
+    let ctg_bytes = get_bin(conn, ctg_id);
+    bincode::deserialize(&ctg_bytes).unwrap()
+}
+
+fn encode_gz(seq: &[u8]) -> anyhow::Result<Vec<u8>> {
+    let mut bytes = Vec::new();
+    let mut z = flate2::read::GzEncoder::new(seq, flate2::Compression::fast());
+    z.read_to_end(&mut bytes)?;
+    Ok(bytes)
+}
+
+pub fn insert_seq(conn: &mut redis::Connection, ctg_id: &str, seq: &[u8]) {
+    let seq_bytes = encode_gz(seq).unwrap();
+    insert_bin(conn, &format!("seq:{ctg_id}"), &seq_bytes);
+}
+
 /// get all chr_ids
 pub fn get_vec_chr(conn: &mut redis::Connection) -> Vec<String> {
-    conn.hkeys("chr").unwrap()
+    let bin = get_bin(conn, "top:chrs");
+    bincode::deserialize(&*bin).unwrap()
 }
 
 /// generated from cnt:ctg:
@@ -170,7 +210,7 @@ pub fn get_idx_ctg(conn: &mut redis::Connection) -> BTreeMap<String, Lapper<u32,
 }
 
 /// BTreeMap<ctg_id, Ctg>
-pub fn get_bin_ctg(conn: &mut redis::Connection) -> BTreeMap<String, Ctg> {
+pub fn get_bin_ctgs(conn: &mut redis::Connection) -> BTreeMap<String, Ctg> {
     let chrs: Vec<String> = get_vec_chr(conn);
 
     let mut ctg_of: BTreeMap<String, Ctg> = BTreeMap::new();
@@ -198,10 +238,8 @@ pub fn get_bin_feature(conn: &mut redis::Connection, ctg_id: &str) -> Vec<Featur
 }
 
 pub fn get_key_pos(conn: &mut redis::Connection, key: &str) -> (String, i32, i32) {
-    let (chr_id, chr_start, chr_end): (String, i32, i32) =
-        conn.hget(key, &["chr_id", "chr_start", "chr_end"]).unwrap();
-
-    (chr_id, chr_start, chr_end)
+    let ctg = get_ctg(conn, key);
+    (ctg.chr_id, ctg.chr_start, ctg.chr_end)
 }
 
 // Can't do this
@@ -291,38 +329,6 @@ pub fn get_scan_match_vec(conn: &mut redis::Connection, scan: &str) -> Vec<Strin
     keys
 }
 
-pub fn get_scan_str(
-    conn: &mut redis::Connection,
-    pattern: &str,
-    field: &str,
-) -> HashMap<String, String> {
-    let keys: Vec<String> = get_scan_vec(conn, pattern);
-
-    let mut hash: HashMap<String, _> = HashMap::new();
-    for key in keys {
-        let val: String = conn.hget(&key, field).unwrap();
-        hash.insert(key.clone(), val);
-    }
-
-    hash
-}
-
-pub fn get_scan_int(
-    conn: &mut redis::Connection,
-    pattern: &str,
-    field: &str,
-) -> HashMap<String, i32> {
-    let keys: Vec<String> = get_scan_vec(conn, pattern);
-
-    let mut hash: HashMap<String, _> = HashMap::new();
-    for key in keys {
-        let val: i32 = conn.hget(&key, field).unwrap();
-        hash.insert(key.clone(), val);
-    }
-
-    hash
-}
-
 pub fn find_one_idx(lapper_of: &BTreeMap<String, Lapper<u32, String>>, rg: &Range) -> String {
     if !lapper_of.contains_key(rg.chr()) {
         return "".to_string();
@@ -353,71 +359,18 @@ pub fn find_one_l(conn: &mut redis::Connection, rg: &Range) -> String {
     }
 }
 
-pub fn find_one_z(conn: &mut redis::Connection, rg: &Range) -> String {
-    // MULTI
-    // ZRANGESTORE tmp-s:I ctg-s:I 0 1000 BYSCORE
-    // ZRANGESTORE tmp-e:I ctg-e:I 1100 +inf BYSCORE
-    // ZINTERSTORE tmp-ctg:I 2 tmp-s:I tmp-e:I AGGREGATE MIN
-    // DEL tmp-s:I tmp-e:I
-    // ZPOPMIN tmp-ctg:I
-    // EXEC
-
-    let res: Vec<BTreeMap<String, isize>> = redis::pipe()
-        .atomic()
-        .cmd("ZRANGESTORE")
-        .arg(format!("tmp-s:{}", rg.chr()))
-        .arg(format!("ctg-s:{}", rg.chr()))
-        .arg(0)
-        .arg(*rg.start())
-        .arg("BYSCORE")
-        .ignore()
-        .cmd("ZRANGESTORE")
-        .arg(format!("tmp-e:{}", rg.chr()))
-        .arg(format!("ctg-e:{}", rg.chr()))
-        .arg(*rg.end())
-        .arg("+inf")
-        .arg("BYSCORE")
-        .ignore()
-        .zinterstore_min(
-            format!("tmp-ctg:{}", rg.chr()),
-            &[format!("tmp-s:{}", rg.chr()), format!("tmp-e:{}", rg.chr())],
-        )
-        .ignore()
-        .del(format!("tmp-s:{}", rg.chr()))
-        .ignore()
-        .del(format!("tmp-e:{}", rg.chr()))
-        .ignore()
-        .cmd("ZPOPMIN")
-        .arg(format!("tmp-ctg:{}", rg.chr()))
-        .arg(1)
-        .query(conn)
-        .unwrap();
-
-    // res = [
-    //     {
-    //         "ctg:I:1": 1,
-    //     },
-    // ]
-    let first = res.first().unwrap();
-    let key = match first.iter().next() {
-        Some(i) => i.0,
-        _ => "",
-    };
-
-    key.to_string()
-}
-
-pub fn decode_gz(bytes: &[u8]) -> io::Result<String> {
+pub fn decode_gz(bytes: &[u8]) -> anyhow::Result<Vec<u8>> {
     let mut gz = GzDecoder::new(bytes);
-    let mut s = String::new();
-    gz.read_to_string(&mut s)?;
-    Ok(s)
+    let mut buf = Vec::new();
+    gz.read_to_end(&mut buf)?;
+    Ok(buf)
 }
 
 pub fn get_ctg_seq(conn: &mut redis::Connection, ctg_id: &str) -> String {
-    let ctg_bytes: Vec<u8> = conn.get(format!("seq:{}", ctg_id)).unwrap();
+    let seq_bytes: Vec<u8> = conn.get(format!("seq:{}", ctg_id)).unwrap();
 
-    decode_gz(&ctg_bytes).unwrap()
+    let s = decode_gz(&seq_bytes).unwrap();
+    String::from_utf8(s).unwrap()
 }
 
 /// GC-content within a ctg
@@ -473,7 +426,8 @@ pub fn get_rg_seq(conn: &mut redis::Connection, rg: &Range) -> String {
         return "".to_string();
     }
 
-    let chr_start: i32 = conn.hget(&ctg_id, "chr_start").unwrap();
+    let ctg = get_ctg(conn, &ctg_id);
+    let chr_start = ctg.chr_start;
 
     let ctg_start = (rg.start() - chr_start + 1) as usize;
     let ctg_end = (rg.end() - chr_start + 1) as usize;
