@@ -1,18 +1,17 @@
 use clap::*;
-use intspan::*;
-use redis::Commands;
 use std::collections::BTreeMap;
 
 // Create clap subcommand arguments
 pub fn make_subcommand() -> Command {
-    Command::new("range")
+    Command::new("rg")
         .about("Add range files for counting")
         .after_help(
-            r#"
-Serial - format!("cnt:range:{}", ctg_id)
-ID - format!("range:{}:{}", ctg_id, serial)
+            r###"
+rg:
+    cnt:rg:{ctg_id}         => serial
+    rg:{ctg_id}:{serial}    => Rg
 
-"#,
+"###,
         )
         .arg(
             Arg::new("infiles")
@@ -47,8 +46,8 @@ pub fn execute(args: &ArgMatches) -> anyhow::Result<()> {
         // act as a sorter
         let ranges_of = gams::read_range(infile, &lapper_of);
 
-        // ctg_id, Range
-        let mut ctg_ranges: Vec<(String, Range)> = vec![];
+        // (ctg_id, Range)
+        let mut ctg_ranges: Vec<(String, intspan::Range)> = vec![];
         for k in ranges_of.keys() {
             for r in ranges_of.get(k).unwrap() {
                 ctg_ranges.push((k.to_string(), r.clone()));
@@ -56,7 +55,7 @@ pub fn execute(args: &ArgMatches) -> anyhow::Result<()> {
         }
 
         // total number of ranges
-        eprintln!("There are {} ranges in this file", ctg_ranges.len());
+        eprintln!("There are {} rgs in this file", ctg_ranges.len());
 
         // start serial of each ctg
         // To minimize expensive Redis operations, locally increment the serial number
@@ -65,7 +64,7 @@ pub fn execute(args: &ArgMatches) -> anyhow::Result<()> {
 
         let mut batch = &mut redis::pipe();
 
-        for (i, (ctg_id, rg)) in ctg_ranges.iter().enumerate() {
+        for (i, (ctg_id, range)) in ctg_ranges.iter().enumerate() {
             // prompts
             if i > 1 && i % opt_size == 0 {
                 let _: () = batch.query(&mut conn).unwrap();
@@ -79,8 +78,9 @@ pub fn execute(args: &ArgMatches) -> anyhow::Result<()> {
             if !serial_of.contains_key(ctg_id) {
                 let cnt = ranges_of.get(ctg_id).unwrap().len() as i32;
                 // Redis counter
-                // increased serial
-                let serial: i32 = conn.incr(format!("cnt:range:{}", ctg_id), cnt).unwrap();
+                // increased serial by cnt
+                let serial =
+                    gams::incr_serial_n(&mut conn, &format!("cnt:rg:{ctg_id}"), cnt) as i32;
 
                 // here we start
                 serial_of.insert(ctg_id.to_string(), serial - cnt);
@@ -88,18 +88,19 @@ pub fn execute(args: &ArgMatches) -> anyhow::Result<()> {
 
             let serial = serial_of.get_mut(ctg_id).unwrap();
             *serial += 1;
-            let range_id = format!("range:{}:{}", ctg_id, serial);
+            let rg_id = format!("rg:{ctg_id}:{serial}");
+
+            let rg = gams::Rg {
+                id: rg_id.clone(),
+                range: range.to_string(),
+                ctg_id: ctg_id.clone(),
+            };
+
+            // Add serialized struct Feature to a Redis set
+            let rg_bytes = bincode::serialize(&rg).unwrap();
 
             batch = batch
-                .hset(&range_id, "range", rg.to_string())
-                .ignore()
-                .hset(&range_id, "chr_id", rg.chr())
-                .ignore()
-                .hset(&range_id, "chr_start", *rg.start())
-                .ignore()
-                .hset(&range_id, "chr_end", *rg.end())
-                .ignore()
-                .hset(&range_id, "ctg_id", ctg_id)
+                .set(&rg_id, rg_bytes.clone())
                 .ignore();
         }
 

@@ -4,7 +4,6 @@ use regex::Regex;
 use std::collections::{BTreeMap, HashMap};
 use std::io::{BufRead, Read};
 
-use intspan::{IntSpan, Range};
 use redis::Commands;
 use serde::{Deserialize, Serialize};
 
@@ -55,6 +54,13 @@ pub struct Feature {
     pub length: i32,
     pub ctg_id: String,
     pub tag: String,
+}
+
+#[derive(Default, Clone, Debug, PartialEq, Serialize, Deserialize)]
+pub struct Rg {
+    pub id: String,
+    pub range: String,
+    pub ctg_id: String,
 }
 
 pub fn connect() -> redis::Connection {
@@ -351,7 +357,10 @@ pub fn get_scan_match_vec(conn: &mut redis::Connection, scan: &str) -> Vec<Strin
     keys
 }
 
-pub fn find_one_idx(lapper_of: &BTreeMap<String, Lapper<u32, String>>, rg: &Range) -> String {
+pub fn find_one_idx(
+    lapper_of: &BTreeMap<String, Lapper<u32, String>>,
+    rg: &intspan::Range,
+) -> String {
     if !lapper_of.contains_key(rg.chr()) {
         return "".to_string();
     }
@@ -365,7 +374,7 @@ pub fn find_one_idx(lapper_of: &BTreeMap<String, Lapper<u32, String>>, rg: &Rang
     }
 }
 
-pub fn find_one_l(conn: &mut redis::Connection, rg: &Range) -> String {
+pub fn find_one_l(conn: &mut redis::Connection, rg: &intspan::Range) -> String {
     let lapper_bytes: Vec<u8> = conn.get(format!("idx:ctg:{}", rg.chr())).unwrap();
 
     if lapper_bytes.is_empty() {
@@ -383,8 +392,8 @@ pub fn find_one_l(conn: &mut redis::Connection, rg: &Range) -> String {
 
 /// GC-content within a ctg
 pub fn cache_gc_content(
-    rg: &Range,
-    parent: &IntSpan,
+    rg: &intspan::Range,
+    parent: &intspan::IntSpan,
     seq: &str,
     cache: &mut HashMap<String, f32>,
 ) -> f32 {
@@ -406,8 +415,8 @@ pub fn cache_gc_content(
 }
 
 pub fn cache_gc_stat(
-    rg: &Range,
-    parent: &IntSpan,
+    rg: &intspan::Range,
+    parent: &intspan::IntSpan,
     seq: &str,
     cache: &mut HashMap<String, f32>,
     size: i32,
@@ -419,15 +428,19 @@ pub fn cache_gc_stat(
     let mut gcs = Vec::new();
 
     for w in windows {
-        let gc_content =
-            cache_gc_content(&Range::from(rg.chr(), w.min(), w.max()), parent, seq, cache);
+        let gc_content = cache_gc_content(
+            &intspan::Range::from(rg.chr(), w.min(), w.max()),
+            parent,
+            seq,
+            cache,
+        );
         gcs.push(gc_content);
     }
 
     gc_stat(&gcs)
 }
 
-pub fn get_rg_seq(conn: &mut redis::Connection, rg: &Range) -> String {
+pub fn get_rg_seq(conn: &mut redis::Connection, rg: &intspan::Range) -> String {
     let ctg_id = find_one_l(conn, rg);
 
     if ctg_id.is_empty() {
@@ -452,15 +465,15 @@ pub fn get_rg_seq(conn: &mut redis::Connection, rg: &Range) -> String {
 pub fn read_range(
     infile: &str,
     lapper_of: &BTreeMap<String, Lapper<u32, String>>,
-) -> BTreeMap<String, Vec<Range>> {
+) -> BTreeMap<String, Vec<intspan::Range>> {
     let reader = intspan::reader(infile);
 
     // ctg_id => [Range]
-    let mut ranges_of: BTreeMap<String, Vec<Range>> = BTreeMap::new();
+    let mut ranges_of: BTreeMap<String, Vec<intspan::Range>> = BTreeMap::new();
 
     // processing each line
     for line in reader.lines().map_while(Result::ok) {
-        let rg = Range::from_str(&line);
+        let rg = intspan::Range::from_str(&line);
         if !rg.is_valid() {
             continue;
         }
@@ -480,7 +493,7 @@ pub fn read_range(
 }
 
 /// This is an expensive operation
-pub fn get_gc_content(conn: &mut redis::Connection, rg: &Range) -> f32 {
+pub fn get_gc_content(conn: &mut redis::Connection, rg: &intspan::Range) -> f32 {
     let bucket = format!("cache:{}:{}", rg.chr(), rg.start() / 1000);
     let field = rg.to_string();
     let expire = 180;
