@@ -32,7 +32,7 @@ fn main() -> anyhow::Result<()> {
     * Sequences - `seq:`
     * Bincode, serialized data structure - `bin:`
 
-* `gams` uses only one Redis data type, STRING
+* `gams` uses only two Redis data types, STRING and SET
     * serial - the INCR command parses string values into integers
     * Rust types like Vec<String> are serialized to bytes using bincode
     * DNA sequences were splitted into pieces, gzipped and then stored

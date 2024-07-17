@@ -1,7 +1,5 @@
 use clap::*;
 use crossbeam::channel::bounded;
-use gams::{Ctg, Feature};
-use intspan::{IntSpan, Range};
 use itertools::Itertools;
 use std::collections::HashMap;
 
@@ -61,7 +59,7 @@ pub fn execute(args: &ArgMatches) -> anyhow::Result<()> {
     //----------------------------
     // Args
     //----------------------------
-    let parallel = *args.get_one::<usize>("parallel").unwrap();
+    let opt_parallel = *args.get_one::<usize>("parallel").unwrap();
 
     //----------------------------
     // Operating
@@ -70,7 +68,7 @@ pub fn execute(args: &ArgMatches) -> anyhow::Result<()> {
     let mut conn = gams::connect();
     let ctg_of = gams::get_bin_ctgs(&mut conn);
 
-    if parallel == 1 {
+    if opt_parallel == 1 {
         let mut writer = intspan::writer(args.get_one::<String>("outfile").unwrap());
 
         // headers
@@ -104,7 +102,7 @@ pub fn execute(args: &ArgMatches) -> anyhow::Result<()> {
     Ok(())
 }
 
-fn proc_ctg(ctg: &Ctg, args: &ArgMatches) -> anyhow::Result<String> {
+fn proc_ctg(ctg: &gams::Ctg, args: &ArgMatches) -> anyhow::Result<String> {
     //----------------------------
     // Args
     //----------------------------
@@ -123,11 +121,11 @@ fn proc_ctg(ctg: &Ctg, args: &ArgMatches) -> anyhow::Result<String> {
     // local caches of GC-content for each ctg
     let mut cache: HashMap<String, f32> = HashMap::new();
 
-    let parent = IntSpan::from_pair(ctg.chr_start, ctg.chr_end);
+    let parent = intspan::IntSpan::from_pair(ctg.chr_start, ctg.chr_end);
     let seq: String = gams::get_seq(&mut conn, &ctg.id);
 
     // All features in this ctg
-    let features: Vec<Feature> = gams::get_bin_feature(&mut conn, &ctg.id);
+    let features: Vec<gams::Feature> = gams::get_bin_features(&mut conn, &ctg.id);
     eprintln!("\tThere are {} features", features.len());
 
     let mut out_string = "".to_string();
@@ -146,21 +144,21 @@ fn proc_ctg(ctg: &Ctg, args: &ArgMatches) -> anyhow::Result<String> {
             let fsw_id = format!("fsw:{}:{}", feature_id, serial);
 
             let gc_content = gams::cache_gc_content(
-                &Range::from(&ctg.chr_id, sw_ints.min(), sw_ints.max()),
+                &intspan::Range::from(&ctg.chr_id, sw_ints.min(), sw_ints.max()),
                 &parent,
                 &seq,
                 &mut cache,
             );
 
             let resized = gams::center_resize(&parent, &sw_ints, resize);
-            let re_rg = Range::from(&ctg.chr_id, resized.min(), resized.max());
+            let re_rg = intspan::Range::from(&ctg.chr_id, resized.min(), resized.max());
             let (gc_mean, gc_stddev, gc_cv) =
                 gams::cache_gc_stat(&re_rg, &parent, &seq, &mut cache, size, size);
 
             // prepare to output
             let mut values: Vec<String> = vec![];
 
-            values.push(Range::from(&ctg.chr_id, sw_ints.min(), sw_ints.max()).to_string());
+            values.push(intspan::Range::from(&ctg.chr_id, sw_ints.min(), sw_ints.max()).to_string());
             values.push(sw_type.to_string());
             values.push(format!("{}", sw_distance));
             values.push(tag.to_string());
@@ -180,7 +178,7 @@ fn proc_ctg(ctg: &Ctg, args: &ArgMatches) -> anyhow::Result<String> {
 }
 
 // Adopt from https://rust-lang-nursery.github.io/rust-cookbook/concurrency/threads.html#create-a-parallel-pipeline
-fn proc_ctg_p(ctgs: &Vec<Ctg>, args: &ArgMatches) -> anyhow::Result<()> {
+fn proc_ctg_p(ctgs: &Vec<gams::Ctg>, args: &ArgMatches) -> anyhow::Result<()> {
     let parallel = *args.get_one::<usize>("parallel").unwrap();
     let mut writer = intspan::writer(args.get_one::<String>("outfile").unwrap());
 
@@ -200,7 +198,7 @@ fn proc_ctg_p(ctgs: &Vec<Ctg>, args: &ArgMatches) -> anyhow::Result<()> {
     eprintln!("{} contigs to be processed", ctgs.len());
 
     // Channel 1 - Contigs
-    let (snd1, rcv1) = bounded::<Ctg>(10);
+    let (snd1, rcv1) = bounded::<gams::Ctg>(10);
     // Channel 2 - Results
     let (snd2, rcv2) = bounded(10);
 

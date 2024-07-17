@@ -112,10 +112,12 @@ gams locate "I:1000-1050"
 gams locate --seq "I:1000-1050"
 
 # add features
-cargo run --bin gams feature tests/S288c/spo11_hot.rg
+gams feature tests/S288c/spo11_hot.rg
+
+gams tsv -s 'feature:*'
 
 # sliding windows around ranges
-gams fsw
+cargo run --bin gams fsw
 
 # add ranges
 gams range tests/S288c/spo11_hot.rg tests/S288c/spo11_hot.rg

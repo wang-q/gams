@@ -97,7 +97,11 @@ pub fn get_bin(conn: &mut redis::Connection, key: &str) -> Vec<u8> {
 }
 
 pub fn incr_serial(conn: &mut redis::Connection, key: &str) -> isize {
-    conn.incr(key, 1).unwrap()
+    incr_serial_n(conn, key, 1)
+}
+
+pub fn incr_serial_n(conn: &mut redis::Connection, key: &str, n: i32) -> isize {
+    conn.incr(key, n).unwrap()
 }
 
 fn encode_gz(seq: &[u8]) -> anyhow::Result<Vec<u8>> {
@@ -244,14 +248,14 @@ pub fn get_bin_ctgs(conn: &mut redis::Connection) -> BTreeMap<String, Ctg> {
 }
 
 /// bincode stored in a Redis set
-pub fn get_bin_feature(conn: &mut redis::Connection, ctg_id: &str) -> Vec<Feature> {
+pub fn get_bin_features(conn: &mut redis::Connection, ctg_id: &str) -> Vec<Feature> {
     let features_bytes: Vec<Vec<u8>> = conn
         .smembers(format!("bin:feature:{}", ctg_id))
         .unwrap_or(vec![]);
 
     features_bytes
         .iter()
-        .map(|e| bincode::deserialize(e).unwrap())
+        .map(|el| bincode::deserialize(el).unwrap())
         .collect()
 }
 

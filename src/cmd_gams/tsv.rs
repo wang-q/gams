@@ -56,6 +56,11 @@ pub fn execute(args: &ArgMatches) -> anyhow::Result<()> {
             let value: gams::Ctg = gams::get_ctg(&mut conn2, &id);
             tsv_wtr.serialize(value).unwrap();
         }
+        else if opt_pattern.starts_with("feature") {
+            let bytes = gams::get_bin(&mut conn2, &id);
+            let value: gams::Feature = bincode::deserialize(&bytes).unwrap();
+            tsv_wtr.serialize(value).unwrap();
+        }
     }
 
     Ok(())

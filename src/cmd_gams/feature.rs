@@ -1,7 +1,4 @@
 use clap::*;
-use gams::Feature;
-use intspan::*;
-use redis::Commands;
 use std::collections::BTreeMap;
 
 // Create clap subcommand arguments
@@ -9,13 +6,13 @@ pub fn make_subcommand() -> Command {
     Command::new("feature")
         .about("Add genomic features from a range file")
         .after_help(
-            r#"
+            r###"
 feature:
-Serial  format!("cnt:feature:{}", ctg_id)
-ID      format!("feature:{}:{}", ctg_id, serial)
-bincode format!("bin:feature:{}", ctg_id)       Redis set => Feature
+    cnt:feature:{ctg_id}        => serial
+    feature:{ctg_id}:{serial}   => Feature
+    bin:feature:{ctg_id}        => Redis SET Feature
 
-"#,
+"###,
         )
         .arg(
             Arg::new("infile")
@@ -60,7 +57,7 @@ pub fn execute(args: &ArgMatches) -> anyhow::Result<()> {
         let ranges_of = gams::read_range(infile, &lapper_of);
 
         // (ctg_id, Range)
-        let mut ctg_ranges: Vec<(String, Range)> = vec![];
+        let mut ctg_ranges: Vec<(String, intspan::Range)> = vec![];
         for k in ranges_of.keys() {
             for r in ranges_of.get(k).unwrap() {
                 ctg_ranges.push((k.to_string(), r.clone()));
@@ -91,8 +88,9 @@ pub fn execute(args: &ArgMatches) -> anyhow::Result<()> {
             if !serial_of.contains_key(ctg_id) {
                 let cnt = ranges_of.get(ctg_id).unwrap().len() as i32;
                 // Redis counter
-                // increased serial
-                let serial: i32 = conn.incr(format!("cnt:feature:{}", ctg_id), cnt).unwrap();
+                // increased serial by cnt
+                let serial =
+                    gams::incr_serial_n(&mut conn, &format!("cnt:feature:{ctg_id}"), cnt) as i32;
 
                 // here we start
                 serial_of.insert(ctg_id.to_string(), serial - cnt);
@@ -100,9 +98,9 @@ pub fn execute(args: &ArgMatches) -> anyhow::Result<()> {
 
             let serial = serial_of.get_mut(ctg_id).unwrap();
             *serial += 1;
-            let feature_id = format!("feature:{}:{}", ctg_id, serial);
+            let feature_id = format!("feature:{ctg_id}:{serial}");
 
-            let feature = Feature {
+            let feature = gams::Feature {
                 id: feature_id.clone(),
                 range: rg.to_string(),
                 chr_id: rg.chr().to_string(),
@@ -115,21 +113,13 @@ pub fn execute(args: &ArgMatches) -> anyhow::Result<()> {
             };
 
             // Add serialized struct Feature to a Redis set
-            let set_name = format!("bin:feature:{}", ctg_id);
-            let bytes = bincode::serialize(&feature).unwrap();
+            let set_name = format!("bin:feature:{ctg_id}");
+            let feature_bytes = bincode::serialize(&feature).unwrap();
 
             batch = batch
-                .hset(&feature_id, "chr_id", rg.chr())
+                .set(&feature_id, feature_bytes.clone())
                 .ignore()
-                .hset(&feature_id, "chr_start", *rg.start())
-                .ignore()
-                .hset(&feature_id, "chr_end", *rg.end())
-                .ignore()
-                .hset(&feature_id, "length", rg.end() - rg.start() + 1)
-                .ignore()
-                .hset(&feature_id, "tag", opt_tag)
-                .ignore()
-                .sadd(&set_name, bytes)
+                .sadd(&set_name, feature_bytes)
                 .ignore();
         }
 
