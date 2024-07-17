@@ -99,16 +99,17 @@ gams status drop
 # generate DB
 gams gen tests/S288c/genome.fa.gz --piece 100000
 
-cargo run --bin gams tsv -s 'ctg:*' > tests/S288c/ctg.tsv
-cargo run --bin gams tsv -s 'ctg:I:*'
+gams tsv -s 'ctg:*' > tests/S288c/ctg.tsv
+gams tsv -s 'ctg:I:*'
 
 gams-stat tests/S288c/ctg.tsv ctg
 
 # annotate
-gams anno tests/S288c/intergenic.json tests/S288c/ctg.range.tsv -H
+gams anno -H tests/S288c/intergenic.json tests/S288c/ctg.tsv
 
 # locate an range
-cargo run --bin gams locate "I(+):1000-1100"
+cargo run --bin gams locate "I:1000-1050"
+cargo run --bin gams locate --seq "I:1000-1050"
 
 # add features
 gams feature tests/S288c/spo11_hot.rg

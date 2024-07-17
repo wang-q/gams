@@ -1,7 +1,5 @@
 use bio::io::fasta;
 use clap::*;
-use gams::Ctg;
-use intspan::{IntSpan, Range};
 use std::collections::{BTreeMap, VecDeque};
 
 // Create clap subcommand arguments
@@ -113,7 +111,7 @@ pub fn execute(args: &ArgMatches) -> anyhow::Result<()> {
                     ambiguous_set.runlist()
                 );
 
-                let mut valid_set = IntSpan::new();
+                let mut valid_set = intspan::IntSpan::new();
                 valid_set.add_pair(1, chr_seq.len() as i32);
                 valid_set.subtract(&ambiguous_set);
                 valid_set = valid_set.fill(opt_fill - 1);
@@ -143,7 +141,7 @@ pub fn execute(args: &ArgMatches) -> anyhow::Result<()> {
             }
 
             // ctgs in each chr
-            let mut ctgs: BTreeMap<String, Ctg> = BTreeMap::new();
+            let mut ctgs: BTreeMap<String, gams::Ctg> = BTreeMap::new();
             while !regions.is_empty() {
                 // Redis counter
                 let serial = gams::incr_serial(&mut conn, &format!("cnt:ctg:{chr_id}"));
@@ -152,7 +150,7 @@ pub fn execute(args: &ArgMatches) -> anyhow::Result<()> {
                 let start = regions.pop_front().unwrap();
                 let end = regions.pop_front().unwrap();
 
-                let range = Range::from(chr_id, start, end);
+                let range = intspan::Range::from(chr_id, start, end);
 
                 // ID	chr_id	chr_start	chr_end	chr_strand	length
                 let ctg = gams::Ctg {
