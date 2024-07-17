@@ -1,5 +1,4 @@
 use clap::*;
-use std::collections::BTreeMap;
 use std::io::BufRead;
 
 // Create clap subcommand arguments
@@ -7,10 +6,11 @@ pub fn make_subcommand() -> Command {
     Command::new("locate")
         .about("Locate the given ranges to the corresponding ctgs")
         .after_help(
-            r#"
-It can also be used as a benchmark program.
+            r###"
+* `--seq` extracts sequences defined by the range(s)
+    * Not very useful, just in case that you can't access the fasta files
 
-"#,
+"###,
         )
         .arg(
             Arg::new("ranges")
@@ -33,16 +33,11 @@ It can also be used as a benchmark program.
                 .help("Rebuild the index of ctgs"),
         )
         .arg(
-            Arg::new("lapper")
-                .long("lapper")
+            Arg::new("seq")
+                .long("seq")
+                .short('s')
                 .action(ArgAction::SetTrue)
-                .help("Deserialize the index on request"),
-        )
-        .arg(
-            Arg::new("zrange")
-                .long("zrange")
-                .action(ArgAction::SetTrue)
-                .help("Use Redis ZRANGESTORE and ZINTER to locate the ctg"),
+                .help("Rebuild the index of ctgs"),
         )
         .arg(
             Arg::new("outfile")
@@ -58,17 +53,21 @@ It can also be used as a benchmark program.
 pub fn execute(args: &ArgMatches) -> anyhow::Result<()> {
     let mut writer = intspan::writer(args.get_one::<String>("outfile").unwrap());
 
+    let is_rebuild = args.get_flag("rebuild");
+    let is_file = args.get_flag("file");
+    let is_seq = args.get_flag("seq");
+
     // redis connection
     let mut conn = gams::connect();
 
     // rebuild
-    if args.get_flag("rebuild") {
+    if is_rebuild {
         gams::build_idx_ctg(&mut conn);
     }
 
     // all ranges
     let mut ranges: Vec<String> = vec![];
-    if args.get_flag("file") {
+    if is_file {
         for infile in args.get_many::<String>("ranges").unwrap() {
             let reader = intspan::reader(infile);
             for line in reader.lines().map_while(Result::ok) {
@@ -85,10 +84,7 @@ pub fn execute(args: &ArgMatches) -> anyhow::Result<()> {
     }
 
     // index of ctgs
-    let mut lapper_of = BTreeMap::new();
-    if !args.get_flag("lapper") || !args.get_flag("zrange") {
-        lapper_of = gams::get_idx_ctg(&mut conn);
-    }
+    let lapper_of = gams::get_idx_ctg(&mut conn);
 
     // processing each range
     for range in ranges {
@@ -98,18 +94,26 @@ pub fn execute(args: &ArgMatches) -> anyhow::Result<()> {
         }
         *rg.strand_mut() = "".to_string();
 
-        let ctg_id = if args.get_flag("lapper") {
-            gams::find_one_l(&mut conn, &rg)
-        } else if args.get_flag("zrange") {
-            gams::find_one_z(&mut conn, &rg)
-        } else {
-            gams::find_one_idx(&lapper_of, &rg)
-        };
+        let ctg_id = gams::find_one_idx(&lapper_of, &rg);
 
         if ctg_id.is_empty() {
             continue;
         }
-        writer.write_fmt(format_args!("{}\t{}\t{}\n", range, rg, ctg_id))?;
+
+        if is_seq {
+            let ctg = gams::get_ctg(&mut conn, &ctg_id);
+            let chr_start = ctg.chr_start;
+
+            let ctg_start = (rg.start() - chr_start + 1) as usize;
+            let ctg_end = (rg.end() - chr_start + 1) as usize;
+
+            let ctg_seq = gams::get_ctg_seq(&mut conn, &ctg_id);
+            // from <= x < to, zero-based
+            let seq = ctg_seq.get((ctg_start - 1)..(ctg_end)).unwrap();
+            writer.write_fmt(format_args!(">{}\n{}\n", range, seq))?;
+        } else {
+            writer.write_fmt(format_args!("{}\t{}\t{}\n", range, rg, ctg_id))?;
+        }
     }
 
     Ok(())
