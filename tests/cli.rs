@@ -1,10 +1,10 @@
 use approx::assert_relative_eq;
-use assert_cmd::prelude::*; // Add methods on commands
+use assert_cmd::prelude::*;
 use intspan::*;
-use predicates::prelude::*; // Used for writing assertions
-use std::collections::HashMap;
+use itertools::Itertools;
+use predicates::prelude::*;
 use std::env;
-use std::process::Command; // Run programs
+use std::process::Command;
 use tempfile::TempDir;
 
 #[test]
@@ -111,6 +111,45 @@ fn command_status() -> anyhow::Result<()> {
 }
 
 #[test]
+fn command_libs_redis() -> anyhow::Result<()> {
+    // env
+    let mut cmd = Command::cargo_bin("gams")?;
+    cmd.arg("env").unwrap();
+
+    // drop
+    let mut cmd = Command::cargo_bin("gams")?;
+    cmd.arg("status").arg("drop").unwrap();
+
+    // gen
+    let mut cmd = Command::cargo_bin("gams")?;
+    cmd.arg("gen")
+        .arg("tests/S288c/genome.fa.gz")
+        .arg("--piece")
+        .arg("100000")
+        .unwrap();
+
+    // get_vec_chr
+    let mut conn = gams::connect();
+    let exp = vec!["I", "Mito"];
+    let res = gams::get_vec_chr(&mut conn)
+        .into_iter()
+        .sorted()
+        .collect::<Vec<_>>();
+    assert_eq!(res, exp, "get_vec_chr");
+
+    // let exp = vec![
+    //     "ctg:I:1",
+    //     "ctg:I:2",
+    //     "ctg:Mito:1",
+    // ];
+    // let res = gams::get_scan_vec(&mut conn, "ctg:*").into_iter().sorted().collect::<Vec<_>>();
+    // assert_eq!(res.len(), exp.len());
+    // assert_eq!(res, exp);
+
+    Ok(())
+}
+
+#[test]
 fn command_gen() -> anyhow::Result<()> {
     // env
     let mut cmd = Command::cargo_bin("gams")?;
@@ -136,57 +175,13 @@ fn command_gen() -> anyhow::Result<()> {
 
     // get_scan_str
     let mut conn = gams::connect();
-    let exp: HashMap<String, String> = HashMap::from([
-        ("ctg:I:1".to_string(), "I".to_string()),
-        ("ctg:I:2".to_string(), "I".to_string()),
-        ("ctg:Mito:1".to_string(), "Mito".to_string()),
-    ]);
-    let res = gams::get_scan_str(&mut conn, "ctg:*", "chr_id");
+    let exp = vec!["ctg:I:1", "ctg:I:2", "ctg:Mito:1"];
+    let res = gams::get_scan_vec(&mut conn, "ctg:*")
+        .into_iter()
+        .sorted()
+        .collect::<Vec<_>>();
     assert_eq!(res.len(), exp.len());
-    assert!(res.keys().all(|k| exp.contains_key(k)));
-    assert!(res
-        .keys()
-        .all(|k| res.get(k).unwrap() == exp.get(k).unwrap()));
-
-    // get_scan_int
-    let mut conn = gams::connect();
-    let exp: HashMap<String, i32> = HashMap::from([
-        ("ctg:I:1".to_string(), 100000),
-        ("ctg:I:2".to_string(), 230218),
-        ("ctg:Mito:1".to_string(), 85779),
-    ]);
-    let res = gams::get_scan_int(&mut conn, "ctg:*", "chr_end");
-    assert_eq!(res.len(), exp.len());
-    assert!(res.keys().all(|k| exp.contains_key(k)));
-    assert!(res
-        .keys()
-        .all(|k| res.get(k).unwrap() == exp.get(k).unwrap()));
-
-    // find_one_z
-    let mut conn = gams::connect();
-    let tests = vec![
-        ("I", 1000, 1100, "ctg:I:1"),
-        ("Mito", 1000, 1100, "ctg:Mito:1"),
-        ("I", -1000, 1100, ""),
-        ("II", 1000, 1100, ""),
-    ];
-    for (name, start, end, expected) in tests {
-        let ctg = gams::find_one_z(&mut conn, &Range::from(name, start, end));
-        assert_eq!(ctg, expected.to_string());
-    }
-
-    // find_one_l
-    let mut conn = gams::connect();
-    let tests = vec![
-        ("I", 1000, 1100, "ctg:I:1"),
-        ("Mito", 1000, 1100, "ctg:Mito:1"),
-        ("I", -1000, 1100, ""),
-        ("II", 1000, 1100, ""),
-    ];
-    for (name, start, end, expected) in tests {
-        let ctg = gams::find_one_l(&mut conn, &Range::from(name, start, end));
-        assert_eq!(ctg, expected.to_string());
-    }
+    assert_eq!(res, exp);
 
     // get_seq
     let mut conn = gams::connect();
@@ -584,38 +579,6 @@ fn command_locate() -> anyhow::Result<()> {
     let mut cmd = Command::cargo_bin("gams")?;
     let output = cmd
         .arg("locate")
-        .arg("I:1000-1100")
-        .arg("II:1000-1100")
-        .arg("Mito:1000-1100")
-        .output()
-        .unwrap();
-    let stdout = String::from_utf8(output.stdout).unwrap();
-
-    assert_eq!(stdout.lines().count(), 2);
-    assert!(stdout.contains("ctg:I:1"));
-    assert!(!stdout.contains("II:1000-1100"));
-
-    // locate --lapper
-    let mut cmd = Command::cargo_bin("gams")?;
-    let output = cmd
-        .arg("locate")
-        .arg("--lapper")
-        .arg("I:1000-1100")
-        .arg("II:1000-1100")
-        .arg("Mito:1000-1100")
-        .output()
-        .unwrap();
-    let stdout = String::from_utf8(output.stdout).unwrap();
-
-    assert_eq!(stdout.lines().count(), 2);
-    assert!(stdout.contains("ctg:I:1"));
-    assert!(!stdout.contains("II:1000-1100"));
-
-    // locate --zrange
-    let mut cmd = Command::cargo_bin("gams")?;
-    let output = cmd
-        .arg("locate")
-        .arg("--zrange")
         .arg("I:1000-1100")
         .arg("II:1000-1100")
         .arg("Mito:1000-1100")

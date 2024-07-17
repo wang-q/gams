@@ -108,7 +108,7 @@ gams-stat tests/S288c/ctg.tsv ctg
 gams anno tests/S288c/intergenic.json tests/S288c/ctg.range.tsv -H
 
 # locate an range
-gams locate "I(+):1000-1100"
+cargo run --bin gams locate "I(+):1000-1100"
 
 # add features
 gams feature tests/S288c/spo11_hot.rg

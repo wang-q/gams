@@ -68,7 +68,7 @@ pub fn execute(args: &ArgMatches) -> anyhow::Result<()> {
     //----------------------------
     // redis connection
     let mut conn = gams::connect();
-    let ctg_of = gams::get_bin_ctg(&mut conn);
+    let ctg_of = gams::get_bin_ctgs(&mut conn);
 
     if parallel == 1 {
         let mut writer = intspan::writer(args.get_one::<String>("outfile").unwrap());

@@ -22,8 +22,9 @@ fn main() -> anyhow::Result<()> {
         .subcommand(cmd_gams::anno::make_subcommand())
         .subcommand(cmd_gams::sliding::make_subcommand())
         .subcommand(cmd_gams::peak::make_subcommand())
-        .subcommand(cmd_gams::tsv::make_subcommand()).after_help(
-        r###"
+        .subcommand(cmd_gams::tsv::make_subcommand())
+        .after_help(
+            r###"
 * `gams` stores key-value pairs in Redis. Keys can be grouped as follows:
     * Basic information about the genome - `top:`
     * Serials - `cnt:`
@@ -34,13 +35,13 @@ fn main() -> anyhow::Result<()> {
 * `gams` uses only one Redis data type, STRING
     * serial - the INCR command parses string values into integers
     * Rust types like Vec<String> are serialized to bytes using bincode
-    * DNA sequences were splitted into chunks(ctgs), gzipped and then stored
+    * DNA sequences were splitted into pieces, gzipped and then stored
 
 * gams naming conventions
-    serial  chr_id  ctg_id
+    serial, chr_id, ctg_id...
 
 "###,
-    );
+        );
 
     // Check which subcomamnd the user ran...
     match app.get_matches().subcommand() {
