@@ -194,6 +194,9 @@ pub fn execute(args: &ArgMatches) -> anyhow::Result<()> {
     }
 
     {
+        let common_name = gams::get_str(&mut conn, "top:common_name");
+        eprintln!("Common name: {}", common_name);
+
         // number of chr
         let n_chr = gams::get_vec_chr(&mut conn).len();
         eprintln!("There are {} chromosomes", n_chr);

@@ -84,6 +84,10 @@ pub fn insert_str(conn: &mut redis::Connection, key: &str, val: &str) -> () {
     conn.set(key, val).unwrap()
 }
 
+pub fn get_str(conn: &mut redis::Connection, key: &str) -> String {
+    conn.get(key).unwrap()
+}
+
 pub fn insert_bin(conn: &mut redis::Connection, key: &str, val: &[u8]) -> () {
     conn.set(key, val).unwrap()
 }

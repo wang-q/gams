@@ -170,7 +170,7 @@ fn command_gen() -> anyhow::Result<()> {
         .unwrap();
     let stderr = String::from_utf8(output.stderr).unwrap();
 
-    assert_eq!(stderr.lines().count(), 16);
+    assert_eq!(stderr.lines().count(), 17);
     assert!(stderr.contains("There are 3 contigs"));
 
     // get_scan_str
