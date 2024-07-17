@@ -33,7 +33,7 @@ fn default_redis_port() -> u32 {
 }
 
 // ID   range   chr_id	chr_start	chr_end	chr_strand	length
-#[derive(Default, Clone, Debug, Serialize, Deserialize)]
+#[derive(Default, Clone, Debug, PartialEq, Serialize, Deserialize)]
 pub struct Ctg {
     pub id: String,
     pub range: String,
@@ -44,7 +44,7 @@ pub struct Ctg {
     pub length: i32,
 }
 
-#[derive(Default, Clone, Debug, Serialize, Deserialize)]
+#[derive(Default, Clone, Debug, PartialEq, Serialize, Deserialize)]
 pub struct Feature {
     pub id: String,
     pub range: String,

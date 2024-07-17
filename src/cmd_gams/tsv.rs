@@ -1,8 +1,5 @@
 use clap::*;
-use gams::*;
-use intspan::*;
 use redis::Commands;
-use std::collections::BTreeMap;
 
 // Create clap subcommand arguments
 pub fn make_subcommand() -> Command {
@@ -24,21 +21,6 @@ ID, chr_id, chr_start, chr_end will always be included.
                 .help("Sets the pattern to scan, `ctg:*`"),
         )
         .arg(
-            Arg::new("field")
-                .long("field")
-                .short('f')
-                .num_args(1..)
-                .action(ArgAction::Append)
-                .help("Sets the fields to output"),
-        )
-        .arg(
-            Arg::new("range")
-                .long("range")
-                .short('r')
-                .action(ArgAction::SetTrue)
-                .help("Write a `range` field before the chr_id field"),
-        )
-        .arg(
             Arg::new("outfile")
                 .long("outfile")
                 .short('o')
@@ -53,85 +35,27 @@ pub fn execute(args: &ArgMatches) -> anyhow::Result<()> {
     //----------------------------
     // Options
     //----------------------------
-    let pattern = args.get_one::<String>("scan").unwrap().as_str();
-    let fields: Vec<String> = if args.contains_id("field") {
-        args.get_many::<String>("field")
-            .unwrap()
-            .map(|s| s.to_string())
-            .collect()
-    } else {
-        Vec::new()
-    };
-    let is_range = args.get_flag("range");
+    let opt_pattern = args.get_one::<String>("scan").unwrap().as_str();
+
+    // there are no easy ways to get field names of a struct
+    // let Serde handles them
+    let writer = intspan::writer(args.get_one::<String>("outfile").unwrap());
+    let mut tsv_wtr = csv::WriterBuilder::new()
+        .delimiter(b'\t')
+        .has_headers(true)
+        .from_writer(writer);
 
     // redis connection
-    let mut conn = connect();
-    let mut conn2 = connect(); // can't use one same `conn` inside an iter
-
-    // headers
-    let mut writer = writer(args.get_one::<String>("outfile").unwrap());
+    let mut conn = gams::connect();
+    let mut conn2 = gams::connect(); // can't use one same `conn` inside an iter
 
     // scan
-    let mut headers: Vec<String> = Vec::new();
-    let iter: redis::Iter<'_, String> = conn.scan_match(pattern).unwrap();
+    let iter: redis::Iter<'_, String> = conn.scan_match(opt_pattern).unwrap();
     for id in iter {
-        // need headers
-        if headers.is_empty() {
-            let mut keys: Vec<String> = conn2.hkeys(&id).unwrap();
-            for k in ["chr_id", "chr_start", "chr_end"]
-                .iter()
-                .map(|s| s.to_string())
-            {
-                if keys.contains(&k) {
-                    headers.push(k.clone());
-
-                    let index = keys.iter().position(|e| *e == k).unwrap();
-                    keys.remove(index);
-                }
-            }
-
-            if fields.is_empty() {
-                for k in keys {
-                    headers.push(k.clone());
-                }
-            } else {
-                for k in &fields {
-                    if keys.contains(k) {
-                        headers.push(k.clone());
-                    }
-                }
-            }
-
-            let mut header_line = headers.join("\t");
-            if is_range {
-                header_line = header_line.replace("chr_id\t", "range\tchr_id\t");
-            }
-            writer.write_all(format!("{}\t{}\n", "ID", header_line).as_ref())?;
+        if opt_pattern.starts_with("ctg") {
+            let value : gams::Ctg = gams::get_ctg(&mut conn2, &id);
+            tsv_wtr.serialize(value).unwrap();
         }
-
-        //----------------------------
-        // Output
-        //----------------------------
-        let hash: BTreeMap<String, String> = conn2.hgetall(&id).unwrap();
-        let mut values: Vec<String> = Vec::new();
-        if !is_range {
-            for k in &headers {
-                let val = hash.get(k).unwrap();
-                values.push(val.clone());
-            }
-        } else {
-            let (chr_id, chr_start, chr_end) = gams::get_key_pos(&mut conn2, &id);
-            let range = Range::from(&chr_id, chr_start, chr_end);
-            values.push(range.to_string());
-
-            for k in &headers {
-                let val = hash.get(k).unwrap();
-                values.push(val.clone());
-            }
-        }
-
-        let line = values.join("\t");
-        writer.write_all(format!("{}\t{}\n", id, line).as_ref())?;
     }
 
     Ok(())

@@ -99,8 +99,8 @@ gams status drop
 # generate DB
 gams gen tests/S288c/genome.fa.gz --piece 100000
 
-gams tsv -s 'ctg:*' > tests/S288c/ctg.tsv
-gams tsv -s 'ctg:*' --range > tests/S288c/ctg.range.tsv
+cargo run --bin gams tsv -s 'ctg:*' > tests/S288c/ctg.tsv
+cargo run --bin gams tsv -s 'ctg:I:*'
 
 gams-stat tests/S288c/ctg.tsv ctg
 
