@@ -53,7 +53,7 @@ pub fn execute(args: &ArgMatches) -> anyhow::Result<()> {
     let iter: redis::Iter<'_, String> = conn.scan_match(opt_pattern).unwrap();
     for id in iter {
         if opt_pattern.starts_with("ctg") {
-            let value : gams::Ctg = gams::get_ctg(&mut conn2, &id);
+            let value: gams::Ctg = gams::get_ctg(&mut conn2, &id);
             tsv_wtr.serialize(value).unwrap();
         }
     }

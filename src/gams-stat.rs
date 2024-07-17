@@ -48,13 +48,11 @@ fn execute(args: &ArgMatches) -> anyhow::Result<()> {
 
     let writer = writer(args.get_one::<String>("outfile").unwrap());
 
-    let df = CsvReader::from_path(infile)
-        .unwrap()
-        .infer_schema(None)
-        .has_header(true)
-        .with_separator(b'\t')
-        .finish()
-        .unwrap();
+    let df = CsvReadOptions::default()
+        .with_has_header(true)
+        .with_parse_options(CsvParseOptions::default().with_separator(b'\t'))
+        .try_into_reader_with_file_path(Some(infile.into()))?
+        .finish()?;
 
     let mut res = match query {
         "ctg" => query_ctg(df),
@@ -75,18 +73,13 @@ fn query_ctg(df: DataFrame) -> DataFrame {
         .lazy()
         .group_by(["chr_id"])
         .agg([
-            col("ID").count().alias("COUNT"),
+            col("id").count().alias("COUNT"),
             col("length").mean().alias("length_mean"),
             col("length").sum().alias("length_sum"),
         ])
         .sort(
-            "chr_id",
-            SortMultipleOptions {
-                descending: false,
-                nulls_last: true,
-                multithreaded: true,
-                maintain_order: false,
-            },
+            ["chr_id"],
+            SortMultipleOptions::new().with_order_descending_multi([false]),
         )
         .collect();
 

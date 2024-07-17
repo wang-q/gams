@@ -112,7 +112,7 @@ gams gen genome/genome.fa.gz --piece 500000
 gams status dump dumps/ctg.rdb
 
 # tsv exports
-time gams tsv -s 'ctg:*' --range |
+time gams tsv -s 'ctg:*' |
     gams anno -H genome/cds.json stdin |
     gams anno -H genome/repeats.json stdin |
     rgr sort -H -f 2 stdin |
@@ -137,7 +137,7 @@ time parallel -j 4 -k --line-buffer '
 #user    0m0.423s
 #sys     0m0.225s
 
-time gams tsv -s 'range:*' --range |
+time gams tsv -s 'range:*' |
     gams anno genome/cds.json stdin -H |
     gams anno genome/repeats.json stdin -H |
     rgr sort -H -f 2 stdin |
@@ -174,7 +174,7 @@ parallel -j 4 -k --line-buffer '
     gams feature features/T-DNA.{}.rg --tag {}
     ' ::: CSHL FLAG MX RATM
 
-time gams tsv -s 'feature:*' --range |
+time gams tsv -s 'feature:*' |
     gams anno genome/cds.json stdin -H |
     gams anno genome/repeats.json stdin -H |
     rgr sort -H -f 2 stdin |

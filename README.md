@@ -17,7 +17,7 @@ cargo install --path . --force --offline
 cargo test -- --test-threads=1
 
 # gams-stat
-cargo install --force --offline --path . --features stat
+cargo install --force --path . --features stat --offline
 
 # build under WSL 2
 export CARGO_TARGET_DIR=/tmp
