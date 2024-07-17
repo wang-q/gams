@@ -130,7 +130,7 @@ pub fn execute(args: &ArgMatches) -> anyhow::Result<()> {
         }
     }
 
-    // number of ranges
+    // number of features
     let n_feature = gams::get_scan_count(&mut conn, "feature:*");
     eprintln!("There are {} features in the database", n_feature);
 

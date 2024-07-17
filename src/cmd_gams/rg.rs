@@ -109,5 +109,9 @@ pub fn execute(args: &ArgMatches) -> anyhow::Result<()> {
         }
     }
 
+    // number of rgs
+    let n_rg = gams::get_scan_count(&mut conn, "rg:*");
+    eprintln!("There are {} rgs in the database", n_rg);
+
     Ok(())
 }

@@ -122,6 +122,8 @@ cargo run --bin gams fsw
 # add rgs
 gams rg tests/S288c/spo11_hot.rg tests/S288c/spo11_hot.rg
 
+gams tsv -s 'rg:*'
+
 # clear
 gams clear rg
 

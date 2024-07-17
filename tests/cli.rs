@@ -248,7 +248,7 @@ fn command_tsv() -> anyhow::Result<()> {
 }
 
 #[test]
-fn command_range() -> anyhow::Result<()> {
+fn command_rg() -> anyhow::Result<()> {
     // env
     let mut cmd = Command::cargo_bin("gams")?;
     cmd.arg("env").unwrap();
@@ -268,15 +268,15 @@ fn command_range() -> anyhow::Result<()> {
     // range
     let mut cmd = Command::cargo_bin("gams")?;
     let output = cmd
-        .arg("range")
+        .arg("rg")
         .arg("tests/S288c/spo11_hot.rg")
         .arg("tests/S288c/spo11_hot.rg")
         .output()
         .unwrap();
     let stderr = String::from_utf8(output.stderr).unwrap();
 
-    assert_eq!(stderr.lines().count(), 2);
-    assert!(stderr.contains("There are 69 ranges in this file"));
+    assert_eq!(stderr.lines().count(), 3);
+    assert!(stderr.contains("There are 69 rgs in this file"));
 
     Ok(())
 }
@@ -307,7 +307,7 @@ fn command_clear() -> anyhow::Result<()> {
 
     // range
     let mut cmd = Command::cargo_bin("gams")?;
-    cmd.arg("range")
+    cmd.arg("rg")
         .arg("tests/S288c/spo11_hot.rg")
         .arg("tests/S288c/spo11_hot.rg")
         .output()
@@ -315,11 +315,11 @@ fn command_clear() -> anyhow::Result<()> {
 
     // clear
     let mut cmd = Command::cargo_bin("gams")?;
-    let output = cmd.arg("clear").arg("range").output().unwrap();
+    let output = cmd.arg("clear").arg("rg").output().unwrap();
     let stderr = String::from_utf8(output.stderr).unwrap();
 
     assert_eq!(stderr.lines().count(), 4);
-    assert!(stderr.contains("Clearing pattern \"range:*\""));
+    assert!(stderr.contains("Clearing pattern \"rg:*\""));
     assert!(stderr.contains("Clear 2 keys"));
 
     Ok(())

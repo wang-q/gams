@@ -6,11 +6,8 @@ pub fn make_subcommand() -> Command {
     Command::new("tsv")
         .about("Export Redis hashes to a tsv file")
         .after_help(
-            r#"
-All hashes should have the same structure.
-ID, chr_id, chr_start, chr_end will always be included.
-
-"#,
+            r###"
+"###,
         )
         .arg(
             Arg::new("scan")
@@ -58,6 +55,10 @@ pub fn execute(args: &ArgMatches) -> anyhow::Result<()> {
         } else if opt_pattern.starts_with("feature") {
             let bytes = gams::get_bin(&mut conn2, &id);
             let value: gams::Feature = bincode::deserialize(&bytes).unwrap();
+            tsv_wtr.serialize(value).unwrap();
+        } else if opt_pattern.starts_with("rg") {
+            let bytes = gams::get_bin(&mut conn2, &id);
+            let value: gams::Rg = bincode::deserialize(&bytes).unwrap();
             tsv_wtr.serialize(value).unwrap();
         }
     }
