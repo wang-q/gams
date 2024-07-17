@@ -1,5 +1,4 @@
 use clap::*;
-use intspan::*;
 use std::collections::BTreeMap;
 use std::io::BufRead;
 
@@ -71,7 +70,7 @@ pub fn execute(args: &ArgMatches) -> anyhow::Result<()> {
     let mut ranges: Vec<String> = vec![];
     if args.get_flag("file") {
         for infile in args.get_many::<String>("ranges").unwrap() {
-            let reader = reader(infile);
+            let reader = intspan::reader(infile);
             for line in reader.lines().map_while(Result::ok) {
                 let parts: Vec<&str> = line.split('\t').collect();
                 ranges.push(parts.first().unwrap().to_string());
@@ -93,7 +92,7 @@ pub fn execute(args: &ArgMatches) -> anyhow::Result<()> {
 
     // processing each range
     for range in ranges {
-        let mut rg = Range::from_str(range.as_str());
+        let mut rg = intspan::Range::from_str(range.as_str());
         if !rg.is_valid() {
             continue;
         }

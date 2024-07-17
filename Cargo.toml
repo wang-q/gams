@@ -21,7 +21,7 @@ flate2 = "1.0.28"
 tera = "1.19.1"
 itertools = "0.12.1"
 
-redis = { version = "0.25.2", default-features = false, features = ["script"] }
+redis = { version = "0.25.4", default-features = false, features = ["script"] }
 rand = "0.8.5"
 serde = "1.0.197"
 envy = "0.4.2"
