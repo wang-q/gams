@@ -15,7 +15,7 @@ fn main() -> anyhow::Result<()> {
         .subcommand(cmd_gams::status::make_subcommand())
         .subcommand(cmd_gams::gen::make_subcommand())
         .subcommand(cmd_gams::locate::make_subcommand())
-        .subcommand(cmd_gams::range::make_subcommand())
+        .subcommand(cmd_gams::rg::make_subcommand())
         .subcommand(cmd_gams::clear::make_subcommand())
         .subcommand(cmd_gams::feature::make_subcommand())
         .subcommand(cmd_gams::fsw::make_subcommand())
@@ -49,7 +49,7 @@ fn main() -> anyhow::Result<()> {
         Some(("status", sub_matches)) => cmd_gams::status::execute(sub_matches),
         Some(("gen", sub_matches)) => cmd_gams::gen::execute(sub_matches),
         Some(("locate", sub_matches)) => cmd_gams::locate::execute(sub_matches),
-        Some(("range", sub_matches)) => cmd_gams::range::execute(sub_matches),
+        Some(("rg", sub_matches)) => cmd_gams::rg::execute(sub_matches),
         Some(("clear", sub_matches)) => cmd_gams::clear::execute(sub_matches),
         Some(("feature", sub_matches)) => cmd_gams::feature::execute(sub_matches),
         Some(("fsw", sub_matches)) => cmd_gams::fsw::execute(sub_matches),

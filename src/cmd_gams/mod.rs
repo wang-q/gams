@@ -8,7 +8,7 @@ pub mod fsw;
 pub mod gen;
 pub mod locate;
 pub mod peak;
-pub mod range;
+pub mod rg;
 pub mod sliding;
 pub mod status;
 pub mod tsv;

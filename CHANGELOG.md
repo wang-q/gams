@@ -3,13 +3,14 @@
 ## Unreleased - ReleaseDate
 
 
-* Add structs `Ctg`, `Feature`, and `Range`
+* Add structs `Ctg`, `Feature`, and `Rg`
     * Store serialized bincode to Redis
 * Rewrite some functions in `libs/redis.rs`
     * Minimize the use of redis commands in each subcommand
 
-* Make `gams range` and `gams feature` up to 10x times faster by packaging hundreds of redis
+* Make `gams rg` and `gams feature` up to 10x times faster by packaging hundreds of redis
   operations into batches
+* Rename `gams range` to `gams rg`
 
 * Add --seq to `gams locate`
 * Add --parallel to `gams sliding` and `gams fsw`

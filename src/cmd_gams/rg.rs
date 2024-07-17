@@ -99,9 +99,7 @@ pub fn execute(args: &ArgMatches) -> anyhow::Result<()> {
             // Add serialized struct Feature to a Redis set
             let rg_bytes = bincode::serialize(&rg).unwrap();
 
-            batch = batch
-                .set(&rg_id, rg_bytes.clone())
-                .ignore();
+            batch = batch.set(&rg_id, rg_bytes.clone()).ignore();
         }
 
         // Possible remaining records in the batch

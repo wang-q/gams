@@ -116,14 +116,14 @@ gams feature tests/S288c/spo11_hot.rg
 
 gams tsv -s 'feature:*'
 
-# sliding windows around ranges
+# sliding windows around features
 cargo run --bin gams fsw
 
-# add ranges
-gams range tests/S288c/spo11_hot.rg tests/S288c/spo11_hot.rg
+# add rgs
+gams rg tests/S288c/spo11_hot.rg tests/S288c/spo11_hot.rg
 
 # clear
-gams clear range
+gams clear rg
 
 # dump DB to redis-server start dir as dump.rdb
 gams status dump

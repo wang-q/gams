@@ -12,9 +12,9 @@ List of actions:
 * feature
     * feature:*
     * cnt:feature:*
-* range
-    * range:*
-    * cnt:range:*
+* rg
+    * rg:*
+    * cnt:rg:*
 * peak
     * peak:*
     * cnt:peak:*
@@ -51,13 +51,13 @@ pub fn execute(args: &ArgMatches) -> anyhow::Result<()> {
                     clear_lua("cnt:feature:*");
                 }
             }
-            "range" => {
+            "rg" => {
                 if is_iter {
-                    clear_iter("range:*");
-                    clear_iter("cnt:range:*");
+                    clear_iter("rg:*");
+                    clear_iter("cnt:rg:*");
                 } else {
-                    clear_lua("range:*");
-                    clear_lua("cnt:range:*");
+                    clear_lua("rg:*");
+                    clear_lua("cnt:rg:*");
                 }
             }
             "peak" => {
