@@ -95,7 +95,7 @@ pub fn execute(args: &ArgMatches) -> anyhow::Result<()> {
             let mut regions = VecDeque::new();
             {
                 // Ambiguous region
-                let mut ambiguous_set = IntSpan::new();
+                let mut ambiguous_set = intspan::IntSpan::new();
 
                 for (i, item) in chr_seq.iter().enumerate() {
                     match *item as char {

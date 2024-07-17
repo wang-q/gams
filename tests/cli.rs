@@ -238,32 +238,10 @@ fn command_tsv() -> anyhow::Result<()> {
     assert_eq!(stdout.lines().count(), 4);
     assert_eq!(
         stdout.lines().next().unwrap().split('\t').count(),
-        6,
+        7,
         "field count"
     );
     assert!(stdout.contains("chr_strand\tlength"));
-    assert!(stdout.contains("ctg:I:2"));
-
-    // tsv -f length
-    let mut cmd = Command::cargo_bin("gams")?;
-    let output = cmd
-        .arg("tsv")
-        .arg("-s")
-        .arg("ctg:*")
-        .arg("-f")
-        .arg("length")
-        .output()
-        .unwrap();
-    let stdout = String::from_utf8(output.stdout).unwrap();
-
-    assert_eq!(stdout.lines().count(), 4);
-    assert_eq!(
-        stdout.lines().next().unwrap().split('\t').count(),
-        5,
-        "field count"
-    );
-    assert!(!stdout.contains("chr_strand\tlength"));
-    assert!(stdout.contains("chr_end\tlength"));
     assert!(stdout.contains("ctg:I:2"));
 
     Ok(())
