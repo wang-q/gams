@@ -107,7 +107,7 @@ pub fn execute(args: &ArgMatches) -> anyhow::Result<()> {
             let ctg_start = (rg.start() - chr_start + 1) as usize;
             let ctg_end = (rg.end() - chr_start + 1) as usize;
 
-            let ctg_seq = gams::get_ctg_seq(&mut conn, &ctg_id);
+            let ctg_seq = gams::get_seq(&mut conn, &ctg_id);
             // from <= x < to, zero-based
             let seq = ctg_seq.get((ctg_start - 1)..(ctg_end)).unwrap();
             writer.write_fmt(format_args!(">{}\n{}\n", range, seq))?;

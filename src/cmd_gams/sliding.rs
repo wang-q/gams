@@ -134,7 +134,7 @@ fn proc_ctg(ctg_id: &String, args: &ArgMatches) -> anyhow::Result<String> {
     let parent = IntSpan::from_pair(chr_start, chr_end);
     let windows = gams::sliding(&parent, size, step);
 
-    let ctg_seq: String = gams::get_ctg_seq(&mut conn, ctg_id);
+    let ctg_seq: String = gams::get_seq(&mut conn, ctg_id);
 
     let mut gcs: Vec<f32> = Vec::with_capacity(windows.len());
     for window in &windows {

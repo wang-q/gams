@@ -108,11 +108,11 @@ gams-stat tests/S288c/ctg.tsv ctg
 gams anno -H tests/S288c/intergenic.json tests/S288c/ctg.tsv
 
 # locate an range
-cargo run --bin gams locate "I:1000-1050"
-cargo run --bin gams locate --seq "I:1000-1050"
+gams locate "I:1000-1050"
+gams locate --seq "I:1000-1050"
 
 # add features
-gams feature tests/S288c/spo11_hot.rg
+cargo run --bin gams feature tests/S288c/spo11_hot.rg
 
 # sliding windows around ranges
 gams fsw

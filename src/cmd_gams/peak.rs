@@ -92,7 +92,7 @@ pub fn execute(args: &ArgMatches) -> anyhow::Result<()> {
         let mut cache: HashMap<String, f32> = HashMap::new();
 
         let parent = IntSpan::from_pair(chr_start, chr_end);
-        let seq: String = get_ctg_seq(&mut conn, ctg_id);
+        let seq: String = get_seq(&mut conn, ctg_id);
 
         // scan_match() is an expensive op. Replace with cnt
         // let pattern = format!("peak:{}:*", ctg_id);

@@ -100,16 +100,6 @@ pub fn incr_serial(conn: &mut redis::Connection, key: &str) -> isize {
     conn.incr(key, 1).unwrap()
 }
 
-pub fn insert_ctg(conn: &mut redis::Connection, ctg_id: &str, ctg: &Ctg) {
-    let ctg_bytes = bincode::serialize(ctg).unwrap();
-    insert_bin(conn, ctg_id, &ctg_bytes);
-}
-
-pub fn get_ctg(conn: &mut redis::Connection, ctg_id: &str) -> Ctg {
-    let ctg_bytes = get_bin(conn, ctg_id);
-    bincode::deserialize(&ctg_bytes).unwrap()
-}
-
 fn encode_gz(seq: &[u8]) -> anyhow::Result<Vec<u8>> {
     let mut bytes = Vec::new();
     let mut z = flate2::read::GzEncoder::new(seq, flate2::Compression::fast());
@@ -120,6 +110,30 @@ fn encode_gz(seq: &[u8]) -> anyhow::Result<Vec<u8>> {
 pub fn insert_seq(conn: &mut redis::Connection, ctg_id: &str, seq: &[u8]) {
     let seq_bytes = encode_gz(seq).unwrap();
     insert_bin(conn, &format!("seq:{ctg_id}"), &seq_bytes);
+}
+
+fn decode_gz(bytes: &[u8]) -> anyhow::Result<Vec<u8>> {
+    let mut gz = GzDecoder::new(bytes);
+    let mut buf = Vec::new();
+    gz.read_to_end(&mut buf)?;
+    Ok(buf)
+}
+
+pub fn get_seq(conn: &mut redis::Connection, ctg_id: &str) -> String {
+    let seq_bytes: Vec<u8> = conn.get(format!("seq:{}", ctg_id)).unwrap();
+
+    let s = decode_gz(&seq_bytes).unwrap();
+    String::from_utf8(s).unwrap()
+}
+
+pub fn insert_ctg(conn: &mut redis::Connection, ctg_id: &str, ctg: &Ctg) {
+    let ctg_bytes = bincode::serialize(ctg).unwrap();
+    insert_bin(conn, ctg_id, &ctg_bytes);
+}
+
+pub fn get_ctg(conn: &mut redis::Connection, ctg_id: &str) -> Ctg {
+    let ctg_bytes = get_bin(conn, ctg_id);
+    bincode::deserialize(&ctg_bytes).unwrap()
 }
 
 /// get all chr_ids
@@ -363,20 +377,6 @@ pub fn find_one_l(conn: &mut redis::Connection, rg: &Range) -> String {
     }
 }
 
-pub fn decode_gz(bytes: &[u8]) -> anyhow::Result<Vec<u8>> {
-    let mut gz = GzDecoder::new(bytes);
-    let mut buf = Vec::new();
-    gz.read_to_end(&mut buf)?;
-    Ok(buf)
-}
-
-pub fn get_ctg_seq(conn: &mut redis::Connection, ctg_id: &str) -> String {
-    let seq_bytes: Vec<u8> = conn.get(format!("seq:{}", ctg_id)).unwrap();
-
-    let s = decode_gz(&seq_bytes).unwrap();
-    String::from_utf8(s).unwrap()
-}
-
 /// GC-content within a ctg
 pub fn cache_gc_content(
     rg: &Range,
@@ -436,7 +436,7 @@ pub fn get_rg_seq(conn: &mut redis::Connection, rg: &Range) -> String {
     let ctg_start = (rg.start() - chr_start + 1) as usize;
     let ctg_end = (rg.end() - chr_start + 1) as usize;
 
-    let ctg_seq = get_ctg_seq(conn, &ctg_id);
+    let ctg_seq = get_seq(conn, &ctg_id);
 
     // from <= x < to, zero-based
     let seq = ctg_seq.get((ctg_start - 1)..(ctg_end)).unwrap();

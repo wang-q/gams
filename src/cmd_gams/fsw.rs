@@ -124,7 +124,7 @@ fn proc_ctg(ctg: &Ctg, args: &ArgMatches) -> anyhow::Result<String> {
     let mut cache: HashMap<String, f32> = HashMap::new();
 
     let parent = IntSpan::from_pair(ctg.chr_start, ctg.chr_end);
-    let seq: String = gams::get_ctg_seq(&mut conn, &ctg.id);
+    let seq: String = gams::get_seq(&mut conn, &ctg.id);
 
     // All features in this ctg
     let features: Vec<Feature> = gams::get_bin_feature(&mut conn, &ctg.id);
