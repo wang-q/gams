@@ -2,22 +2,24 @@
 
 ## Unreleased - ReleaseDate
 
+
+* Add structs `Ctg`, `Feature`, and `Range`
+    * Store serialized bincode to Redis
+* Rewrite some functions in `libs/redis.rs`
+    * Minimize the use of redis commands in each subcommand
+
 * Make `gams range` and `gams feature` up to 10x times faster by packaging hundreds of redis
   operations into batches
 
-* Add structs `Ctg`, `Feature`, and `Range`
-* Rewrite some functions in `redis.rs`
-
-* Add `gams-sql` as an alternative to `gams-stat`
-
-* `--range` writes a `range` field before the chr_id field
+* Add --seq to `gams locate`
 * Add --parallel to `gams sliding` and `gams fsw`
 * Using lua scripts in `gams clear`
 * Enhance `gams status dump`
+* Serializing to .tsv via serde
 
 * Bump deps
     * `clap` v4
-    * `polars` v0.30
+    * `polars` v0.41
 
 * Add more benchmarks
 * Update docs

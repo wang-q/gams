@@ -36,7 +36,7 @@ serde = { version = "1.0.171", features = ["derive"] }
 bincode = "1.3.3"
 rust-lapper = { version = "1.0.1", features = ["with_serde"] }
 
-polars = { version = "0.38.3", optional = true, features = ["dtype-slim", "lazy"] }
+polars = { version = "0.41.3", optional = true, features = ["dtype-slim", "lazy"] }
 
 [features]
 stat = ["polars"]
