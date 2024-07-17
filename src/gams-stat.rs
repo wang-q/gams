@@ -81,7 +81,7 @@ fn query_ctg(df: DataFrame) -> DataFrame {
         ])
         .sort(
             "chr_id",
-            SortOptions {
+            SortMultipleOptions {
                 descending: false,
                 nulls_last: true,
                 multithreaded: true,
