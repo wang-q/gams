@@ -158,7 +158,8 @@ fn proc_ctg(ctg: &gams::Ctg, args: &ArgMatches) -> anyhow::Result<String> {
             // prepare to output
             let mut values: Vec<String> = vec![];
 
-            values.push(intspan::Range::from(&ctg.chr_id, sw_ints.min(), sw_ints.max()).to_string());
+            values
+                .push(intspan::Range::from(&ctg.chr_id, sw_ints.min(), sw_ints.max()).to_string());
             values.push(sw_type.to_string());
             values.push(format!("{}", sw_distance));
             values.push(tag.to_string());
