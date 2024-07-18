@@ -132,8 +132,6 @@ fn proc_ctg(ctg: &gams::Ctg, args: &ArgMatches) -> anyhow::Result<String> {
     for feature in &features {
         let feature_id = &feature.id;
         let feature_rg = intspan::Range::from_str(&feature.range);
-
-
         let range_start = feature_rg.start;
         let range_end = feature_rg.end;
         let tag = &feature.tag;

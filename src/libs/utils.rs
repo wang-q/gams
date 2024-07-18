@@ -1,8 +1,8 @@
-use std::collections::{BTreeMap, HashMap};
-use rust_lapper::{Interval, Lapper};
-use std::io::{BufRead, Read};
 use lazy_static::lazy_static;
 use regex::Regex;
+use rust_lapper::{Interval, Lapper};
+use std::collections::{BTreeMap, HashMap};
+use std::io::{BufRead, Read};
 
 /// Read ranges in the file
 pub fn read_range(
@@ -34,7 +34,9 @@ pub fn read_range(
 
     ranges_of
 }
+
 /// Read peaks in the file
+/// gc_content in this file aren't correct
 pub fn read_peak(
     infile: &str,
     lapper_of: &BTreeMap<String, Lapper<u32, String>>,

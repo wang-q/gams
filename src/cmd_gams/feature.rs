@@ -69,7 +69,7 @@ pub fn execute(args: &ArgMatches) -> anyhow::Result<()> {
 
         // start serial of each ctg
         // To minimize expensive Redis operations, locally increment the serial number
-        // For each ctg, we increase the counter only once
+        // For each ctg, we increase the counter in Redis only once
         let mut serial_of: BTreeMap<String, i32> = BTreeMap::new();
 
         let mut batch = &mut redis::pipe();
@@ -88,7 +88,7 @@ pub fn execute(args: &ArgMatches) -> anyhow::Result<()> {
             if !serial_of.contains_key(ctg_id) {
                 let cnt = ranges_of.get(ctg_id).unwrap().len() as i32;
                 // Redis counter
-                // increased serial by cnt
+                // increase serial by cnt
                 let serial =
                     gams::incr_serial_n(&mut conn, &format!("cnt:feature:{ctg_id}"), cnt) as i32;
 
