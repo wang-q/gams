@@ -131,8 +131,11 @@ fn proc_ctg(ctg: &gams::Ctg, args: &ArgMatches) -> anyhow::Result<String> {
     let mut out_string = "".to_string();
     for feature in &features {
         let feature_id = &feature.id;
-        let range_start = feature.chr_start;
-        let range_end = feature.chr_end;
+        let feature_rg = intspan::Range::from_str(&feature.range);
+
+
+        let range_start = feature_rg.start;
+        let range_end = feature_rg.end;
         let tag = &feature.tag;
 
         // No need to use Redis counters

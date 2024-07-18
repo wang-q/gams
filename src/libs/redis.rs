@@ -31,7 +31,7 @@ fn default_redis_port() -> u32 {
     6379
 }
 
-// ID   range   chr_id	chr_start	chr_end	chr_strand	length
+/// chr_* fields were retained to facilitate Serde serializing to tsv
 #[derive(Default, Clone, Debug, PartialEq, Serialize, Deserialize)]
 pub struct Ctg {
     pub id: String,
@@ -47,10 +47,6 @@ pub struct Ctg {
 pub struct Feature {
     pub id: String,
     pub range: String,
-    pub chr_id: String,
-    pub chr_start: i32,
-    pub chr_end: i32,
-    pub chr_strand: String,
     pub length: i32,
     pub ctg_id: String,
     pub tag: String,

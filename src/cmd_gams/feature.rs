@@ -103,10 +103,6 @@ pub fn execute(args: &ArgMatches) -> anyhow::Result<()> {
             let feature = gams::Feature {
                 id: feature_id.clone(),
                 range: rg.to_string(),
-                chr_id: rg.chr().to_string(),
-                chr_start: *rg.start(),
-                chr_end: *rg.end(),
-                chr_strand: "+".to_string(),
                 length: rg.end() - rg.start() + 1,
                 ctg_id: ctg_id.clone(),
                 tag: opt_tag.to_string(),
