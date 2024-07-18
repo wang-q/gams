@@ -128,7 +128,7 @@ fn proc_ctg(ctg_id: &String, args: &ArgMatches) -> anyhow::Result<String> {
     // redis connection
     let mut conn = gams::connect();
 
-    let (chr_id, chr_start, chr_end) = gams::get_key_pos(&mut conn, ctg_id);
+    let (chr_id, chr_start, chr_end) = gams::get_ctg_pos(&mut conn, ctg_id);
     eprintln!("Process {} {}:{}-{}", ctg_id, chr_id, chr_start, chr_end);
 
     let parent = IntSpan::from_pair(chr_start, chr_end);

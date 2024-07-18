@@ -126,7 +126,7 @@ pub fn execute(args: &ArgMatches) -> anyhow::Result<()> {
             let mut prop = 0.0;
             if set.contains_key(range.chr()) {
                 if !cache.contains_key(&ctg_id) {
-                    let (_, chr_start, chr_end) = gams::get_key_pos(&mut conn, &ctg_id);
+                    let (_, chr_start, chr_end) = gams::get_ctg_pos(&mut conn, &ctg_id);
                     let ctg_intspan = IntSpan::from_pair(chr_start, chr_end);
                     let parent = set.get(range.chr()).unwrap().intersect(&ctg_intspan);
                     cache.insert(ctg_id.clone(), parent);

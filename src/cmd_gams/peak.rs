@@ -86,7 +86,7 @@ pub fn execute(args: &ArgMatches) -> anyhow::Result<()> {
     let ctgs: Vec<String> = gams::get_scan_vec(&mut conn, "ctg:*");
     eprintln!("Updating GC-content of peaks...");
     for ctg_id in &ctgs {
-        let (chr_id, chr_start, chr_end) = gams::get_key_pos(&mut conn, ctg_id);
+        let (chr_id, chr_start, chr_end) = gams::get_ctg_pos(&mut conn, ctg_id);
 
         // local caches of GC-content for each ctg
         let mut cache: HashMap<String, f32> = HashMap::new();
@@ -99,7 +99,7 @@ pub fn execute(args: &ArgMatches) -> anyhow::Result<()> {
         // let peaks: Vec<String> = gams::get_scan_vec(&mut conn, pattern);
         let peaks: Vec<String> = get_vec_feature(&mut conn, ctg_id);
         for peak_id in peaks {
-            let (_, peak_start, peak_end) = gams::get_key_pos(&mut conn, &peak_id);
+            let (_, peak_start, peak_end) = gams::get_ctg_pos(&mut conn, &peak_id);
 
             let gc_content = cache_gc_content(
                 &Range::from(&chr_id, peak_start, peak_end),
@@ -115,7 +115,7 @@ pub fn execute(args: &ArgMatches) -> anyhow::Result<()> {
     eprintln!("Updating relationships of peaks...");
     eprintln!("{} contigs to be processed", ctgs.len());
     for ctg_id in &ctgs {
-        let (chr_id, chr_start, chr_end) = gams::get_key_pos(&mut conn, ctg_id);
+        let (chr_id, chr_start, chr_end) = gams::get_ctg_pos(&mut conn, ctg_id);
         eprintln!("Process {} {}:{}-{}", ctg_id, chr_id, chr_start, chr_end);
 
         // All peaks in this ctg

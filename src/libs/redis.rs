@@ -146,6 +146,11 @@ pub fn get_ctg(conn: &mut redis::Connection, ctg_id: &str) -> Ctg {
     bincode::deserialize(&ctg_bytes).unwrap()
 }
 
+pub fn get_ctg_pos(conn: &mut redis::Connection, ctg_id: &str) -> (String, i32, i32) {
+    let ctg = get_ctg(conn, ctg_id);
+    (ctg.chr_id, ctg.chr_start, ctg.chr_end)
+}
+
 /// get all chr_ids
 pub fn get_vec_chr(conn: &mut redis::Connection) -> Vec<String> {
     let bin = get_bin(conn, "top:chrs");
@@ -203,7 +208,7 @@ pub fn build_idx_ctg(conn: &mut redis::Connection) {
         let mut ivs: Vec<Iv> = vec![];
 
         for ctg_id in &ctgs {
-            let (_, chr_start, chr_end) = get_key_pos(conn, ctg_id);
+            let (_, chr_start, chr_end) = get_ctg_pos(conn, ctg_id);
             let iv = Iv {
                 start: chr_start as u32,
                 stop: chr_end as u32 + 1,
@@ -263,11 +268,6 @@ pub fn get_bin_features(conn: &mut redis::Connection, ctg_id: &str) -> Vec<Featu
         .iter()
         .map(|el| bincode::deserialize(el).unwrap())
         .collect()
-}
-
-pub fn get_key_pos(conn: &mut redis::Connection, key: &str) -> (String, i32, i32) {
-    let ctg = get_ctg(conn, key);
-    (ctg.chr_id, ctg.chr_start, ctg.chr_end)
 }
 
 // Can't do this
