@@ -2,7 +2,7 @@ use lazy_static::lazy_static;
 use regex::Regex;
 use rust_lapper::{Interval, Lapper};
 use std::collections::{BTreeMap, HashMap};
-use std::io::{BufRead, Read};
+use std::io::{BufRead};
 
 /// Read ranges in the file
 pub fn read_range(

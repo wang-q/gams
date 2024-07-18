@@ -1,22 +1,20 @@
 use clap::*;
-use gams::*;
-use intspan::*;
 use redis::Commands;
-use std::collections::HashMap;
-use std::io::BufRead;
+use std::collections::{BTreeMap, HashMap};
 
 // Create clap subcommand arguments
 pub fn make_subcommand() -> Command {
     Command::new("peak")
         .about("Add peaks of GC-waves")
         .after_help(
-            r#"
-Serial - format!("cnt:peak:{}", ctg_id)
-ID - format!("peak:{}:{}", ctg_id, serial)
+            r###"
+feature:
+    cnt:peak:{ctg_id}       => serial
+    peak:{ctg_id}:{serial}  => Peak
 
 Left-/right- wave lengths may be negative
 
-"#,
+"###,
         )
         .arg(
             Arg::new("infile")
@@ -32,132 +30,118 @@ pub fn execute(args: &ArgMatches) -> anyhow::Result<()> {
     let infile = args.get_one::<String>("infile").unwrap();
 
     // redis connection
-    let mut conn = connect();
+    let mut conn = gams::connect();
 
     // index of ctgs
     let lapper_of = gams::get_idx_ctg(&mut conn);
 
-    // processing each line
+    // ctg_id => [(Range, signal)]
     eprintln!("Loading peaks...");
-    let reader = reader(infile);
-    for line in reader.lines().map_while(Result::ok) {
-        let parts: Vec<&str> = line.split('\t').collect();
+    let peaks_of = gams::read_peak(infile, &lapper_of);
 
-        let mut rg = Range::from_str(parts[0]);
-        if !rg.is_valid() {
-            continue;
-        }
-        *rg.strand_mut() = "".to_string();
-
-        let signal = parts[2];
-
-        let ctg_id = gams::find_one_idx(&lapper_of, &rg);
-        if ctg_id.is_empty() {
-            continue;
-        }
-
-        // Redis counter
-        let serial: i32 = conn.incr(format!("cnt:peak:{}", ctg_id), 1).unwrap();
-        let peak_id = format!("peak:{}:{}", ctg_id, serial);
-
-        let length = rg.end() - rg.start() + 1;
-
-        // hset_multiple cannot be used because of the different value types
-        let _: () = redis::pipe()
-            .hset(&peak_id, "chr_id", rg.chr())
-            .ignore()
-            .hset(&peak_id, "chr_start", *rg.start())
-            .ignore()
-            .hset(&peak_id, "chr_end", *rg.end())
-            .ignore()
-            .hset(&peak_id, "length", length)
-            .ignore()
-            .hset(&peak_id, "signal", signal)
-            .ignore()
-            .query(&mut conn)
-            .unwrap();
-    }
-
-    // number of peaks
-    let n_peak = gams::get_scan_count(&mut conn, "peak:*");
-    eprintln!("There are {} peaks\n", n_peak);
-
-    // each ctg
-    let ctgs: Vec<String> = gams::get_scan_vec(&mut conn, "ctg:*");
-    eprintln!("Updating GC-content of peaks...");
-    for ctg_id in &ctgs {
+    // start serial of each ctg
+    // To minimize expensive Redis operations, locally increment the serial number
+    // For each ctg, we increase the counter in Redis only once
+    let mut serial_of: BTreeMap<String, i32> = BTreeMap::new();
+    let mut s_peaks_of : BTreeMap<String, Vec<gams::Peak>> = Default::default();
+    for ctg_id in peaks_of.keys() {
         let (chr_id, chr_start, chr_end) = gams::get_ctg_pos(&mut conn, ctg_id);
+        eprintln!("Process {} {}:{}-{}", ctg_id, chr_id, chr_start, chr_end);
+
+        // tuple with 2 members
+        let mut peaks_t2 = peaks_of
+            .get(ctg_id)
+            .unwrap()
+            .clone();
+        peaks_t2.sort_by_cached_key(|el| el.0.start);
+
+        if peaks_t2.is_empty() {
+            continue;
+        }
+
+        // number of peaks
+        let n_peak = peaks_t2.len() as i32;
+        eprintln!("There are {} peaks\n", n_peak);
+
+        let parent = intspan::IntSpan::from_pair(chr_start, chr_end);
+        let seq: String = gams::get_seq(&mut conn, ctg_id);
 
         // local caches of GC-content for each ctg
         let mut cache: HashMap<String, f32> = HashMap::new();
 
-        let parent = IntSpan::from_pair(chr_start, chr_end);
-        let seq: String = get_seq(&mut conn, ctg_id);
+        // each peak
+        let mut peaks : Vec<gams::Peak> = Default::default();
+        for tp in &peaks_t2 {
+            // serial and id
+            if !serial_of.contains_key(ctg_id) {
+                // Redis counter
+                // increase serial by cnt
+                let serial =
+                    gams::incr_serial_n(&mut conn, &format!("cnt:peak:{ctg_id}"), n_peak) as i32;
 
-        // scan_match() is an expensive op. Replace with cnt
-        // let pattern = format!("peak:{}:*", ctg_id);
-        // let peaks: Vec<String> = gams::get_scan_vec(&mut conn, pattern);
-        let peaks: Vec<String> = get_vec_feature(&mut conn, ctg_id);
-        for peak_id in peaks {
-            let (_, peak_start, peak_end) = gams::get_ctg_pos(&mut conn, &peak_id);
+                // here we start
+                serial_of.insert(ctg_id.to_string(), serial - n_peak);
+            }
+            let serial = serial_of.get_mut(ctg_id).unwrap();
+            *serial += 1;
+            let peak_id = format!("peak:{ctg_id}:{serial}");
 
-            let gc_content = cache_gc_content(
-                &Range::from(&chr_id, peak_start, peak_end),
+            let gc_content = gams::cache_gc_content(
+                &tp.0,
                 &parent,
                 &seq,
                 &mut cache,
             );
-            let _: () = conn.hset(&peak_id, "gc", gc_content).unwrap();
+
+            let peak = gams::Peak {
+                id: peak_id.clone(),
+                range: tp.0.to_string(),
+                length: tp.0.end() - tp.0.start() + 1,
+                signal: tp.1.clone(),
+                gc: gc_content,
+                left_signal: None,
+                left_wave_length: None,
+                left_amplitude: None,
+                right_signal: None,
+                right_wave_length: None,
+                right_amplitude: None,
+            };
+            peaks.push(peak);
         }
+
+        s_peaks_of.insert(ctg_id.clone(), peaks);
     }
 
     // each ctg
     eprintln!("Updating relationships of peaks...");
-    eprintln!("{} contigs to be processed", ctgs.len());
-    for ctg_id in &ctgs {
+    eprintln!("{} contigs to be processed", s_peaks_of.len());
+    for ctg_id in s_peaks_of.keys().cloned().collect::<Vec<_>>().iter() {
         let (chr_id, chr_start, chr_end) = gams::get_ctg_pos(&mut conn, ctg_id);
         eprintln!("Process {} {}:{}-{}", ctg_id, chr_id, chr_start, chr_end);
 
-        // All peaks in this ctg
-        let mut peaks: Vec<String> = get_vec_feature(&mut conn, ctg_id);
+        // All peaks in this ctg, sorted
+        let peaks = s_peaks_of.get_mut(ctg_id).unwrap();
         eprintln!("\tThere are {} peaks", peaks.len());
 
-        if peaks.is_empty() {
-            continue;
-        }
-
-        // sort peaks
-        let mut chr_start_of: HashMap<String, i32> = HashMap::new();
-        for key in &peaks {
-            let val: i32 = conn.hget(key, "chr_start".to_string()).unwrap();
-            chr_start_of.insert(key.clone(), val);
-        }
-        peaks.sort_by_key(|k| chr_start_of.get(k).unwrap());
-        // eprintln!("{}\t{:#?}", ctg_id, peaks);
-
         // left
-        let (mut prev_signal, mut prev_gc): (String, f32) = conn
-            .hget(peaks.first().unwrap(), &["signal", "gc"])
-            .unwrap();
+        let mut prev_signal = peaks.first().unwrap().signal.clone();
+        let mut prev_gc = peaks.first().unwrap().gc;
         let mut prev_end: i32 = chr_start;
-        for peak in &peaks {
-            let (cur_signal, cur_start, cur_end, cur_gc): (String, i32, i32, f32) = conn
-                .hget(peak, &["signal", "chr_start", "chr_end", "gc"])
-                .unwrap();
+        for i in 0..peaks.len() {
+            let peak = peaks.get_mut(i).unwrap();
+
+            let rg = intspan::Range::from_str(&peak.range);
+            let cur_signal = peak.signal.clone();
+            let cur_start = rg.start;
+            let cur_end = rg.end;
+            let cur_gc = peak.gc;
 
             let left_wave_length = cur_start - prev_end + 1;
             let left_amplitude: f32 = (cur_gc - prev_gc).abs();
 
-            // hset_multiple cannot be used because of the different value types
-            let _: () = redis::pipe()
-                .hset(peak, "left_signal", &prev_signal)
-                .ignore()
-                .hset(peak, "left_wave_length", left_wave_length)
-                .ignore()
-                .hset(peak, "left_amplitude", left_amplitude)
-                .ignore()
-                .query(&mut conn)
-                .unwrap();
+            peak.left_signal = Some(prev_signal.clone());
+            peak.left_wave_length = Some(left_wave_length);
+            peak.left_amplitude = Some(left_amplitude);
 
             prev_signal = cur_signal.clone();
             prev_end = cur_end;
@@ -165,30 +149,40 @@ pub fn execute(args: &ArgMatches) -> anyhow::Result<()> {
         }
 
         // right
-        let (mut next_signal, mut next_gc): (String, f32) =
-            conn.hget(peaks.last().unwrap(), &["signal", "gc"]).unwrap();
+        let mut next_signal = peaks.last().unwrap().signal.clone();
+        let mut next_gc = peaks.last().unwrap().gc;
         let mut next_start: i32 = chr_end;
         for i in (0..peaks.len()).rev() {
-            let (cur_signal, cur_start, cur_end, cur_gc): (String, i32, i32, f32) = conn
-                .hget(&peaks[i], &["signal", "chr_start", "chr_end", "gc"])
-                .unwrap();
+            let peak = peaks.get_mut(i).unwrap();
+
+            let rg = intspan::Range::from_str(&peak.range);
+            let cur_signal = peak.signal.clone();
+            let cur_start = rg.start;
+            let cur_end = rg.end;
+            let cur_gc = peak.gc;
 
             let right_wave_length = next_start - cur_end + 1;
             let right_amplitude: f32 = (cur_gc - next_gc).abs();
 
-            let _: () = redis::pipe()
-                .hset(&peaks[i], "right_signal", &next_signal)
-                .ignore()
-                .hset(&peaks[i], "right_wave_length", right_wave_length)
-                .ignore()
-                .hset(&peaks[i], "right_amplitude", right_amplitude)
-                .ignore()
-                .query(&mut conn)
-                .unwrap();
+            peak.right_signal = Some(next_signal.clone());
+            peak.right_wave_length = Some(right_wave_length);
+            peak.right_amplitude = Some(right_amplitude);
 
             next_signal = cur_signal.clone();
             next_start = cur_start;
             next_gc = cur_gc;
+        }
+    }
+
+    let writer = intspan::writer("stdout");
+    let mut tsv_wtr = csv::WriterBuilder::new()
+        .delimiter(b'\t')
+        .has_headers(true)
+        .from_writer(writer);
+    for ctg_id in s_peaks_of.keys() {
+        let peaks = s_peaks_of.get(ctg_id).unwrap();
+        for peak in peaks {
+            tsv_wtr.serialize(peak).unwrap();
         }
     }
 

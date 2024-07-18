@@ -1,6 +1,6 @@
 use flate2::read::GzDecoder;
-use std::collections::{BTreeMap};
-use std::io::{Read};
+use std::collections::BTreeMap;
+use std::io::Read;
 
 use redis::Commands;
 use serde::{Deserialize, Serialize};
@@ -9,9 +9,6 @@ use rust_lapper::{Interval, Lapper};
 
 // Interval: represent a range from [start, stop), carrying val
 type Iv = Interval<u32, String>; // the first type should be Unsigned
-
-use crate::libs::stat::*;
-use crate::libs::window::*;
 
 #[derive(Deserialize, Debug)]
 pub struct Config {
@@ -53,6 +50,21 @@ pub struct Feature {
 pub struct Rg {
     pub id: String,
     pub range: String,
+}
+
+#[derive(Default, Clone, Debug, PartialEq, Serialize, Deserialize)]
+pub struct Peak {
+    pub id: String,
+    pub range: String,
+    pub length: i32,
+    pub gc: f32,
+    pub signal: String,
+    pub left_wave_length: Option<i32>,
+    pub left_amplitude: Option<f32>,
+    pub left_signal: Option<String>,
+    pub right_wave_length: Option<i32>,
+    pub right_amplitude: Option<f32>,
+    pub right_signal: Option<String>,
 }
 
 pub fn connect() -> redis::Connection {

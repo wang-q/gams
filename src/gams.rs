@@ -66,3 +66,4 @@ fn main() -> anyhow::Result<()> {
 
 // TODO: sliding windows of waves
 // TODO: `gams count`
+// TODO: get_scan_count() miss 1 ctg
