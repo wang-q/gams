@@ -28,30 +28,30 @@ hyperfine --warmup 1 --export-markdown gams.md.tmp \
     '
     gams status drop; gams gen genome/genome.fa.gz --piece 500000;
     ' \
-    -n 'd-g; range;' \
+    -n 'd/g; rg;' \
     '
     gams status drop; gams gen genome/genome.fa.gz --piece 500000;
-    gams range features/T-DNA.CSHL.rg;
+    gams rg features/T-DNA.CSHL.rg;
     ' \
-    -n 'clear; range;' \
+    -n 'clear; rg;' \
     '
-    gams clear range feature;
-    gams range features/T-DNA.CSHL.rg;
+    gams clear rg feature;
+    gams rg features/T-DNA.CSHL.rg;
     ' \
     -n 'clear; feature;' \
     '
-    gams clear range feature;
+    gams clear rg feature;
     gams feature features/T-DNA.CSHL.rg --tag CSHL;
     ' \
     -n 'clear; feature; fsw;' \
     '
-    gams clear range feature;
+    gams clear rg feature;
     gams feature features/T-DNA.CSHL.rg --tag CSHL;
     gams fsw;
     ' \
     -n 'clear; sliding;' \
     '
-    gams clear range feature;
+    gams clear rg feature;
     gams sliding --size 100 --step 20 --lag 50 > /dev/null;
     '
 
@@ -61,14 +61,14 @@ cat gams.md.tmp
 
 ### R7 5800 Windows 11 WSL
 
-| Command                |      Mean [s] | Min [s] | Max [s] |    Relative |
-|:-----------------------|--------------:|--------:|--------:|------------:|
-| `drop; gen;`           | 1.095 ± 0.009 |   1.083 |   1.111 |        1.00 |
-| `d-g; range;`          | 2.929 ± 0.101 |   2.774 |   3.103 | 2.67 ± 0.09 |
-| `clear; range;`        | 2.652 ± 0.123 |   2.446 |   2.858 | 2.42 ± 0.11 |
-| `clear; feature;`      | 2.868 ± 0.058 |   2.777 |   2.954 | 2.62 ± 0.06 |
-| `clear; feature; fsw;` | 9.108 ± 0.153 |   9.015 |   9.519 | 8.32 ± 0.16 |
-| `clear; sliding;`      | 5.993 ± 0.021 |   5.965 |   6.024 | 5.47 ± 0.05 |
+| Command                |      Mean [s] | Min [s] | Max [s] |     Relative |
+|:-----------------------|--------------:|--------:|--------:|-------------:|
+| `drop; gen;`           | 1.351 ± 0.012 |   1.337 |   1.379 | 10.65 ± 0.37 |
+| `d/g; rg;`             | 1.462 ± 0.007 |   1.454 |   1.473 | 11.53 ± 0.39 |
+| `clear; rg;`           | 0.127 ± 0.004 |   0.120 |   0.137 |         1.00 |
+| `clear; feature;`      | 0.162 ± 0.005 |   0.154 |   0.172 |  1.28 ± 0.06 |
+| `clear; feature; fsw;` | 6.312 ± 0.030 |   6.264 |   6.376 | 49.77 ± 1.67 |
+| `clear; sliding;`      | 5.892 ± 0.049 |   5.847 |   6.012 | 46.46 ± 1.59 |
 
 ### i5-12500H Windows 11 WSL
 
@@ -109,6 +109,7 @@ cat gams.md.tmp
 cd ~/gams/
 
 # redis
+gams status stop
 rm dump.rdb
 redis-server &
 
@@ -149,6 +150,16 @@ cat batch.md.tmp
 
 ```
 
+### R7 5800 Windows 11 WSL
+
+| Command     |      Mean [s] | Min [s] | Max [s] |     Relative |
+|:------------|--------------:|--------:|--------:|-------------:|
+| `size 1`    | 1.637 ± 0.029 |   1.588 |   1.677 | 11.51 ± 0.36 |
+| `size 10`   | 0.299 ± 0.012 |   0.287 |   0.320 |  2.11 ± 0.10 |
+| `size 50`   | 0.173 ± 0.006 |   0.165 |   0.184 |  1.22 ± 0.05 |
+| `size 100`  | 0.157 ± 0.003 |   0.151 |   0.164 |  1.10 ± 0.04 |
+| `size 1000` | 0.142 ± 0.004 |   0.135 |   0.149 |         1.00 |
+
 ### i5-12500H Windows 11 WSL
 
 | Command     |      Mean [s] | Min [s] | Max [s] |    Relative |
@@ -175,6 +186,7 @@ cat batch.md.tmp
 cd ~/gams/
 
 # redis
+gams status stop
 rm dump.rdb
 redis-server &
 
@@ -322,21 +334,25 @@ cat threads.md.tmp
 
 * feature
 
-| Command         |       Mean [s] | Min [s] | Max [s] |    Relative |
-|:----------------|---------------:|--------:|--------:|------------:|
-| `serial`        | 12.903 ± 0.257 |  12.603 |  13.436 | 1.64 ± 0.04 |
-| `parallel -j 1` | 13.285 ± 0.239 |  12.890 |  13.811 | 1.68 ± 0.04 |
-| `parallel -j 2` |  8.207 ± 0.245 |   7.961 |   8.854 | 1.04 ± 0.03 |
-| `parallel -j 4` |  7.892 ± 0.107 |   7.742 |   8.040 |        1.00 |
+| Command         |     Mean [ms] | Min [ms] | Max [ms] |    Relative |
+|:----------------|--------------:|---------:|---------:|------------:|
+| `serial`        |  851.1 ± 31.5 |    808.8 |    894.3 | 1.20 ± 0.07 |
+| `parallel -j 1` | 1037.4 ± 20.6 |    992.9 |   1072.2 | 1.46 ± 0.07 |
+| `parallel -j 2` |  746.6 ± 19.2 |    719.3 |    780.6 | 1.05 ± 0.05 |
+| `parallel -j 4` |  711.7 ± 30.9 |    672.0 |    754.6 |        1.00 |
 
 * fsw
 
-| Command         |       Mean [s] | Min [s] | Max [s] |    Relative |
-|:----------------|---------------:|--------:|--------:|------------:|
-| `serial`        | 23.775 ± 0.232 |  23.514 |  24.198 | 2.46 ± 0.03 |
-| `parallel -j 1` | 28.501 ± 0.549 |  27.699 |  29.672 | 2.94 ± 0.06 |
-| `parallel -j 2` | 14.920 ± 0.266 |  14.651 |  15.550 | 1.54 ± 0.03 |
-| `parallel -j 4` |  9.684 ± 0.052 |   9.611 |   9.766 |        1.00 |
+| Command       |       Mean [s] | Min [s] | Max [s] |    Relative |
+|:--------------|---------------:|--------:|--------:|------------:|
+| `parallel 1`  | 14.692 ± 0.105 |  14.544 |  14.881 | 7.74 ± 0.14 |
+| `parallel 2`  |  7.772 ± 0.094 |   7.692 |   7.986 | 4.09 ± 0.08 |
+| `parallel 4`  |  4.123 ± 0.037 |   4.074 |   4.186 | 2.17 ± 0.04 |
+| `parallel 8`  |  2.483 ± 0.031 |   2.420 |   2.529 | 1.31 ± 0.03 |
+| `parallel 12` |  2.044 ± 0.014 |   2.023 |   2.068 | 1.08 ± 0.02 |
+| `parallel 16` |  1.898 ± 0.031 |   1.861 |   1.951 |        1.00 |
+
+* sliding
 
 ### i5-12500H Windows 11 WSL
 
