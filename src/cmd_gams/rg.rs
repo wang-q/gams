@@ -93,7 +93,6 @@ pub fn execute(args: &ArgMatches) -> anyhow::Result<()> {
             let rg = gams::Rg {
                 id: rg_id.clone(),
                 range: range.to_string(),
-                ctg_id: ctg_id.clone(),
             };
 
             // Add serialized struct Feature to a Redis set

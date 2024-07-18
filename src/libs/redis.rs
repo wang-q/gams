@@ -46,7 +46,6 @@ pub struct Feature {
     pub id: String,
     pub range: String,
     pub length: i32,
-    pub ctg_id: String,
     pub tag: String,
 }
 
@@ -54,7 +53,6 @@ pub struct Feature {
 pub struct Rg {
     pub id: String,
     pub range: String,
-    pub ctg_id: String,
 }
 
 pub fn connect() -> redis::Connection {

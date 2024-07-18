@@ -104,7 +104,6 @@ pub fn execute(args: &ArgMatches) -> anyhow::Result<()> {
                 id: feature_id.clone(),
                 range: rg.to_string(),
                 length: rg.end() - rg.start() + 1,
-                ctg_id: ctg_id.clone(),
                 tag: opt_tag.to_string(),
             };
 
