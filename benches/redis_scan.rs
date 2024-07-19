@@ -37,17 +37,26 @@ pub fn bench_redis_scan(c: &mut Criterion) {
 
     c.bench_function("scan_count", |b| {
         b.iter(|| {
-            let _: i32 = gams::get_scan_count(&mut conn, "prefix:*");
+            let n: i32 = gams::get_scan_count(&mut conn, "prefix:*");
+            assert_eq!(n, 5000);
+        })
+    });
+    c.bench_function("scan_lua", |b| {
+        b.iter(|| {
+            let vec: Vec<_> = gams::get_scan_lua(&mut conn, "prefix:*");
+            assert_eq!(vec.len(), 5000);
         })
     });
     c.bench_function("scan_match_10", |b| {
         b.iter(|| {
-            let _: Vec<_> = gams::get_scan_match_vec(&mut conn, "prefix:*");
+            let vec: Vec<_> = gams::get_scan_match_vec(&mut conn, "prefix:*");
+            assert_eq!(vec.len(), 5000);
         })
     });
     c.bench_function("scan_count_10", |b| {
         b.iter(|| {
-            let _: Vec<_> = gams::get_scan_vec_n(&mut conn, "prefix:*", 10);
+            let vec: Vec<_> = gams::get_scan_vec_n(&mut conn, "prefix:*", 10);
+            assert_eq!(vec.len(), 5000);
         })
     });
     c.bench_function("scan_count_100", |b| {

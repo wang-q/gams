@@ -420,10 +420,9 @@ fn script() {
     println!("******* Running Lua Scripts *******");
 
     let script = redis::Script::new(
-        r#"
+        r###"
 return tonumber(ARGV[1]) + tonumber(ARGV[2]);
-
-"#,
+"###,
     );
     let res: RedisResult<i32> = script.arg(1).arg(2).invoke(&mut conn);
     eprintln!("res = {:#?}", res);
@@ -441,10 +440,26 @@ repeat
     count = count + count_delta;
 until cursor == "0";
 return count;
-
 "###,
     );
     let res: RedisResult<i32> = script.arg("ctg*").arg(1000).invoke(&mut conn);
+    eprintln!("res = {:#?}", res);
+
+    let script = redis::Script::new(
+        r###"
+local cursor = 0;
+local list = {};
+repeat
+    local result = redis.call('SCAN', cursor, 'MATCH', ARGV[1], 'COUNT', ARGV[2])
+    cursor = result[1];
+    for _, v in ipairs(result[2]) do
+        list[#list+1] = v
+    end
+until cursor == "0";
+return list;
+"###,
+    );
+    let res: RedisResult<Vec<String>> = script.arg("ctg*").arg(1000).invoke(&mut conn);
     eprintln!("res = {:#?}", res);
 
 }

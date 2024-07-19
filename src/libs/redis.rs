@@ -277,8 +277,8 @@ pub fn get_bundle_feature(conn: &mut redis::Connection, ctg_id: &str) -> Vec<Fea
 pub fn get_scan_count(conn: &mut redis::Connection, pattern: &str) -> i32 {
     let script = redis::Script::new(
         r###"
-local cursor = 0;
-local count = 0;
+local cursor = "0";
+local count = "0";
 repeat
     local result = redis.call('SCAN', cursor, 'MATCH', ARGV[1], 'COUNT', ARGV[2])
     cursor = result[1];
@@ -286,13 +286,29 @@ repeat
     count = count + count_delta;
 until cursor == "0";
 return count;
-
 "###,
     );
     script.arg(pattern).arg(1000).invoke( conn).unwrap()
 }
 
-///
+pub fn get_scan_lua(conn: &mut redis::Connection, pattern: &str) -> Vec<String> {
+    let script = redis::Script::new(
+        r###"
+local cursor = "0";
+local list = {};
+repeat
+    local result = redis.call('SCAN', cursor, 'MATCH', ARGV[1], 'COUNT', ARGV[2])
+    cursor = result[1];
+    for _, v in ipairs(result[2]) do
+        list[#list+1] = v
+    end
+until cursor == "0";
+return list;
+"###,
+    );
+    script.arg(pattern).arg(1000).invoke( conn).unwrap()
+}
+
 /// ```
 /// // let mut conn = gams::connect();
 ///
