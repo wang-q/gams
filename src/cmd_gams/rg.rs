@@ -78,7 +78,7 @@ pub fn execute(args: &ArgMatches) -> anyhow::Result<()> {
             if !serial_of.contains_key(ctg_id) {
                 let cnt = ranges_of.get(ctg_id).unwrap().len() as i32;
                 // Redis counter
-                // increased serial by cnt
+                // increase serial by cnt
                 let serial =
                     gams::incr_serial_n(&mut conn, &format!("cnt:rg:{ctg_id}"), cnt) as i32;
 
@@ -94,13 +94,9 @@ pub fn execute(args: &ArgMatches) -> anyhow::Result<()> {
                 id: rg_id.clone(),
                 range: range.to_string(),
             };
-
-            // Add serialized struct Feature to a Redis set
-            let rg_bytes = bincode::serialize(&rg).unwrap();
-
-            batch = batch.set(&rg_id, rg_bytes.clone()).ignore();
+            let json = serde_json::to_string(&rg).unwrap();
+            batch = batch.set(&rg_id, json.clone()).ignore();
         }
-
         // Possible remaining records in the batch
         {
             let _: () = batch.query(&mut conn).unwrap();
