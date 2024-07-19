@@ -26,8 +26,7 @@ gams gen tests/S288c/genome.fa.gz --piece 100000
 gams tsv -s 'ctg:*' > tests/S288c/ctg.tsv
 
 gams-stat tests/S288c/ctg.tsv ctg
-
-gams-sql tests/S288c/ctg.tsv templates/ctg-2.sql
+gams-stat tests/S288c/ctg.tsv "$(cat templates/ctg-2.sql)"
 
 textql -dlm=tab -header -output-dlm=tab -output-header \
     -sql "$(cat templates/ctg-2.sql)" \
@@ -36,8 +35,8 @@ textql -dlm=tab -header -output-dlm=tab -output-header \
 hyperfine --warmup 1 --export-markdown stat.md.tmp \
     -n gams-stat \
     'gams-stat tests/S288c/ctg.tsv ctg > /dev/null' \
-    -n gams-sql \
-    'gams-sql tests/S288c/ctg.tsv templates/ctg-2.sql > /dev/null' \
+    -n 'gams-stat sql' \
+    'gams-stat tests/S288c/ctg.tsv "$(cat templates/ctg-2.sql)" > /dev/null' \
     -n textql \
     '
     textql -dlm=tab -header -output-dlm=tab -output-header \
@@ -55,6 +54,14 @@ cat stat.md.tmp
 |:----------|----------:|---------:|---------:|------------:|
 | gams-stat | 4.3 ± 0.2 |      3.9 |      5.3 |        1.00 |
 | textql    | 5.8 ± 0.2 |      5.0 |      6.6 | 1.35 ± 0.07 |
+
+### i7-12700T Windows 11 WSL
+
+| Command         |  Mean [ms] | Min [ms] | Max [ms] |    Relative |
+|:----------------|-----------:|---------:|---------:|------------:|
+| `gams-stat`     | 10.2 ± 1.1 |      8.9 |     19.2 | 1.05 ± 0.15 |
+| `gams-stat sql` | 11.8 ± 0.7 |     10.3 |     15.3 | 1.21 ± 0.14 |
+| `textql`        |  9.7 ± 0.9 |      7.5 |     12.5 |        1.00 |
 
 ### i5-12500H Windows 11 WSL
 

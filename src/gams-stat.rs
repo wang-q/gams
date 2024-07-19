@@ -1,7 +1,6 @@
 extern crate clap;
 
 use clap::*;
-use intspan::writer;
 use polars::prelude::*;
 
 fn main() -> anyhow::Result<()> {
@@ -46,7 +45,7 @@ fn execute(args: &ArgMatches) -> anyhow::Result<()> {
     let infile = args.get_one::<String>("infile").unwrap();
     let query = args.get_one::<String>("query").unwrap().as_str();
 
-    let writer = writer(args.get_one::<String>("outfile").unwrap());
+    let writer = intspan::writer(args.get_one::<String>("outfile").unwrap());
 
     let df = CsvReadOptions::default()
         .with_has_header(true)
@@ -56,7 +55,14 @@ fn execute(args: &ArgMatches) -> anyhow::Result<()> {
 
     let mut res = match query {
         "ctg" => query_ctg(df),
-        _ => unreachable!(),
+        _ => {
+            // table name in SQL
+            let table = match infile {
+                s if s.contains("ctg.") => "ctg",
+                _ => unreachable!(),
+            };
+            query_sql(df, query, table)
+        } // treat inputs as sql
     };
 
     // write DataFrame to file
@@ -84,4 +90,14 @@ fn query_ctg(df: DataFrame) -> DataFrame {
         .collect();
 
     res.unwrap()
+}
+
+fn query_sql(df: DataFrame, sql: &str, table: &str) -> DataFrame {
+    let mut context = polars::sql::SQLContext::new();
+    context.register(table, df.lazy());
+    context
+        .execute(sql)
+        .expect("Could not execute statement")
+        .collect()
+        .unwrap()
 }
