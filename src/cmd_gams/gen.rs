@@ -171,8 +171,8 @@ pub fn execute(args: &ArgMatches) -> anyhow::Result<()> {
                 gams::insert_seq(&mut conn, &ctg_id, seq);
             } // ctg
 
-            let ctgs_bytes = bincode::serialize(&ctg_of).unwrap();
-            gams::insert_bin(&mut conn, &format!("bundle:ctg:{chr_id}"), &ctgs_bytes);
+            let bundle_ctgs = bincode::serialize(&ctg_of).unwrap();
+            gams::insert_bin(&mut conn, &format!("bundle:ctg:{chr_id}"), &bundle_ctgs);
         } // chr
     } // fasta file
 
@@ -182,11 +182,11 @@ pub fn execute(args: &ArgMatches) -> anyhow::Result<()> {
         gams::insert_str(&mut conn, "top:common_name", opt_name);
 
         // chrs
-        let bin_chr_len = bincode::serialize(&len_of).unwrap();
-        gams::insert_bin(&mut conn, "top:chr_len", &bin_chr_len);
+        let json_chr_len = serde_json::to_string(&len_of).unwrap();
+        gams::insert_str(&mut conn, "top:chr_len", &json_chr_len);
 
-        let bin_chrs = bincode::serialize(&len_of.keys().cloned().collect::<Vec<_>>()).unwrap();
-        gams::insert_bin(&mut conn, "top:chrs", &bin_chrs);
+        let json_chrs = serde_json::to_string(&len_of.keys().cloned().collect::<Vec<_>>()).unwrap();
+        gams::insert_str(&mut conn, "top:chrs", &json_chrs);
 
         eprintln!("Building the lapper index of ctgs...\n");
         gams::build_idx_ctg(&mut conn);

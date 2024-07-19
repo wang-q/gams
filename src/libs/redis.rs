@@ -141,13 +141,13 @@ pub fn get_seq(conn: &mut redis::Connection, ctg_id: &str) -> String {
 }
 
 pub fn insert_ctg(conn: &mut redis::Connection, ctg_id: &str, ctg: &Ctg) {
-    let ctg_bytes = bincode::serialize(ctg).unwrap();
-    insert_bin(conn, ctg_id, &ctg_bytes);
+    let json = serde_json::to_string(ctg).unwrap();
+    insert_str(conn, ctg_id, &json);
 }
 
 pub fn get_ctg(conn: &mut redis::Connection, ctg_id: &str) -> Ctg {
-    let ctg_bytes = get_bin(conn, ctg_id);
-    bincode::deserialize(&ctg_bytes).unwrap()
+    let json = get_str(conn, ctg_id);
+    serde_json::from_str(&json).unwrap()
 }
 
 pub fn get_ctg_pos(conn: &mut redis::Connection, ctg_id: &str) -> (String, i32, i32) {
@@ -157,8 +157,8 @@ pub fn get_ctg_pos(conn: &mut redis::Connection, ctg_id: &str) -> (String, i32, 
 
 /// get all chr_ids
 pub fn get_vec_chr(conn: &mut redis::Connection) -> Vec<String> {
-    let bin = get_bin(conn, "top:chrs");
-    bincode::deserialize(&bin).unwrap()
+    let json = get_str(conn, "top:chrs");
+    serde_json::from_str(&json).unwrap()
 }
 
 /// generated from cnt:ctg:
@@ -224,9 +224,7 @@ pub fn build_idx_ctg(conn: &mut redis::Connection) {
         let lapper = Lapper::new(ivs);
         let serialized = bincode::serialize(&lapper).unwrap();
 
-        let _: () = conn
-            .set(format!("idx:ctg:{}", chr_id), &serialized)
-            .unwrap();
+        insert_bin(conn, &format!("idx:ctg:{}", chr_id), &serialized);
     }
 }
 
