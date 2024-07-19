@@ -2,11 +2,12 @@
 
 ## Unreleased - ReleaseDate
 
-
 * Add structs `Ctg`, `Feature`, and `Rg`
-    * Store serialized bincode to Redis
+    * Store serialized json to Redis
 * Rewrite some functions in `libs/redis.rs`
     * Minimize the use of redis commands in each subcommand
+* Use server-side lua scripting for `SCAN MATCH`
+* Serializing to .tsv via serde
 
 * Make `gams rg` and `gams feature` up to 10x times faster by packaging hundreds of redis
   operations into batches
