@@ -43,16 +43,13 @@ pub fn execute(args: &ArgMatches) -> anyhow::Result<()> {
     // To minimize expensive Redis operations, locally increment the serial number
     // For each ctg, we increase the counter in Redis only once
     let mut serial_of: BTreeMap<String, i32> = BTreeMap::new();
-    let mut s_peaks_of : BTreeMap<String, Vec<gams::Peak>> = Default::default();
+    let mut s_peaks_of: BTreeMap<String, Vec<gams::Peak>> = Default::default();
     for ctg_id in peaks_of.keys() {
         let (chr_id, chr_start, chr_end) = gams::get_ctg_pos(&mut conn, ctg_id);
         eprintln!("Process {} {}:{}-{}", ctg_id, chr_id, chr_start, chr_end);
 
         // tuple with 2 members
-        let mut peaks_t2 = peaks_of
-            .get(ctg_id)
-            .unwrap()
-            .clone();
+        let mut peaks_t2 = peaks_of.get(ctg_id).unwrap().clone();
         peaks_t2.sort_by_cached_key(|el| el.0.start);
 
         if peaks_t2.is_empty() {
@@ -70,7 +67,7 @@ pub fn execute(args: &ArgMatches) -> anyhow::Result<()> {
         let mut cache: HashMap<String, f32> = HashMap::new();
 
         // each peak
-        let mut peaks : Vec<gams::Peak> = Default::default();
+        let mut peaks: Vec<gams::Peak> = Default::default();
         for tp in &peaks_t2 {
             // serial and id
             if !serial_of.contains_key(ctg_id) {
@@ -86,12 +83,7 @@ pub fn execute(args: &ArgMatches) -> anyhow::Result<()> {
             *serial += 1;
             let peak_id = format!("peak:{ctg_id}:{serial}");
 
-            let gc_content = gams::cache_gc_content(
-                &tp.0,
-                &parent,
-                &seq,
-                &mut cache,
-            );
+            let gc_content = gams::cache_gc_content(&tp.0, &parent, &seq, &mut cache);
 
             let peak = gams::Peak {
                 id: peak_id.clone(),
@@ -143,7 +135,7 @@ pub fn execute(args: &ArgMatches) -> anyhow::Result<()> {
             peak.left_wave_length = Some(left_wave_length);
             peak.left_amplitude = Some(left_amplitude);
 
-            prev_signal = cur_signal.clone();
+            prev_signal.clone_from(&cur_signal);
             prev_end = cur_end;
             prev_gc = cur_gc;
         }
@@ -168,7 +160,7 @@ pub fn execute(args: &ArgMatches) -> anyhow::Result<()> {
             peak.right_wave_length = Some(right_wave_length);
             peak.right_amplitude = Some(right_amplitude);
 
-            next_signal = cur_signal.clone();
+            next_signal.clone_from(&cur_signal);
             next_start = cur_start;
             next_gc = cur_gc;
         }

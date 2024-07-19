@@ -2,7 +2,7 @@ use lazy_static::lazy_static;
 use regex::Regex;
 use rust_lapper::{Interval, Lapper};
 use std::collections::{BTreeMap, HashMap};
-use std::io::{BufRead};
+use std::io::BufRead;
 
 /// Read ranges in the file
 pub fn read_range(
@@ -58,7 +58,7 @@ pub fn read_peak(
 
         let signal = parts[2];
 
-        let ctg_id = crate::find_one_idx(&lapper_of, &rg);
+        let ctg_id = crate::find_one_idx(lapper_of, &rg);
         if ctg_id.is_empty() {
             continue;
         }

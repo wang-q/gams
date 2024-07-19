@@ -90,7 +90,7 @@ pub fn connect() -> redis::Connection {
         .expect("Failed to connect to Redis")
 }
 
-pub fn insert_str(conn: &mut redis::Connection, key: &str, val: &str) -> () {
+pub fn insert_str(conn: &mut redis::Connection, key: &str, val: &str) {
     conn.set(key, val).unwrap()
 }
 
@@ -98,7 +98,7 @@ pub fn get_str(conn: &mut redis::Connection, key: &str) -> String {
     conn.get(key).unwrap()
 }
 
-pub fn insert_bin(conn: &mut redis::Connection, key: &str, val: &[u8]) -> () {
+pub fn insert_bin(conn: &mut redis::Connection, key: &str, val: &[u8]) {
     conn.set(key, val).unwrap()
 }
 
@@ -158,7 +158,7 @@ pub fn get_ctg_pos(conn: &mut redis::Connection, ctg_id: &str) -> (String, i32, 
 /// get all chr_ids
 pub fn get_vec_chr(conn: &mut redis::Connection) -> Vec<String> {
     let bin = get_bin(conn, "top:chrs");
-    bincode::deserialize(&*bin).unwrap()
+    bincode::deserialize(&bin).unwrap()
 }
 
 /// generated from cnt:ctg:

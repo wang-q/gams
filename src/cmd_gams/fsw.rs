@@ -66,7 +66,7 @@ pub fn execute(args: &ArgMatches) -> anyhow::Result<()> {
     //----------------------------
     // redis connection
     let mut conn = gams::connect();
-    let ctg_of = gams::get_bin_ctgs(&mut conn);
+    let ctg_of = gams::get_bundle_ctg(&mut conn, None);
 
     if opt_parallel == 1 {
         let mut writer = intspan::writer(args.get_one::<String>("outfile").unwrap());
@@ -125,7 +125,7 @@ fn proc_ctg(ctg: &gams::Ctg, args: &ArgMatches) -> anyhow::Result<String> {
     let seq: String = gams::get_seq(&mut conn, &ctg.id);
 
     // All features in this ctg
-    let features: Vec<gams::Feature> = gams::get_bin_features(&mut conn, &ctg.id);
+    let features: Vec<gams::Feature> = gams::get_bundle_feature(&mut conn, &ctg.id);
     eprintln!("\tThere are {} features", features.len());
 
     let mut out_string = "".to_string();
