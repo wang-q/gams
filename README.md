@@ -215,9 +215,12 @@ and `gams` are running on different hosts, the latency is increased for both phy
 NICs. Typical latency for a Gigabit Ethernet is about 200 μs. Thus, for insert operations, `gams`
 packages hundreds of operations locally and then passes them to `redis` at once.
 
-For complex data structures, a local `bincode::serialize()` takes about 50 ns,
-and `bincode::deserialize()` about 100 ns, which is insignificant compared to IPC. Similarly, for
-genome sequences, `gams` gz-compresses them locally before passing them to `redis`.
+As the results of `cargo bench ---bench serialize` show, for a normal
+structure, `bincode::serialize()` and `serde_json::to_string()` take 20 ns and 150 ns, respectively,
+while `bincode::: deserialize()` and `serde_json::from_str()` take about 60 ns and 160 ns,
+respectively. These times are insignificant compared to IPC.
+
+Similarly, for genome sequences, `gams` gz-compresses them locally before passing them to `redis`.
 
 ### Contents stored in Redis
 

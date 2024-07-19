@@ -55,5 +55,26 @@ pub fn bench_bincode(c: &mut Criterion) {
     });
 }
 
-criterion_group!(benches, rand_things, bench_bincode);
+pub fn bench_json(c: &mut Criterion) {
+    let ctg = rand_ctg();
+    let json = serde_json::to_string(&ctg).unwrap();
+
+    c.bench_function("json_se_fix", |b| {
+        b.iter(|| {
+            serde_json::to_string(black_box(&ctg)).unwrap();
+        })
+    });
+    c.bench_function("json_se_rand", |b| {
+        b.iter(|| {
+            serde_json::to_string(black_box(&rand_ctg())).unwrap();
+        })
+    });
+    c.bench_function("json_de", |b| {
+        b.iter(|| {
+            let _: Ctg = serde_json::from_str(black_box(&json)).unwrap();
+        })
+    });
+}
+
+criterion_group!(benches, rand_things, bench_bincode, bench_json);
 criterion_main!(benches);
