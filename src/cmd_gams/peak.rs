@@ -1,5 +1,4 @@
 use clap::*;
-use redis::Commands;
 use std::collections::{BTreeMap, HashMap};
 
 // Create clap subcommand arguments
