@@ -48,81 +48,86 @@ pub fn execute(args: &ArgMatches) -> anyhow::Result<()> {
     // redis connection
     let mut conn = gams::connect();
 
-    // index of ctgs
-    let lapper_of = gams::get_idx_ctg(&mut conn);
+    // ctg_id => [Range]
+    // act as a sorter
+    let ranges_of = {
+        // index of ctgs
+        let lapper_of = gams::get_idx_ctg(&mut conn);
+        gams::read_range(infile, &lapper_of)
+    };
 
-    {
-        // ctg_id => [Range]
-        // act as a sorter
-        let ranges_of = gams::read_range(infile, &lapper_of);
-
-        // (ctg_id, Range)
-        let mut ctg_ranges: Vec<(String, intspan::Range)> = vec![];
-        for k in ranges_of.keys() {
-            for r in ranges_of.get(k).unwrap() {
-                ctg_ranges.push((k.to_string(), r.clone()));
-            }
+    // (ctg_id, Range)
+    let mut ctg_ranges: Vec<(String, intspan::Range)> = vec![];
+    for k in ranges_of.keys() {
+        for r in ranges_of.get(k).unwrap() {
+            ctg_ranges.push((k.to_string(), r.clone()));
         }
+    }
 
-        // total number of ranges
-        eprintln!("There are {} features in this file", ctg_ranges.len());
+    // total number of ranges
+    eprintln!("There are {} features in this file", ctg_ranges.len());
 
-        // start serial of each ctg
-        // To minimize expensive Redis operations, locally increment the serial number
-        // For each ctg, we increase the counter in Redis only once
-        let mut serial_of: BTreeMap<String, i32> = BTreeMap::new();
+    // start serial of each ctg
+    // To minimize expensive Redis operations, locally increment the serial number
+    // For each ctg, we increase the counter in Redis only once
+    let mut serial_of: BTreeMap<String, i32> = BTreeMap::new();
 
-        let mut batch = &mut redis::pipe();
+    // ctg_id => Vec<Feature>
+    let mut features_of: BTreeMap<String, Vec<gams::Feature>> = BTreeMap::new();
 
-        for (i, (ctg_id, rg)) in ctg_ranges.iter().enumerate() {
-            // prompts
-            if i > 1 && i % opt_size == 0 {
-                let _: () = batch.query(&mut conn).unwrap();
-                batch.clear();
-            }
-            if i > 1 && i % (opt_size * 10) == 0 {
-                eprintln!("Insert {} records", i);
-            }
-
-            // serial and id
-            if !serial_of.contains_key(ctg_id) {
-                let cnt = ranges_of.get(ctg_id).unwrap().len() as i32;
-                // Redis counter
-                // increase serial by cnt
-                let serial =
-                    gams::incr_serial_n(&mut conn, &format!("cnt:feature:{ctg_id}"), cnt) as i32;
-
-                // here we start
-                serial_of.insert(ctg_id.to_string(), serial - cnt);
-            }
-
-            let serial = serial_of.get_mut(ctg_id).unwrap();
-            *serial += 1;
-            let feature_id = format!("feature:{ctg_id}:{serial}");
-
-            let feature = gams::Feature {
-                id: feature_id.clone(),
-                range: rg.to_string(),
-                length: rg.end() - rg.start() + 1,
-                tag: opt_tag.to_string(),
-            };
-
-            // Add serialized struct Feature to a Redis set
-            let set_name = format!("bundle:feature:{ctg_id}");
-            let feature_bytes = bincode::serialize(&feature).unwrap();
-
-            batch = batch
-                .set(&feature_id, feature_bytes.clone())
-                .ignore()
-                .sadd(&set_name, feature_bytes)
-                .ignore();
-        }
-
-        // Possible remaining records in the batch
-        {
+    let mut batch = &mut redis::pipe();
+    for (i, (ctg_id, rg)) in ctg_ranges.iter().enumerate() {
+        // prompts
+        if i > 1 && i % opt_size == 0 {
             let _: () = batch.query(&mut conn).unwrap();
             batch.clear();
         }
+        if i > 1 && i % (opt_size * 10) == 0 {
+            eprintln!("Insert {} records", i);
+        }
+
+        // serial and id
+        if !serial_of.contains_key(ctg_id) {
+            let cnt = ranges_of.get(ctg_id).unwrap().len() as i32;
+            // Redis counter
+            // increase serial by cnt
+            let serial =
+                gams::incr_serial_n(&mut conn, &format!("cnt:feature:{ctg_id}"), cnt) as i32;
+
+            // here we start
+            serial_of.insert(ctg_id.to_string(), serial - cnt);
+        }
+
+        let serial = serial_of.get_mut(ctg_id).unwrap();
+        *serial += 1;
+        let feature_id = format!("feature:{ctg_id}:{serial}");
+
+        let feature = gams::Feature {
+            id: feature_id.clone(),
+            range: rg.to_string(),
+            length: rg.end() - rg.start() + 1,
+            tag: opt_tag.to_string(),
+        };
+
+        let json = serde_json::to_string(&feature).unwrap();
+        batch = batch.set(&feature_id, json).ignore();
+
+        features_of
+            .entry(ctg_id.clone())
+            .and_modify(|v| v.push(feature))
+            .or_default();
+    }
+    // Possible remaining records in the batch
+    {
+        let _: () = batch.query(&mut conn).unwrap();
+        batch.clear();
+    }
+
+    // Add serialized struct Feature to a Redis set
+    for ctg_id in features_of.keys() {
+        let set_name = format!("bundle:feature:{ctg_id}");
+        let bundle = bincode::serialize(features_of.get(ctg_id).unwrap()).unwrap();
+        gams::insert_bin(&mut conn, &set_name, &bundle);
     }
 
     // number of features
