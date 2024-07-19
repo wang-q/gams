@@ -53,12 +53,12 @@ pub fn execute(args: &ArgMatches) -> anyhow::Result<()> {
             let value: gams::Ctg = gams::get_ctg(&mut conn2, &id);
             tsv_wtr.serialize(value).unwrap();
         } else if opt_pattern.starts_with("feature") {
-            let bytes = gams::get_bin(&mut conn2, &id);
-            let value: gams::Feature = bincode::deserialize(&bytes).unwrap();
+            let json = gams::get_str(&mut conn2, &id);
+            let value: gams::Feature = serde_json::from_str(&json).unwrap();
             tsv_wtr.serialize(value).unwrap();
         } else if opt_pattern.starts_with("rg") {
-            let bytes = gams::get_bin(&mut conn2, &id);
-            let value: gams::Rg = bincode::deserialize(&bytes).unwrap();
+            let json = gams::get_str(&mut conn2, &id);
+            let value: gams::Rg = serde_json::from_str(&json).unwrap();
             tsv_wtr.serialize(value).unwrap();
         }
     }

@@ -266,14 +266,12 @@ pub fn get_bundle_ctg(conn: &mut redis::Connection, chr_id: Option<&str>) -> BTr
 
 /// bincode stored in a Redis set
 pub fn get_bundle_feature(conn: &mut redis::Connection, ctg_id: &str) -> Vec<Feature> {
-    let features_bytes: Vec<Vec<u8>> = conn
-        .smembers(format!("bundle:feature:{}", ctg_id))
-        .unwrap_or(vec![]);
-
-    features_bytes
-        .iter()
-        .map(|el| bincode::deserialize(el).unwrap())
-        .collect()
+    let bytes = get_bin(conn, &format!("bundle:feature:{}", ctg_id));
+    if bytes.is_empty() {
+        vec![]
+    } else {
+        bincode::deserialize(&bytes).unwrap()
+    }
 }
 
 // Can't do this
