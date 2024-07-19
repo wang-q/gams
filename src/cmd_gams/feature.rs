@@ -7,10 +7,6 @@ pub fn make_subcommand() -> Command {
         .about("Add genomic features from a range file")
         .after_help(
             r###"
-feature:
-    cnt:feature:{ctg_id}        => serial
-    feature:{ctg_id}:{serial}   => Feature
-
 Please process multiple files separately, as you will have to tag each file
 
 "###,

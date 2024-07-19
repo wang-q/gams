@@ -8,21 +8,6 @@ pub fn make_subcommand() -> Command {
         .about("Generate the database from (gzipped) fasta files")
         .after_help(
             r###"
-top:
-    top:common_name => STRING
-    top:chrs        => Vec<String>
-    top:chr_len     => BTreeMap<String, i32>
-
-ctg:
-    cnt:ctg:{chr_id}        => serial
-    ctg:{chr_id}:{serial}   => Ctg
-    idx:ctg:{chr_id}        => index, Lapper<u32, String>
-    bundle:ctg:{chr_id}     => BTreeMap<ctg_id, Ctg>
-                               all contigs of a chr_id
-
-seq:
-    seq:{ctg_id}            => Gzipped &[u8]
-
 "###,
         )
         .arg(

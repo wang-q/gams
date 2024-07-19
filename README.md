@@ -209,61 +209,82 @@ gams status test
 ## Designing concepts
 
 `Redis` has a low operating cost, but the inter-process communication (IPC) between `gams`
-and `redis` is expensive. After connecting to redis, a `SET` or `HSET` by `gams` consumes about 100
-μs. A pipeline of 100 `HSET` operations takes almost the same amount of time. If `redis-server`
+and `redis` is expensive. After connecting to redis, a `SET` or `GET` by `gams` consumes about 100
+μs. A pipeline of 100 `SET` operations takes almost the same amount of time. If `redis-server`
 and `gams` are running on different hosts, the latency is increased for both physical and virtual
 NICs. Typical latency for a Gigabit Ethernet is about 200 μs. Thus, for insert operations, `gams`
 packages hundreds of operations locally and then passes them to `redis` at once.
 
 As the results of `cargo bench ---bench serialize` show, for a normal
 structure, `bincode::serialize()` and `serde_json::to_string()` take 20 ns and 150 ns, respectively,
-while `bincode::: deserialize()` and `serde_json::from_str()` take about 60 ns and 160 ns,
+while `bincode::deserialize()` and `serde_json::from_str()` take about 60 ns and 160 ns,
 respectively. These times are insignificant compared to IPC.
 
 Similarly, for genome sequences, `gams` gz-compresses them locally before passing them to `redis`.
 
 ### Contents stored in Redis
 
-| Namespace                 |  Type   | Fields            | Description                                                                  |
-|:--------------------------|:-------:|:------------------|:-----------------------------------------------------------------------------|
-| common_name               | STRING  |                   | The common name, e.g. S288c, Human                                           |
-| chr                       |  HASH   |                   | Length of each chromosome                                                    |
-|                           |         | chr_id            |                                                                              |
-| **ctg**                   |         |                   | *A contiguous range on chromosome*                                           |
-| cnt:ctg:{chr_id}          | INTEGER |                   | Serial number. An internal counter of ctgs on this chr                       |
-| ctg:{chr_id}:{serial}     |  HASH   |                   | ID, ctg_id                                                                   |
-|                           |         | range             | 1:4000001-4500000                                                            |
-|                           |         | chr_id            |                                                                              |
-|                           |         | chr_start         |                                                                              |
-|                           |         | chr_end           |                                                                              |
-|                           |         | chr_strand        |                                                                              |
-|                           |         | length            | All other namespaces of type HASH contain these fields                       |
-| idx:ctg:{chr_id}          | BINARY  |                   | A serialized structure of `Lapper<u32, String>` for indexing ctgs on chr     |
-| bin:ctg:{chr_id}          | BINARY  |                   | A serialized structure of `BTreeMap<String, Ctg>`                            |
-| seq:{ctg_id}              | BINARY  |                   | Compressed genomic sequence of ctg                                           |
-| **feature**               |         |                   | *A generic genomic feature of interest*                                      |
-| cnt:feature:{ctg_id}      | INTEGER |                   | Serial number. Counter of features locating on this ctg                      |
-| feature:{ctg_id}:{serial} |  HASH   |                   | ID, feature_id                                                               |
-|                           |         | ...               | Standard fields similar to ctg                                               |
-|                           |         | tag               | Feature tags                                                                 |
-| bin:feature:{ctg_id}      |   SET   |                   | A Redis SET contains all serialized features on this ctg                     |
-| **range**                 |         |                   | *Genomic features used for counting, i.e., relationship to certain features* |
-| cnt:range:{ctg_id}        | INTEGER |                   | Serial number. Counter of ranges locating on this ctg                        |
-| range:{ctg_id}:{serial}   |  HASH   |                   | ID, range_id                                                                 |
-|                           |         | ...               | Standard fields similar to ctg                                               |
-| idx:range:{ctg_id}        | BINARY  |                   | A serialized structure of `Lapper<u32, String>` for indexing ranges on ctg   |
-| **peak**                  |         |                   | Peaks of GC-wave                                                             |
-| cnt:peak:{ctg_id}         | INTEGER |                   | Serial number. Counter of peaks locating on this ctg                         |
-| peak:{ctg_id}:{serial}    |  HASH   |                   | ID, peak_id                                                                  |
-|                           |         | ...               | Standard fields similar to ctg                                               |
-|                           |         | signal            | 1 for crest, -1 for trough                                                   |
-|                           |         | gc                | GC-content                                                                   |
-|                           |         | left_signal       | Signal of previous peak                                                      |
-|                           |         | left_wave_length  | Distance to previous peak                                                    |
-|                           |         | left_amplitude    | Difference of GC-content to previous peak                                    |
-|                           |         | right_signal      | Signal of next peak                                                          |
-|                           |         | right_wave_length | distance to next peak                                                        |
-|                           |         | right_amplitude   | Difference of GC-content to next peak                                        |
+* `gams` stores key-value pairs in Redis. Keys can be grouped as follows:
+    * Basic information about the genome - `top:`
+    * Serials - `cnt:`
+    * Contigs, a contiguous genomic region - `ctg:`
+    * Sequences - `seq:`
+    * Bincode, serialized data structure - `bundle:`
+
+* `gams` uses only one Redis data types, STRING
+    * serial - the INCR command parses string values into integers
+    * Rust types like Vec<String> are serialized to json using serde
+    * Indexes for Ctg, Rg are made by rust_lapper, and serialized to bincode
+    * DNA sequences were separated into pieces, gzipped and then stored
+
+* gams naming conventions
+    * Rust struct - Ctg, Feature, Rg, Peak
+    * Rust variable - serial, chr_id, ctg_id...
+
+| Namespace                 |  Type   | Contents                | Description                                            |
+|:--------------------------|:-------:|:------------------------|:-------------------------------------------------------|
+| top:common_name           | STRING  |                         | The common name, e.g. S288c, Human                     |
+| top:chrs                  |  JSON   | Vec<String>             | Names of each chromosome                               |
+| top:chr_len               |  JSON   | BTreeMap<chr_id, usize> | Lengths of each chromosome                             |
+|                           |         |                         |                                                        |
+| **ctg**                   |         |                         | *A contiguous range on chromosome*                     |
+| cnt:ctg:{chr_id}          | INTEGER |                         | Serial number. An internal counter of ctgs on this chr |
+| ctg:{chr_id}:{serial}     |  JSON   | Ctg                     | ctg_id => Ctg                                          |
+|                           |         | range                   | 1:4000001-4500000                                      |
+|                           |         | chr_id                  |                                                        |
+|                           |         | chr_start               |                                                        |
+|                           |         | chr_end                 |                                                        |
+|                           |         | chr_strand              |                                                        |
+|                           |         | length                  |                                                        |
+| idx:ctg:{chr_id}          | BINARY  | Lapper<u32, String>     | A serialized structure for indexing ctgs on chr        |
+| bundle:ctg:{chr_id}       | BINARY  | BTreeMap<ctg_id, Ctg>   | Retrieves all ctgs of a chr                            |
+| seq:{ctg_id}              | BINARY  | Gzipped &[u8]           | Compressed genomic sequence of ctg                     |
+|                           |         |                         |                                                        |
+| **feature**               |         |                         | *A generic genomic feature of interest*                |
+| cnt:feature:{ctg_id}      | INTEGER |                         | Counter of features locating on this ctg               |
+| feature:{ctg_id}:{serial} |  JSON   | Feature                 | feature_id => Feature                                  |
+|                           |         | range                   |                                                        |
+|                           |         | length                  |                                                        |
+|                           |         | tag                     |                                                        |
+|                           |         |                         |                                                        |
+| **rg**                    |         |                         | *For counting overlaps to sliding windows*             |
+| cnt:rg:{ctg_id}           | INTEGER |                         | Counter                                                |
+| rg:{ctg_id}:{serial}      |  JSON   | Rg                      | range_id => Rg                                         |
+|                           |         | range                   |                                                        |
+| idx:rg:{ctg_id}           | BINARY  |                         | A serialized structure for indexing rgs                |
+|                           |         |                         |                                                        |
+| **peak**                  |         |                         | Peaks of GC-wave                                       |
+| cnt:peak:{ctg_id}         | INTEGER |                         | Counter                                                |
+| peak:{ctg_id}:{serial}    |  JSON   | Peak                    | peak_id => Peak                                        |
+|                           |         | length                  |                                                        |
+|                           |         | gc                      | GC-content                                             |
+|                           |         | signal                  | 1 for crest, -1 for trough                             |
+|                           |         | left_wave_length        | Distance to previous peak                              |
+|                           |         | left_amplitude          | Difference of GC-content to previous peak              |
+|                           |         | left_signal             | Signal of previous peak                                |
+|                           |         | right_wave_length       | distance to next peak                                  |
+|                           |         | right_amplitude         | Difference of GC-content to next peak                  |
+|                           |         | right_signal            | Signal of next peak                                    |
 
 ## Runtime dependencies
 

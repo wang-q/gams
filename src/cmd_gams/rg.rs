@@ -7,10 +7,6 @@ pub fn make_subcommand() -> Command {
         .about("Add range files for counting")
         .after_help(
             r###"
-rg:
-    cnt:rg:{ctg_id}         => serial
-    rg:{ctg_id}:{serial}    => Rg
-
 "###,
         )
         .arg(

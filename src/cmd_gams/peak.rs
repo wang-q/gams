@@ -8,10 +8,6 @@ pub fn make_subcommand() -> Command {
         .about("Add peaks of GC-waves")
         .after_help(
             r###"
-feature:
-    cnt:peak:{ctg_id}       => serial
-    peak:{ctg_id}:{serial}  => Peak
-
 Left-/right- wave lengths may be negative
 
 "###,
