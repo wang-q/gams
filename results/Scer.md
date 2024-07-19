@@ -104,4 +104,13 @@ bcftools view SGRP2.vcf.gz --samples SK1 --min-alleles 2 --max-alleles 2 --targe
     bcftools annotate -x "^INFO/AC,INFO/AN,INFO/AF" `# remove useless INFO` |
     bcftools annotate -x "FORMAT/GQ,FORMAT/GL,FORMAT/GLE,FORMAT/QR,FORMAT/QA" `# remove useless FORMAT` -o SK1.vcf
 
+cat SK1.vcf |
+     perl -nla -e '
+        /^#/ and next;
+        @F >= 2 or next;
+
+        print "$F[0]:$F[1]";
+    ' \
+    > SK1.snp.rg
+
 ```

@@ -10,7 +10,8 @@ pub fn make_subcommand() -> Command {
 feature:
     cnt:feature:{ctg_id}        => serial
     feature:{ctg_id}:{serial}   => Feature
-    bundle:feature:{ctg_id}     => Redis SET Feature
+
+Please process multiple files separately, as you will have to tag each file
 
 "###,
         )
@@ -72,9 +73,6 @@ pub fn execute(args: &ArgMatches) -> anyhow::Result<()> {
     // For each ctg, we increase the counter in Redis only once
     let mut serial_of: BTreeMap<String, i32> = BTreeMap::new();
 
-    // ctg_id => Vec<Feature>
-    let mut features_of: BTreeMap<String, Vec<gams::Feature>> = BTreeMap::new();
-
     let mut batch = &mut redis::pipe();
     for (i, (ctg_id, rg)) in ctg_ranges.iter().enumerate() {
         // prompts
@@ -111,23 +109,11 @@ pub fn execute(args: &ArgMatches) -> anyhow::Result<()> {
 
         let json = serde_json::to_string(&feature).unwrap();
         batch = batch.set(&feature_id, json).ignore();
-
-        features_of
-            .entry(ctg_id.clone())
-            .and_modify(|v| v.push(feature))
-            .or_default();
     }
     // Possible remaining records in the batch
     {
         let _: () = batch.query(&mut conn).unwrap();
         batch.clear();
-    }
-
-    // Add serialized struct Feature to a Redis set
-    for ctg_id in features_of.keys() {
-        let set_name = format!("bundle:feature:{ctg_id}");
-        let bundle = bincode::serialize(features_of.get(ctg_id).unwrap()).unwrap();
-        gams::insert_bin(&mut conn, &set_name, &bundle);
     }
 
     // number of features
