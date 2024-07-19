@@ -351,6 +351,7 @@ pub fn find_one_idx(
     }
 }
 
+/// Don't use this
 pub fn find_one_l(conn: &mut redis::Connection, rg: &intspan::Range) -> String {
     let lapper_bytes: Vec<u8> = conn.get(format!("idx:ctg:{}", rg.chr())).unwrap();
 
@@ -367,6 +368,7 @@ pub fn find_one_l(conn: &mut redis::Connection, rg: &intspan::Range) -> String {
     }
 }
 
+/// Don't use this
 pub fn get_rg_seq(conn: &mut redis::Connection, rg: &intspan::Range) -> String {
     let ctg_id = find_one_l(conn, rg);
 
