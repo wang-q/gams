@@ -53,7 +53,6 @@ pub fn execute(args: &ArgMatches) -> anyhow::Result<()> {
 
         // number of peaks
         let n_peak = peaks_t2.len() as i32;
-        eprintln!("There are {} peaks\n", n_peak);
 
         let parent = intspan::IntSpan::from_pair(chr_start, chr_end);
         let seq: String = gams::get_seq(&mut conn, ctg_id);
