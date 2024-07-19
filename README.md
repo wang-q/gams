@@ -230,6 +230,7 @@ Similarly, for genome sequences, `gams` gz-compresses them locally before passin
     * Contigs, a contiguous genomic region - `ctg:`
     * Sequences - `seq:`
     * Bincode, serialized data structure - `bundle:`
+    * Indexes - `idx:`
 
 * `gams` uses only one Redis data types, STRING
     * serial - the INCR command parses string values into integers
@@ -273,7 +274,7 @@ Similarly, for genome sequences, `gams` gz-compresses them locally before passin
 |                           |         | range                   |                                                        |
 | idx:rg:{ctg_id}           | BINARY  |                         | A serialized structure for indexing rgs                |
 |                           |         |                         |                                                        |
-| **peak**                  |         |                         | Peaks of GC-wave                                       |
+| **peak**                  |         |                         | *Peaks of GC-wave*                                     |
 | cnt:peak:{ctg_id}         | INTEGER |                         | Counter                                                |
 | peak:{ctg_id}:{serial}    |  JSON   | Peak                    | peak_id => Peak                                        |
 |                           |         | length                  |                                                        |
