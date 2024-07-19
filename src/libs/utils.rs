@@ -1,6 +1,6 @@
 use lazy_static::lazy_static;
 use regex::Regex;
-use rust_lapper::{Interval, Lapper};
+use rust_lapper::{Lapper};
 use std::collections::{BTreeMap, HashMap};
 use std::io::BufRead;
 

@@ -391,7 +391,7 @@ fn command_fsw() -> anyhow::Result<()> {
     let mut cmd = Command::cargo_bin("gams")?;
     let output = cmd.arg("fsw").output().unwrap();
     let stdout = String::from_utf8(output.stdout).unwrap();
-    assert_eq!(stdout.lines().count(), 2810);
+    assert_eq!(stdout.lines().count(), 2728);
     assert!(stdout.contains("fsw:feature:ctg:I:2:32:1"));
 
     let stderr = String::from_utf8(output.stderr).unwrap();

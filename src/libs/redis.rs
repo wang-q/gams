@@ -264,16 +264,6 @@ pub fn get_bundle_ctg(conn: &mut redis::Connection, chr_id: Option<&str>) -> BTr
     ctg_of
 }
 
-/// bincode stored in a Redis set
-pub fn get_bundle_feature(conn: &mut redis::Connection, ctg_id: &str) -> Vec<Feature> {
-    let bytes = get_bin(conn, &format!("bundle:feature:{}", ctg_id));
-    if bytes.is_empty() {
-        vec![]
-    } else {
-        bincode::deserialize(&bytes).unwrap()
-    }
-}
-
 pub fn get_scan_count(conn: &mut redis::Connection, pattern: &str) -> i32 {
     let script = redis::Script::new(
         r###"
@@ -288,10 +278,10 @@ until cursor == "0";
 return count;
 "###,
     );
-    script.arg(pattern).arg(1000).invoke( conn).unwrap()
+    script.arg(pattern).arg(1000).invoke(conn).unwrap()
 }
 
-pub fn get_scan_lua(conn: &mut redis::Connection, pattern: &str) -> Vec<String> {
+pub fn get_scan_keys(conn: &mut redis::Connection, pattern: &str) -> Vec<String> {
     let script = redis::Script::new(
         r###"
 local cursor = "0";
@@ -299,55 +289,32 @@ local list = {};
 repeat
     local result = redis.call('SCAN', cursor, 'MATCH', ARGV[1], 'COUNT', ARGV[2])
     cursor = result[1];
-    for _, v in ipairs(result[2]) do
-        list[#list+1] = v
+    for _, key in ipairs(result[2]) do
+        list[#list+1] = key
     end
 until cursor == "0";
 return list;
 "###,
     );
-    script.arg(pattern).arg(1000).invoke( conn).unwrap()
+    script.arg(pattern).arg(1000).invoke(conn).unwrap()
 }
 
-/// ```
-/// // let mut conn = gams::connect();
-///
-/// // let keys = gams::get_scan_vec(&mut conn, "prefix:*");
-/// ```
-pub fn get_scan_vec_n(conn: &mut redis::Connection, pattern: &str, count: usize) -> Vec<String> {
-    // matched keys
-    let mut keys: Vec<String> = Vec::new();
-    let iter: redis::Iter<'_, String> = redis::cmd("SCAN")
-        .cursor_arg(0)
-        .arg("MATCH")
-        .arg(pattern)
-        .arg("COUNT")
-        .arg(count) // default is 10
-        .clone()
-        .iter(conn)
-        .unwrap();
-    for x in iter {
-        keys.push(x);
-    }
-
-    keys
-}
-
-pub fn get_scan_vec(conn: &mut redis::Connection, pattern: &str) -> Vec<String> {
-    get_scan_vec_n(conn, pattern, 1000)
-}
-
-/// Default COUNT is 10
-/// Don't use this
-pub fn get_scan_match_vec(conn: &mut redis::Connection, scan: &str) -> Vec<String> {
-    // number of matches
-    let mut keys: Vec<String> = Vec::new();
-    let iter: redis::Iter<'_, String> = conn.scan_match(scan).unwrap();
-    for x in iter {
-        keys.push(x);
-    }
-
-    keys
+pub fn get_scan_values(conn: &mut redis::Connection, pattern: &str) -> Vec<String> {
+    let script = redis::Script::new(
+        r###"
+local cursor = "0";
+local list = {};
+repeat
+    local result = redis.call('SCAN', cursor, 'MATCH', ARGV[1], 'COUNT', ARGV[2])
+    cursor = result[1];
+    for _, key in ipairs(result[2]) do
+        list[#list+1] = redis.call('GET', key)
+    end
+until cursor == "0";
+return list;
+"###,
+    );
+    script.arg(pattern).arg(1000).invoke(conn).unwrap()
 }
 
 pub fn find_one_idx(

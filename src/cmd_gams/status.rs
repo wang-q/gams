@@ -412,7 +412,6 @@ fn pipe_atomic() {
     // DEL tmp-s:I tmp-e:I
     // ZPOPMIN tmp-ctg:I
     // EXEC
-
 }
 
 fn script() {
@@ -452,8 +451,8 @@ local list = {};
 repeat
     local result = redis.call('SCAN', cursor, 'MATCH', ARGV[1], 'COUNT', ARGV[2])
     cursor = result[1];
-    for _, v in ipairs(result[2]) do
-        list[#list+1] = v
+    for _, k in ipairs(result[2]) do
+        list[#list+1] = k
     end
 until cursor == "0";
 return list;
@@ -462,4 +461,20 @@ return list;
     let res: RedisResult<Vec<String>> = script.arg("ctg*").arg(1000).invoke(&mut conn);
     eprintln!("res = {:#?}", res);
 
+    let script = redis::Script::new(
+        r###"
+local cursor = 0;
+local list = {};
+repeat
+    local result = redis.call('SCAN', cursor, 'MATCH', ARGV[1], 'COUNT', ARGV[2])
+    cursor = result[1];
+    for _, k in ipairs(result[2]) do
+        list[#list+1] = redis.call('GET', k)
+    end
+until cursor == "0";
+return list;
+"###,
+    );
+    let res: RedisResult<Vec<String>> = script.arg("foo*").arg(1000).invoke(&mut conn);
+    eprintln!("res = {:#?}", res);
 }

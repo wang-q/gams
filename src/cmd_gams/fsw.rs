@@ -125,7 +125,11 @@ fn proc_ctg(ctg: &gams::Ctg, args: &ArgMatches) -> anyhow::Result<String> {
     let seq: String = gams::get_seq(&mut conn, &ctg.id);
 
     // All features in this ctg
-    let features: Vec<gams::Feature> = gams::get_bundle_feature(&mut conn, &ctg.id);
+    let jsons: Vec<String> = gams::get_scan_values(&mut conn, &format!("feature:{}:*", ctg.id));
+    let features: Vec<gams::Feature> = jsons
+        .iter()
+        .map(|el| serde_json::from_str(el).unwrap())
+        .collect();
     eprintln!("\tThere are {} features", features.len());
 
     let mut out_string = "".to_string();

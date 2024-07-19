@@ -92,7 +92,7 @@ pub fn execute(args: &ArgMatches) -> anyhow::Result<()> {
     //----------------------------
     // redis connection
     let mut conn = gams::connect();
-    let ctgs: Vec<String> = gams::get_scan_vec(&mut conn, args.get_one::<String>("ctg").unwrap());
+    let ctgs: Vec<String> = gams::get_scan_keys(&mut conn, args.get_one::<String>("ctg").unwrap());
 
     if opt_parallel == 1 {
         let mut writer = writer(args.get_one::<String>("outfile").unwrap());
