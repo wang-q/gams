@@ -17,7 +17,7 @@ gzip -dcf *dna_sm.toplevel* |
     pigz > genome.fa.gz
 faops size genome.fa.gz > chr.sizes
 
-# annotaions
+# annotations
 gzip -dcf Arabidopsis_thaliana.TAIR10.58.gff3.gz |
     grep -v '^#' |
     cut -f 1 |
