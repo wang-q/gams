@@ -46,9 +46,11 @@ pub fn execute(args: &ArgMatches) -> anyhow::Result<()> {
                 if is_iter {
                     clear_iter("feature:*");
                     clear_iter("cnt:feature:*");
+                    clear_iter("bundle:feature:*");
                 } else {
                     clear_lua("feature:*");
                     clear_lua("cnt:feature:*");
+                    clear_lua("bundle:feature:*");
                 }
             }
             "rg" => {
@@ -89,7 +91,7 @@ fn clear_iter(pattern: &str) {
         i += 1;
     }
 
-    eprintln!("\tClear {:#?} keys", i);
+    eprintln!("    Clear {:#?} keys", i);
 }
 
 fn clear_lua(pattern: &str) {
@@ -114,5 +116,5 @@ return result
 "###,
     );
     let res: i32 = script.arg(pattern).invoke(&mut conn).unwrap();
-    eprintln!("\tClear {:#?} keys", res);
+    eprintln!("    Clear {:#?} keys", res);
 }
