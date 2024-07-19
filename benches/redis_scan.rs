@@ -35,6 +35,11 @@ pub fn bench_redis_scan(c: &mut Criterion) {
     gams::db_drop();
     rand_insert(black_box(5000));
 
+    c.bench_function("scan_count", |b| {
+        b.iter(|| {
+            let _: i32 = gams::get_scan_count(&mut conn, "prefix:*");
+        })
+    });
     c.bench_function("scan_match_10", |b| {
         b.iter(|| {
             let _: Vec<_> = gams::get_scan_match_vec(&mut conn, "prefix:*");

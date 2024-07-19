@@ -274,50 +274,22 @@ pub fn get_bundle_feature(conn: &mut redis::Connection, ctg_id: &str) -> Vec<Fea
     }
 }
 
-// Can't do this
-// Response was of incompatible type - TypeError: "Bulk response of wrong dimension"
-// pub fn batch_key_pos(conn: &mut redis::Connection, keys: &Vec<String>) -> Vec<(String, i32, i32)> {
-//     let mut result: Vec<(String, i32, i32)> = vec![];
-//
-//     let mut batch = &mut redis::pipe();
-//
-//     for (i, key) in keys.iter().enumerate() {
-//         if i > 1 && i % 100 == 0 {
-//             let ary: Vec<(String, i32, i32)> = batch.query(conn).unwrap();
-//             result.extend(ary);
-//             batch.clear();
-//         }
-//
-//         batch = batch
-//             .hget(key, &["chr_id", "chr_start", "chr_end"]);
-//     }
-//     // Possible remaining records in the batch
-//     {
-//         let ary: Vec<(String, i32, i32)> = batch.query(conn).unwrap();
-//         result.extend(ary);
-//         batch.clear();
-//     }
-//
-//     result
-// }
-
 pub fn get_scan_count(conn: &mut redis::Connection, pattern: &str) -> i32 {
-    // number of matches
-    let mut count = 0;
-    let iter: redis::Iter<'_, String> = redis::cmd("SCAN")
-        .cursor_arg(0)
-        .arg("MATCH")
-        .arg(pattern)
-        .arg("COUNT")
-        .arg(1000) // default is 10
-        .clone()
-        .iter(conn)
-        .unwrap();
-    for _ in iter {
-        count += 1;
-    }
+    let script = redis::Script::new(
+        r###"
+local cursor = 0;
+local count = 0;
+repeat
+    local result = redis.call('SCAN', cursor, 'MATCH', ARGV[1], 'COUNT', ARGV[2])
+    cursor = result[1];
+    local count_delta = #result[2];
+    count = count + count_delta;
+until cursor == "0";
+return count;
 
-    count
+"###,
+    );
+    script.arg(pattern).arg(1000).invoke( conn).unwrap()
 }
 
 ///
@@ -350,6 +322,7 @@ pub fn get_scan_vec(conn: &mut redis::Connection, pattern: &str) -> Vec<String> 
 }
 
 /// Default COUNT is 10
+/// Don't use this
 pub fn get_scan_match_vec(conn: &mut redis::Connection, scan: &str) -> Vec<String> {
     // number of matches
     let mut keys: Vec<String> = Vec::new();

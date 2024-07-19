@@ -413,36 +413,6 @@ fn pipe_atomic() {
     // ZPOPMIN tmp-ctg:I
     // EXEC
 
-    let res: Vec<BTreeMap<String, isize>> = redis::pipe()
-        .atomic()
-        .cmd("ZRANGESTORE")
-        .arg("tmp-s:I")
-        .arg("ctg-s:I")
-        .arg(0)
-        .arg(1000)
-        .arg("BYSCORE")
-        .ignore()
-        .cmd("ZRANGESTORE")
-        .arg("tmp-e:I")
-        .arg("ctg-e:I")
-        .arg(1100)
-        .arg("+inf")
-        .arg("BYSCORE")
-        .ignore()
-        .zinterstore_min("tmp-ctg:I", &["tmp-s:I", "tmp-e:I"])
-        .ignore()
-        .del("tmp-s:I")
-        .ignore()
-        .del("tmp-e:I")
-        .ignore()
-        .cmd("ZPOPMIN")
-        .arg("tmp-ctg:I")
-        .arg(1)
-        .query(&mut conn)
-        .unwrap();
-    let (key, _) = res.first().unwrap().iter().next().unwrap();
-    eprintln!("res = {:#?}", res);
-    eprintln!("key = {:#?}", key);
 }
 
 fn script() {
@@ -459,4 +429,22 @@ return tonumber(ARGV[1]) + tonumber(ARGV[2]);
     eprintln!("res = {:#?}", res);
 
     // https://github.com/redis/redis/issues/7#issuecomment-596464166
+    // https://stackoverflow.com/questions/52167955/use-lua-script-with-scan-command-to-obtain-the-list
+    let script = redis::Script::new(
+        r###"
+local cursor = 0;
+local count = 0;
+repeat
+    local result = redis.call('SCAN', cursor, 'MATCH', ARGV[1], 'COUNT', ARGV[2])
+    cursor = result[1];
+    local count_delta = #result[2];
+    count = count + count_delta;
+until cursor == "0";
+return count;
+
+"###,
+    );
+    let res: RedisResult<i32> = script.arg("ctg*").arg(1000).invoke(&mut conn);
+    eprintln!("res = {:#?}", res);
+
 }
