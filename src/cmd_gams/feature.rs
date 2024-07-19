@@ -10,7 +10,7 @@ pub fn make_subcommand() -> Command {
 feature:
     cnt:feature:{ctg_id}        => serial
     feature:{ctg_id}:{serial}   => Feature
-    bin:feature:{ctg_id}        => Redis SET Feature
+    bundle:feature:{ctg_id}     => Redis SET Feature
 
 "###,
         )
@@ -108,7 +108,7 @@ pub fn execute(args: &ArgMatches) -> anyhow::Result<()> {
             };
 
             // Add serialized struct Feature to a Redis set
-            let set_name = format!("bin:feature:{ctg_id}");
+            let set_name = format!("bundle:feature:{ctg_id}");
             let feature_bytes = bincode::serialize(&feature).unwrap();
 
             batch = batch

@@ -247,13 +247,17 @@ pub fn get_idx_ctg(conn: &mut redis::Connection) -> BTreeMap<String, Lapper<u32,
 }
 
 /// BTreeMap<ctg_id, Ctg>
-pub fn get_bin_ctgs(conn: &mut redis::Connection) -> BTreeMap<String, Ctg> {
-    let chrs: Vec<String> = get_vec_chr(conn);
+pub fn get_bundle_ctg(conn: &mut redis::Connection, chr_id: Option<&str>) -> BTreeMap<String, Ctg> {
+    let chrs: Vec<String> = if chr_id.is_some() {
+        vec![chr_id.unwrap().to_string()]
+    } else {
+        get_vec_chr(conn)
+    };
 
     let mut ctg_of: BTreeMap<String, Ctg> = BTreeMap::new();
 
     for chr_id in &chrs {
-        let ctgs_bytes: Vec<u8> = conn.get(format!("bin:ctg:{}", chr_id)).unwrap();
+        let ctgs_bytes: Vec<u8> = conn.get(format!("bundle:ctg:{}", chr_id)).unwrap();
         let ctgs: BTreeMap<String, Ctg> = bincode::deserialize(&ctgs_bytes).unwrap();
 
         ctg_of.extend(ctgs);
@@ -263,9 +267,9 @@ pub fn get_bin_ctgs(conn: &mut redis::Connection) -> BTreeMap<String, Ctg> {
 }
 
 /// bincode stored in a Redis set
-pub fn get_bin_features(conn: &mut redis::Connection, ctg_id: &str) -> Vec<Feature> {
+pub fn get_bundle_feature(conn: &mut redis::Connection, ctg_id: &str) -> Vec<Feature> {
     let features_bytes: Vec<Vec<u8>> = conn
-        .smembers(format!("bin:feature:{}", ctg_id))
+        .smembers(format!("bundle:feature:{}", ctg_id))
         .unwrap_or(vec![]);
 
     features_bytes

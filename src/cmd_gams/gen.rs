@@ -17,7 +17,8 @@ ctg:
     cnt:ctg:{chr_id}        => serial
     ctg:{chr_id}:{serial}   => Ctg
     idx:ctg:{chr_id}        => index, Lapper<u32, String>
-    bin:ctg:{chr_id}        => BTreeMap<String, Ctg>
+    bundle:ctg:{chr_id}     => BTreeMap<ctg_id, Ctg>
+                               all contigs of a chr_id
 
 seq:
     seq:{ctg_id}            => Gzipped &[u8]
@@ -140,8 +141,8 @@ pub fn execute(args: &ArgMatches) -> anyhow::Result<()> {
                 }
             }
 
-            // ctgs in each chr
-            let mut ctgs: BTreeMap<String, gams::Ctg> = BTreeMap::new();
+            // ctgs of each chr
+            let mut ctg_of: BTreeMap<String, gams::Ctg> = BTreeMap::new();
             while !regions.is_empty() {
                 // Redis counter
                 let serial = gams::incr_serial(&mut conn, &format!("cnt:ctg:{chr_id}"));
@@ -162,7 +163,7 @@ pub fn execute(args: &ArgMatches) -> anyhow::Result<()> {
                     chr_strand: "+".to_string(),
                     length: end - start + 1,
                 };
-                ctgs.insert(ctg_id.clone(), ctg.clone());
+                ctg_of.insert(ctg_id.clone(), ctg.clone());
 
                 gams::insert_ctg(&mut conn, &ctg_id, &ctg);
 
@@ -170,8 +171,8 @@ pub fn execute(args: &ArgMatches) -> anyhow::Result<()> {
                 gams::insert_seq(&mut conn, &ctg_id, seq);
             } // ctg
 
-            let ctgs_bytes = bincode::serialize(&ctgs).unwrap();
-            gams::insert_bin(&mut conn, &format!("bin:ctg:{chr_id}"), &ctgs_bytes);
+            let ctgs_bytes = bincode::serialize(&ctg_of).unwrap();
+            gams::insert_bin(&mut conn, &format!("bundle:ctg:{chr_id}"), &ctgs_bytes);
         } // chr
     } // fasta file
 
