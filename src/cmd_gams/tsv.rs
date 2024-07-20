@@ -43,21 +43,21 @@ pub fn execute(args: &ArgMatches) -> anyhow::Result<()> {
         .from_writer(writer);
 
     // redis connection
-    let mut conn = gams::connect();
-    let mut conn2 = gams::connect(); // can't use one same `conn` inside an iter
+    let mut raw_conn = gams::connect();
+    let mut conn = gams::Conn::new(); // can't use one same `conn` inside an iter
 
     // scan
-    let iter: redis::Iter<'_, String> = conn.scan_match(opt_pattern).unwrap();
+    let iter: redis::Iter<'_, String> = raw_conn.scan_match(opt_pattern).unwrap();
     for id in iter {
         if opt_pattern.starts_with("ctg") {
-            let value: gams::Ctg = gams::get_ctg(&mut conn2, &id);
+            let value: gams::Ctg = conn.get_ctg(&id);
             tsv_wtr.serialize(value).unwrap();
         } else if opt_pattern.starts_with("feature") {
-            let json = gams::get_str(&mut conn2, &id);
+            let json = conn.get_str(&id);
             let value: gams::Feature = serde_json::from_str(&json).unwrap();
             tsv_wtr.serialize(value).unwrap();
         } else if opt_pattern.starts_with("rg") {
-            let json = gams::get_str(&mut conn2, &id);
+            let json = conn.get_str(&id);
             let value: gams::Rg = serde_json::from_str(&json).unwrap();
             tsv_wtr.serialize(value).unwrap();
         }

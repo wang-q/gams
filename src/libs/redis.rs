@@ -99,7 +99,8 @@ impl Conn {
     }
 
     pub fn incr_sn_n(&mut self, key: &str, n: i32) -> i32 {
-        self.conn().incr(key, n).unwrap() as i32
+        let sn: isize = self.conn().incr(key, n).unwrap();
+        sn as i32
     }
 
     pub fn incr_sn(&mut self, key: &str) -> i32 {
@@ -225,7 +226,7 @@ impl Conn {
         let mut ctg_of: BTreeMap<String, crate::Ctg> = BTreeMap::new();
 
         for chr_id in &chrs {
-            let ctgs_bytes: Vec<u8> = self.get_bin(&format!("bundle:ctg:{}", chr_id)).unwrap();
+            let ctgs_bytes: Vec<u8> = self.get_bin(&format!("bundle:ctg:{}", chr_id));
             let ctgs: BTreeMap<String, crate::Ctg> = bincode::deserialize(&ctgs_bytes).unwrap();
 
             ctg_of.extend(ctgs);
@@ -271,7 +272,7 @@ impl Conn {
         let mut lapper_of: BTreeMap<String, Lapper<u32, String>> = BTreeMap::new();
 
         for chr_id in &chrs {
-            let lapper_bytes: Vec<u8> = self.get_bin(&format!("idx:ctg:{}", chr_id)).unwrap();
+            let lapper_bytes: Vec<u8> = self.get_bin(&format!("idx:ctg:{}", chr_id));
             let lapper: Lapper<u32, String> = bincode::deserialize(&lapper_bytes).unwrap();
 
             lapper_of.insert(chr_id.clone(), lapper);

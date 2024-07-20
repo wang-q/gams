@@ -1,5 +1,4 @@
 use lazy_static::lazy_static;
-use redis::Commands;
 use regex::Regex;
 use rust_lapper::Lapper;
 use std::collections::{BTreeMap, HashMap};

@@ -58,11 +58,11 @@ pub fn execute(args: &ArgMatches) -> anyhow::Result<()> {
     let is_seq = args.get_flag("seq");
 
     // redis connection
-    let mut conn = gams::connect();
+    let mut conn = gams::Conn::new();
 
     // rebuild
     if is_rebuild {
-        gams::build_idx_ctg(&mut conn);
+        conn.build_idx_ctg();
     }
 
     // all ranges
@@ -84,7 +84,7 @@ pub fn execute(args: &ArgMatches) -> anyhow::Result<()> {
     }
 
     // index of ctgs
-    let lapper_of = gams::get_idx_ctg(&mut conn);
+    let lapper_of = conn.get_idx_ctg();
 
     // processing each range
     for range in ranges {
@@ -101,13 +101,13 @@ pub fn execute(args: &ArgMatches) -> anyhow::Result<()> {
         }
 
         if is_seq {
-            let ctg = gams::get_ctg(&mut conn, &ctg_id);
+            let ctg = conn.get_ctg(&ctg_id);
             let chr_start = ctg.chr_start;
 
             let ctg_start = (rg.start() - chr_start + 1) as usize;
             let ctg_end = (rg.end() - chr_start + 1) as usize;
 
-            let ctg_seq = gams::get_seq(&mut conn, &ctg_id);
+            let ctg_seq = conn.get_seq(&ctg_id);
             // from <= x < to, zero-based
             let seq = ctg_seq.get((ctg_start - 1)..(ctg_end)).unwrap();
             writer.write_fmt(format_args!(">{}\n{}\n", range, seq))?;

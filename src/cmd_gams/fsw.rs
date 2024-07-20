@@ -65,8 +65,8 @@ pub fn execute(args: &ArgMatches) -> anyhow::Result<()> {
     // Operating
     //----------------------------
     // redis connection
-    let mut conn = gams::connect();
-    let ctg_of = gams::get_bundle_ctg(&mut conn, None);
+    let mut conn = gams::Conn::new();
+    let ctg_of = conn.get_bundle_ctg(None);
 
     if opt_parallel == 1 {
         let mut writer = intspan::writer(args.get_one::<String>("outfile").unwrap());
@@ -111,7 +111,7 @@ fn proc_ctg(ctg: &gams::Ctg, args: &ArgMatches) -> anyhow::Result<String> {
     let resize = *args.get_one::<i32>("resize").unwrap();
 
     // redis connection
-    let mut conn = gams::connect();
+    let mut conn = gams::Conn::new();
 
     eprintln!(
         "Process {} {}:{}-{}",
@@ -122,10 +122,10 @@ fn proc_ctg(ctg: &gams::Ctg, args: &ArgMatches) -> anyhow::Result<String> {
     let mut cache: HashMap<String, f32> = HashMap::new();
 
     let parent = intspan::IntSpan::from_pair(ctg.chr_start, ctg.chr_end);
-    let seq: String = gams::get_seq(&mut conn, &ctg.id);
+    let seq: String = conn.get_seq(&ctg.id);
 
     // All features in this ctg
-    let jsons: Vec<String> = gams::get_scan_values(&mut conn, &format!("feature:{}:*", ctg.id));
+    let jsons: Vec<String> = conn.get_scan_values(&format!("feature:{}:*", ctg.id));
     let features: Vec<gams::Feature> = jsons
         .iter()
         .map(|el| serde_json::from_str(el).unwrap())

@@ -25,10 +25,10 @@ pub fn execute(args: &ArgMatches) -> anyhow::Result<()> {
     let infile = args.get_one::<String>("infile").unwrap();
 
     // redis connection
-    let mut conn = gams::connect();
+    let mut conn = gams::Conn::new();
 
     // index of ctgs
-    let lapper_of = gams::get_idx_ctg(&mut conn);
+    let lapper_of = conn.get_idx_ctg();
 
     // ctg_id => [(Range, signal)]
     eprintln!("Loading peaks...");
@@ -40,7 +40,7 @@ pub fn execute(args: &ArgMatches) -> anyhow::Result<()> {
     let mut serial_of: BTreeMap<String, i32> = BTreeMap::new();
     let mut s_peaks_of: BTreeMap<String, Vec<gams::Peak>> = Default::default();
     for ctg_id in peaks_of.keys() {
-        let (chr_id, chr_start, chr_end) = gams::get_ctg_pos(&mut conn, ctg_id);
+        let (chr_id, chr_start, chr_end) = conn.get_ctg_pos(ctg_id);
         eprintln!("Process {} {}:{}-{}", ctg_id, chr_id, chr_start, chr_end);
 
         // tuple with 2 members
@@ -55,7 +55,7 @@ pub fn execute(args: &ArgMatches) -> anyhow::Result<()> {
         let n_peak = peaks_t2.len() as i32;
 
         let parent = intspan::IntSpan::from_pair(chr_start, chr_end);
-        let seq: String = gams::get_seq(&mut conn, ctg_id);
+        let seq: String = conn.get_seq(ctg_id);
 
         // local caches of GC-content for each ctg
         let mut cache: HashMap<String, f32> = HashMap::new();
@@ -67,8 +67,7 @@ pub fn execute(args: &ArgMatches) -> anyhow::Result<()> {
             if !serial_of.contains_key(ctg_id) {
                 // Redis counter
                 // increase serial by cnt
-                let serial =
-                    gams::incr_serial_n(&mut conn, &format!("cnt:peak:{ctg_id}"), n_peak) as i32;
+                let serial = conn.incr_sn_n(&format!("cnt:peak:{ctg_id}"), n_peak) as i32;
 
                 // here we start
                 serial_of.insert(ctg_id.to_string(), serial - n_peak);
@@ -102,7 +101,7 @@ pub fn execute(args: &ArgMatches) -> anyhow::Result<()> {
     eprintln!("Updating relationships of peaks...");
     eprintln!("{} contigs to be processed", s_peaks_of.len());
     for ctg_id in s_peaks_of.keys().cloned().collect::<Vec<_>>().iter() {
-        let (chr_id, chr_start, chr_end) = gams::get_ctg_pos(&mut conn, ctg_id);
+        let (chr_id, chr_start, chr_end) = conn.get_ctg_pos(ctg_id);
         eprintln!("Process {} {}:{}-{}", ctg_id, chr_id, chr_start, chr_end);
 
         // All peaks in this ctg, sorted

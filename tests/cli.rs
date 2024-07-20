@@ -1,6 +1,5 @@
 use approx::assert_relative_eq;
 use assert_cmd::prelude::*;
-use intspan::*;
 use itertools::Itertools;
 use predicates::prelude::*;
 use std::env;

@@ -43,13 +43,13 @@ pub fn execute(args: &ArgMatches) -> anyhow::Result<()> {
     let opt_size = *args.get_one::<usize>("size").unwrap();
 
     // redis connection
-    let mut conn = gams::connect();
+    let mut conn = gams::Conn::new();
 
     // ctg_id => [Range]
     // act as a sorter
     let ranges_of = {
         // index of ctgs
-        let lapper_of = gams::get_idx_ctg(&mut conn);
+        let lapper_of = conn.get_idx_ctg();
         gams::read_range(infile, &lapper_of)
     };
 
@@ -73,7 +73,7 @@ pub fn execute(args: &ArgMatches) -> anyhow::Result<()> {
     for (i, (ctg_id, rg)) in ctg_ranges.iter().enumerate() {
         // prompts
         if i > 1 && i % opt_size == 0 {
-            let _: () = batch.query(&mut conn).unwrap();
+            let _: () = batch.query(conn.conn()).unwrap();
             batch.clear();
         }
         if i > 1 && i % (opt_size * 10) == 0 {
@@ -85,8 +85,7 @@ pub fn execute(args: &ArgMatches) -> anyhow::Result<()> {
             let cnt = ranges_of.get(ctg_id).unwrap().len() as i32;
             // Redis counter
             // increase serial by cnt
-            let serial =
-                gams::incr_serial_n(&mut conn, &format!("cnt:feature:{ctg_id}"), cnt) as i32;
+            let serial = conn.incr_sn_n(&format!("cnt:feature:{ctg_id}"), cnt);
 
             // here we start
             serial_of.insert(ctg_id.to_string(), serial - cnt);
@@ -108,12 +107,12 @@ pub fn execute(args: &ArgMatches) -> anyhow::Result<()> {
     }
     // Possible remaining records in the batch
     {
-        let _: () = batch.query(&mut conn).unwrap();
+        let _: () = batch.query(conn.conn()).unwrap();
         batch.clear();
     }
 
     // number of features
-    let n_feature = gams::get_scan_count(&mut conn, "feature:*");
+    let n_feature = conn.get_scan_count("feature:*");
     eprintln!("There are {} features in the database", n_feature);
 
     Ok(())

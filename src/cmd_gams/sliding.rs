@@ -91,8 +91,8 @@ pub fn execute(args: &ArgMatches) -> anyhow::Result<()> {
     // Operating
     //----------------------------
     // redis connection
-    let mut conn = gams::connect();
-    let ctgs: Vec<String> = gams::get_scan_keys(&mut conn, args.get_one::<String>("ctg").unwrap());
+    let mut conn = gams::Conn::new();
+    let ctgs: Vec<String> = conn.get_scan_keys(args.get_one::<String>("ctg").unwrap());
 
     if opt_parallel == 1 {
         let mut writer = writer(args.get_one::<String>("outfile").unwrap());
@@ -126,15 +126,15 @@ fn proc_ctg(ctg_id: &String, args: &ArgMatches) -> anyhow::Result<String> {
     let opt_influence = *args.get_one::<f32>("influence").unwrap();
 
     // redis connection
-    let mut conn = gams::connect();
+    let mut conn = gams::Conn::new();
 
-    let (chr_id, chr_start, chr_end) = gams::get_ctg_pos(&mut conn, ctg_id);
+    let (chr_id, chr_start, chr_end) = conn.get_ctg_pos(ctg_id);
     eprintln!("Process {} {}:{}-{}", ctg_id, chr_id, chr_start, chr_end);
 
     let parent = IntSpan::from_pair(chr_start, chr_end);
     let windows = gams::sliding(&parent, opt_size, opt_step);
 
-    let ctg_seq: String = gams::get_seq(&mut conn, ctg_id);
+    let ctg_seq: String = conn.get_seq(ctg_id);
 
     let mut gcs: Vec<f32> = Vec::with_capacity(windows.len());
     for window in &windows {

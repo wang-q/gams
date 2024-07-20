@@ -59,7 +59,7 @@ pub fn execute(args: &ArgMatches) -> anyhow::Result<()> {
     let opt_min = *args.get_one::<i32>("min").unwrap();
 
     // redis connection
-    let mut conn = gams::connect();
+    let mut conn = gams::Conn::new();
 
     // hash chr
     let mut len_of: BTreeMap<_, _> = BTreeMap::new();
@@ -130,7 +130,7 @@ pub fn execute(args: &ArgMatches) -> anyhow::Result<()> {
             let mut ctg_of: BTreeMap<String, gams::Ctg> = BTreeMap::new();
             while !regions.is_empty() {
                 // Redis counter
-                let serial = gams::incr_serial(&mut conn, &format!("cnt:ctg:{chr_id}"));
+                let serial = conn.incr_sn(&format!("cnt:ctg:{chr_id}"));
                 let ctg_id = format!("ctg:{chr_id}:{serial}");
 
                 let start = regions.pop_front().unwrap();
@@ -150,43 +150,43 @@ pub fn execute(args: &ArgMatches) -> anyhow::Result<()> {
                 };
                 ctg_of.insert(ctg_id.clone(), ctg.clone());
 
-                gams::insert_ctg(&mut conn, &ctg_id, &ctg);
+                conn.insert_ctg(&ctg_id, &ctg);
 
                 let seq: &[u8] = &chr_seq[(start - 1) as usize..end as usize];
-                gams::insert_seq(&mut conn, &ctg_id, seq);
+                conn.insert_seq(&ctg_id, seq);
             } // ctg
 
             let bundle_ctgs = bincode::serialize(&ctg_of).unwrap();
-            gams::insert_bin(&mut conn, &format!("bundle:ctg:{chr_id}"), &bundle_ctgs);
+            conn.insert_bin(&format!("bundle:ctg:{chr_id}"), &bundle_ctgs);
         } // chr
     } // fasta file
 
     // store to db
     {
         // common_name
-        gams::insert_str(&mut conn, "top:common_name", opt_name);
+        conn.insert_str("top:common_name", opt_name);
 
         // chrs
         let json_chr_len = serde_json::to_string(&len_of).unwrap();
-        gams::insert_str(&mut conn, "top:chr_len", &json_chr_len);
+        conn.insert_str("top:chr_len", &json_chr_len);
 
         let json_chrs = serde_json::to_string(&len_of.keys().cloned().collect::<Vec<_>>()).unwrap();
-        gams::insert_str(&mut conn, "top:chrs", &json_chrs);
+        conn.insert_str("top:chrs", &json_chrs);
 
         eprintln!("Building the lapper index of ctgs...\n");
-        gams::build_idx_ctg(&mut conn);
+        conn.build_idx_ctg();
     }
 
     {
-        let common_name = gams::get_str(&mut conn, "top:common_name");
+        let common_name = conn.get_str("top:common_name");
         eprintln!("Common name: {}", common_name);
 
         // number of chr
-        let n_chr = gams::get_vec_chr(&mut conn).len();
+        let n_chr = conn.get_vec_chr().len();
         eprintln!("There are {} chromosomes", n_chr);
 
         // number of ctg
-        let n_ctg: i32 = gams::get_scan_count(&mut conn, "ctg:*");
+        let n_ctg: i32 = conn.get_scan_count("ctg:*");
         eprintln!("There are {} contigs", n_ctg);
     }
 
