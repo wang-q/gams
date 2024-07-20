@@ -129,12 +129,9 @@ fn command_libs_redis() -> anyhow::Result<()> {
         .unwrap();
 
     // get_vec_chr
-    let mut conn = gams::connect();
+    let mut conn = gams::Conn::new();
     let exp = vec!["I", "Mito"];
-    let res = gams::get_vec_chr(&mut conn)
-        .into_iter()
-        .sorted()
-        .collect::<Vec<_>>();
+    let res = conn.get_vec_chr().into_iter().sorted().collect::<Vec<_>>();
     assert_eq!(res, exp, "get_vec_chr");
 
     // let exp = vec![

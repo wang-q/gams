@@ -1,8 +1,26 @@
 use lazy_static::lazy_static;
+use redis::Commands;
 use regex::Regex;
 use rust_lapper::Lapper;
 use std::collections::{BTreeMap, HashMap};
 use std::io::BufRead;
+
+pub fn find_one_idx(
+    lapper_of: &BTreeMap<String, Lapper<u32, String>>,
+    rg: &intspan::Range,
+) -> String {
+    if !lapper_of.contains_key(rg.chr()) {
+        return "".to_string();
+    }
+
+    let lapper = lapper_of.get(rg.chr()).unwrap();
+    let res = lapper.find(*rg.start() as u32, *rg.end() as u32).next();
+
+    match res {
+        Some(iv) => iv.val.clone(),
+        None => "".to_string(),
+    }
+}
 
 /// Read ranges in the file
 pub fn read_range(
@@ -21,7 +39,7 @@ pub fn read_range(
             continue;
         }
 
-        let ctg_id = crate::find_one_idx(lapper_of, &rg);
+        let ctg_id = find_one_idx(lapper_of, &rg);
         if ctg_id.is_empty() {
             continue;
         }
@@ -133,4 +151,72 @@ pub fn cache_gc_stat(
     }
 
     crate::gc_stat(&gcs)
+}
+
+/// Don't use this
+pub fn find_one_l(conn: &mut redis::Connection, rg: &intspan::Range) -> String {
+    let lapper_bytes: Vec<u8> = conn.get(format!("idx:ctg:{}", rg.chr())).unwrap();
+
+    if lapper_bytes.is_empty() {
+        return "".to_string();
+    }
+
+    let lapper: Lapper<u32, String> = bincode::deserialize(&lapper_bytes).unwrap();
+    let res = lapper.find(*rg.start() as u32, *rg.end() as u32).next();
+
+    match res {
+        Some(iv) => iv.val.clone(),
+        None => "".to_string(),
+    }
+}
+
+/// Don't use this
+pub fn get_rg_seq(conn: &mut redis::Connection, rg: &intspan::Range) -> String {
+    let ctg_id = find_one_l(conn, rg);
+
+    if ctg_id.is_empty() {
+        return "".to_string();
+    }
+
+    let ctg = get_ctg(conn, &ctg_id);
+    let chr_start = ctg.chr_start;
+
+    let ctg_start = (rg.start() - chr_start + 1) as usize;
+    let ctg_end = (rg.end() - chr_start + 1) as usize;
+
+    let ctg_seq = get_seq(conn, &ctg_id);
+
+    // from <= x < to, zero-based
+    let seq = ctg_seq.get((ctg_start - 1)..(ctg_end)).unwrap();
+
+    String::from(seq)
+}
+
+/// This is an expensive operation
+pub fn get_gc_content(conn: &mut redis::Connection, rg: &intspan::Range) -> f32 {
+    let bucket = format!("cache:{}:{}", rg.chr(), rg.start() / 1000);
+    let field = rg.to_string();
+    let expire = 180;
+    let res = conn.hget(&bucket, &field).unwrap();
+
+    return match res {
+        Some(res) => {
+            let _: () = conn.expire(&bucket, expire).unwrap();
+
+            res
+        }
+        None => {
+            let seq = get_rg_seq(conn, rg);
+
+            let gc_content = if seq.is_empty() {
+                0.
+            } else {
+                bio::seq_analysis::gc::gc_content(seq.bytes())
+            };
+            let _: () = conn.hset(&bucket, &field, gc_content).unwrap();
+            let _: () = conn.expire(&bucket, expire).unwrap();
+
+            gc_content
+        }
+    };
 }

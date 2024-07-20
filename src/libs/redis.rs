@@ -26,6 +26,7 @@ fn default_redis_port() -> u32 {
     6379
 }
 
+/// raw redis connection
 pub fn connect() -> redis::Connection {
     dotenvy::from_filename("gams.env").expect("Failed to read gams.env file");
 
@@ -49,28 +50,92 @@ pub fn connect() -> redis::Connection {
         .expect("Failed to connect to Redis")
 }
 
-pub fn insert_str(conn: &mut redis::Connection, key: &str, val: &str) {
-    conn.set(key, val).unwrap()
+/// drop the database
+pub fn db_drop() {
+    let mut conn = connect();
+    let output: String = redis::cmd("FLUSHDB")
+        .query(&mut conn)
+        .expect("Failed to execute FLUSHDB");
+    println!("{}", output);
 }
 
-pub fn get_str(conn: &mut redis::Connection, key: &str) -> String {
-    conn.get(key).unwrap()
+pub struct Conn {
+    conn: redis::Connection,
+    inputs: Vec<String>,
 }
 
-pub fn insert_bin(conn: &mut redis::Connection, key: &str, val: &[u8]) {
-    conn.set(key, val).unwrap()
+/// INTERFACE: Redis connection.
+/// Three basic data types: str, bin and sn
+///
+/// ----
+/// ----
+impl Conn {
+    pub fn new() -> Self {
+        Self {
+            conn: connect(),
+            inputs: vec![],
+        }
+    }
+
+    /// raw redis connection
+    pub fn conn(&mut self) -> &mut redis::Connection {
+        &mut self.conn
+    }
+
+    pub fn insert_str(&mut self, key: &str, val: &str) {
+        self.conn().set(key, val).unwrap()
+    }
+
+    pub fn get_str(&mut self, key: &str) -> String {
+        self.conn().get(key).unwrap()
+    }
+
+    pub fn insert_bin(&mut self, key: &str, val: &[u8]) {
+        self.conn().set(key, val).unwrap()
+    }
+
+    pub fn get_bin(&mut self, key: &str) -> Vec<u8> {
+        self.conn().get(key).unwrap()
+    }
+
+    pub fn incr_sn_n(&mut self, key: &str, n: i32) -> i32 {
+        self.conn().incr(key, n).unwrap() as i32
+    }
+
+    pub fn incr_sn(&mut self, key: &str) -> i32 {
+        self.incr_sn_n(key, 1)
+    }
+
+    pub fn get_sn(&mut self, key: &str) -> i32 {
+        self.conn().get(key).unwrap_or(0)
+    }
 }
 
-pub fn get_bin(conn: &mut redis::Connection, key: &str) -> Vec<u8> {
-    conn.get(key).unwrap()
-}
+/// INTERFACE: wrapped data: ctg and seq
+///
+/// ----
+/// ----
+impl Conn {
+    pub fn insert_ctg(&mut self, ctg_id: &str, ctg: &crate::Ctg) {
+        let json = serde_json::to_string(ctg).unwrap();
+        self.insert_str(ctg_id, &json);
+    }
 
-pub fn incr_serial(conn: &mut redis::Connection, key: &str) -> isize {
-    incr_serial_n(conn, key, 1)
-}
+    pub fn get_ctg(&mut self, ctg_id: &str) -> crate::Ctg {
+        let json = self.get_str(ctg_id);
+        serde_json::from_str(&json).unwrap()
+    }
 
-pub fn incr_serial_n(conn: &mut redis::Connection, key: &str, n: i32) -> isize {
-    conn.incr(key, n).unwrap()
+    pub fn insert_seq(&mut self, ctg_id: &str, seq: &[u8]) {
+        let seq_bytes = encode_gz(seq).unwrap();
+        self.insert_bin(&format!("seq:{ctg_id}"), &seq_bytes)
+    }
+
+    pub fn get_seq(&mut self, ctg_id: &str) -> String {
+        let seq_bytes: Vec<u8> = self.get_bin(&format!("seq:{}", ctg_id));
+        let s = decode_gz(&seq_bytes).unwrap();
+        String::from_utf8(s).unwrap()
+    }
 }
 
 fn encode_gz(seq: &[u8]) -> anyhow::Result<Vec<u8>> {
@@ -80,11 +145,6 @@ fn encode_gz(seq: &[u8]) -> anyhow::Result<Vec<u8>> {
     Ok(bytes)
 }
 
-pub fn insert_seq(conn: &mut redis::Connection, ctg_id: &str, seq: &[u8]) {
-    let seq_bytes = encode_gz(seq).unwrap();
-    insert_bin(conn, &format!("seq:{ctg_id}"), &seq_bytes);
-}
-
 fn decode_gz(bytes: &[u8]) -> anyhow::Result<Vec<u8>> {
     let mut gz = GzDecoder::new(bytes);
     let mut buf = Vec::new();
@@ -92,143 +152,143 @@ fn decode_gz(bytes: &[u8]) -> anyhow::Result<Vec<u8>> {
     Ok(buf)
 }
 
-pub fn get_seq(conn: &mut redis::Connection, ctg_id: &str) -> String {
-    let seq_bytes: Vec<u8> = conn.get(format!("seq:{}", ctg_id)).unwrap();
+/// INTERFACE: easy access
+///
+/// ----
+/// ----
+impl Conn {
+    pub fn get_ctg_pos(&mut self, ctg_id: &str) -> (String, i32, i32) {
+        let ctg = self.get_ctg(ctg_id);
+        (ctg.chr_id, ctg.chr_start, ctg.chr_end)
+    }
 
-    let s = decode_gz(&seq_bytes).unwrap();
-    String::from_utf8(s).unwrap()
-}
+    /// get all chr_ids
+    pub fn get_vec_chr(&mut self) -> Vec<String> {
+        let json = self.get_str("top:chrs");
+        serde_json::from_str(&json).unwrap()
+    }
 
-pub fn insert_ctg(conn: &mut redis::Connection, ctg_id: &str, ctg: &crate::Ctg) {
-    let json = serde_json::to_string(ctg).unwrap();
-    insert_str(conn, ctg_id, &json);
-}
+    /// generated from cnt:ctg:
+    pub fn get_vec_ctg(&mut self, chr_id: &str) -> Vec<String> {
+        let key = format!("cnt:ctg:{}", chr_id);
+        let cnt = self.get_sn(&key);
 
-pub fn get_ctg(conn: &mut redis::Connection, ctg_id: &str) -> crate::Ctg {
-    let json = get_str(conn, ctg_id);
-    serde_json::from_str(&json).unwrap()
-}
+        let list: Vec<String> = if cnt == 0 {
+            vec![]
+        } else {
+            (1..=cnt).map(|i| format!("ctg:{}:{}", chr_id, i)).collect()
+        };
 
-pub fn get_ctg_pos(conn: &mut redis::Connection, ctg_id: &str) -> (String, i32, i32) {
-    let ctg = get_ctg(conn, ctg_id);
-    (ctg.chr_id, ctg.chr_start, ctg.chr_end)
-}
+        list
+    }
 
-/// get all chr_ids
-pub fn get_vec_chr(conn: &mut redis::Connection) -> Vec<String> {
-    let json = get_str(conn, "top:chrs");
-    serde_json::from_str(&json).unwrap()
-}
+    /// generated from cnt:feature:
+    pub fn get_vec_feature(&mut self, ctg_id: &str) -> Vec<String> {
+        let key = format!("cnt:feature:{}", ctg_id);
+        let cnt = self.get_sn(&key);
 
-/// generated from cnt:ctg:
-pub fn get_vec_ctg(conn: &mut redis::Connection, chr_id: &str) -> Vec<String> {
-    let cnt = conn.get(format!("cnt:ctg:{}", chr_id)).unwrap_or(0);
+        let list: Vec<String> = if cnt == 0 {
+            vec![]
+        } else {
+            (1..=cnt)
+                .map(|i| format!("feature:{}:{}", ctg_id, i))
+                .collect()
+        };
 
-    let list: Vec<String> = if cnt == 0 {
-        vec![]
-    } else {
-        (1..=cnt).map(|i| format!("ctg:{}:{}", chr_id, i)).collect()
-    };
+        list
+    }
 
-    list
-}
+    /// generated from cnt:peak:
+    pub fn get_vec_peak(&mut self, ctg_id: &str) -> Vec<String> {
+        let key = format!("cnt:peak:{}", ctg_id);
+        let cnt = self.get_sn(&key);
 
-/// generated from cnt:feature:
-pub fn get_vec_feature(conn: &mut redis::Connection, ctg_id: &str) -> Vec<String> {
-    let cnt = conn.get(format!("cnt:feature:{}", ctg_id)).unwrap_or(0);
+        let list: Vec<String> = if cnt == 0 {
+            vec![]
+        } else {
+            (1..=cnt)
+                .map(|i| format!("peak:{}:{}", ctg_id, i))
+                .collect()
+        };
 
-    let list: Vec<String> = if cnt == 0 {
-        vec![]
-    } else {
-        (1..=cnt)
-            .map(|i| format!("feature:{}:{}", ctg_id, i))
-            .collect()
-    };
+        list
+    }
 
-    list
-}
+    /// BTreeMap<ctg_id, Ctg>
+    pub fn get_bundle_ctg(&mut self, chr_id: Option<&str>) -> BTreeMap<String, crate::Ctg> {
+        let chrs: Vec<String> = if chr_id.is_some() {
+            vec![chr_id.unwrap().to_string()]
+        } else {
+            self.get_vec_chr()
+        };
 
-/// generated from cnt:peak:
-pub fn get_vec_peak(conn: &mut redis::Connection, ctg_id: &str) -> Vec<String> {
-    let cnt = conn.get(format!("cnt:peak:{}", ctg_id)).unwrap_or(0);
+        let mut ctg_of: BTreeMap<String, crate::Ctg> = BTreeMap::new();
 
-    let list: Vec<String> = if cnt == 0 {
-        vec![]
-    } else {
-        (1..=cnt)
-            .map(|i| format!("peak:{}:{}", ctg_id, i))
-            .collect()
-    };
+        for chr_id in &chrs {
+            let ctgs_bytes: Vec<u8> = self.get_bin(&format!("bundle:ctg:{}", chr_id)).unwrap();
+            let ctgs: BTreeMap<String, crate::Ctg> = bincode::deserialize(&ctgs_bytes).unwrap();
 
-    list
-}
-
-pub fn build_idx_ctg(conn: &mut redis::Connection) {
-    let chrs: Vec<String> = get_vec_chr(conn);
-
-    for chr_id in &chrs {
-        let ctgs = get_vec_ctg(conn, chr_id);
-        let mut ivs: Vec<Iv> = vec![];
-
-        for ctg_id in &ctgs {
-            let (_, chr_start, chr_end) = get_ctg_pos(conn, ctg_id);
-            let iv = Iv {
-                start: chr_start as u32,
-                stop: chr_end as u32 + 1,
-                val: ctg_id.to_string(),
-            };
-            ivs.push(iv);
+            ctg_of.extend(ctgs);
         }
 
-        let lapper = Lapper::new(ivs);
-        let serialized = bincode::serialize(&lapper).unwrap();
-
-        insert_bin(conn, &format!("idx:ctg:{}", chr_id), &serialized);
+        ctg_of
     }
 }
 
-/// chr_id => Lapper => ctg_id
-pub fn get_idx_ctg(conn: &mut redis::Connection) -> BTreeMap<String, Lapper<u32, String>> {
-    let chrs: Vec<String> = get_vec_chr(conn);
+/// INTERFACE: index
+///
+/// ----
+/// ----
+impl Conn {
+    pub fn build_idx_ctg(&mut self) {
+        let chrs: Vec<String> = self.get_vec_chr();
 
-    let mut lapper_of: BTreeMap<String, Lapper<u32, String>> = BTreeMap::new();
+        for chr_id in &chrs {
+            let ctgs = self.get_vec_ctg(chr_id);
+            let mut ivs: Vec<Iv> = vec![];
 
-    for chr_id in &chrs {
-        let lapper_bytes: Vec<u8> = conn.get(format!("idx:ctg:{}", chr_id)).unwrap();
-        let lapper: Lapper<u32, String> = bincode::deserialize(&lapper_bytes).unwrap();
+            for ctg_id in &ctgs {
+                let (_, chr_start, chr_end) = self.get_ctg_pos(ctg_id);
+                let iv = Iv {
+                    start: chr_start as u32,
+                    stop: chr_end as u32 + 1,
+                    val: ctg_id.to_string(),
+                };
+                ivs.push(iv);
+            }
 
-        lapper_of.insert(chr_id.clone(), lapper);
+            let lapper = Lapper::new(ivs);
+            let serialized = bincode::serialize(&lapper).unwrap();
+
+            self.insert_bin(&format!("idx:ctg:{}", chr_id), &serialized);
+        }
     }
 
-    lapper_of
-}
+    /// chr_id => Lapper => ctg_id
+    pub fn get_idx_ctg(&mut self) -> BTreeMap<String, Lapper<u32, String>> {
+        let chrs: Vec<String> = self.get_vec_chr();
 
-/// BTreeMap<ctg_id, Ctg>
-pub fn get_bundle_ctg(
-    conn: &mut redis::Connection,
-    chr_id: Option<&str>,
-) -> BTreeMap<String, crate::Ctg> {
-    let chrs: Vec<String> = if chr_id.is_some() {
-        vec![chr_id.unwrap().to_string()]
-    } else {
-        get_vec_chr(conn)
-    };
+        let mut lapper_of: BTreeMap<String, Lapper<u32, String>> = BTreeMap::new();
 
-    let mut ctg_of: BTreeMap<String, crate::Ctg> = BTreeMap::new();
+        for chr_id in &chrs {
+            let lapper_bytes: Vec<u8> = self.get_bin(&format!("idx:ctg:{}", chr_id)).unwrap();
+            let lapper: Lapper<u32, String> = bincode::deserialize(&lapper_bytes).unwrap();
 
-    for chr_id in &chrs {
-        let ctgs_bytes: Vec<u8> = conn.get(format!("bundle:ctg:{}", chr_id)).unwrap();
-        let ctgs: BTreeMap<String, crate::Ctg> = bincode::deserialize(&ctgs_bytes).unwrap();
+            lapper_of.insert(chr_id.clone(), lapper);
+        }
 
-        ctg_of.extend(ctgs);
+        lapper_of
     }
-
-    ctg_of
 }
 
-pub fn get_scan_count(conn: &mut redis::Connection, pattern: &str) -> i32 {
-    let script = redis::Script::new(
-        r###"
+/// INTERFACE: lua scripting
+///
+/// ----
+/// ----
+impl Conn {
+    pub fn get_scan_count(&mut self, pattern: &str) -> i32 {
+        let script = redis::Script::new(
+            r###"
 local cursor = "0";
 local count = "0";
 repeat
@@ -239,13 +299,13 @@ repeat
 until cursor == "0";
 return count;
 "###,
-    );
-    script.arg(pattern).arg(1000).invoke(conn).unwrap()
-}
+        );
+        script.arg(pattern).arg(1000).invoke(self.conn()).unwrap()
+    }
 
-pub fn get_scan_keys(conn: &mut redis::Connection, pattern: &str) -> Vec<String> {
-    let script = redis::Script::new(
-        r###"
+    pub fn get_scan_keys(&mut self, pattern: &str) -> Vec<String> {
+        let script = redis::Script::new(
+            r###"
 local cursor = "0";
 local list = {};
 repeat
@@ -257,13 +317,13 @@ repeat
 until cursor == "0";
 return list;
 "###,
-    );
-    script.arg(pattern).arg(1000).invoke(conn).unwrap()
-}
+        );
+        script.arg(pattern).arg(1000).invoke(self.conn()).unwrap()
+    }
 
-pub fn get_scan_values(conn: &mut redis::Connection, pattern: &str) -> Vec<String> {
-    let script = redis::Script::new(
-        r###"
+    pub fn get_scan_values(&mut self, pattern: &str) -> Vec<String> {
+        let script = redis::Script::new(
+            r###"
 local cursor = "0";
 local list = {};
 repeat
@@ -275,100 +335,7 @@ repeat
 until cursor == "0";
 return list;
 "###,
-    );
-    script.arg(pattern).arg(1000).invoke(conn).unwrap()
-}
-
-pub fn find_one_idx(
-    lapper_of: &BTreeMap<String, Lapper<u32, String>>,
-    rg: &intspan::Range,
-) -> String {
-    if !lapper_of.contains_key(rg.chr()) {
-        return "".to_string();
+        );
+        script.arg(pattern).arg(1000).invoke(self.conn()).unwrap()
     }
-
-    let lapper = lapper_of.get(rg.chr()).unwrap();
-    let res = lapper.find(*rg.start() as u32, *rg.end() as u32).next();
-
-    match res {
-        Some(iv) => iv.val.clone(),
-        None => "".to_string(),
-    }
-}
-
-/// Don't use this
-pub fn find_one_l(conn: &mut redis::Connection, rg: &intspan::Range) -> String {
-    let lapper_bytes: Vec<u8> = conn.get(format!("idx:ctg:{}", rg.chr())).unwrap();
-
-    if lapper_bytes.is_empty() {
-        return "".to_string();
-    }
-
-    let lapper: Lapper<u32, String> = bincode::deserialize(&lapper_bytes).unwrap();
-    let res = lapper.find(*rg.start() as u32, *rg.end() as u32).next();
-
-    match res {
-        Some(iv) => iv.val.clone(),
-        None => "".to_string(),
-    }
-}
-
-/// Don't use this
-pub fn get_rg_seq(conn: &mut redis::Connection, rg: &intspan::Range) -> String {
-    let ctg_id = find_one_l(conn, rg);
-
-    if ctg_id.is_empty() {
-        return "".to_string();
-    }
-
-    let ctg = get_ctg(conn, &ctg_id);
-    let chr_start = ctg.chr_start;
-
-    let ctg_start = (rg.start() - chr_start + 1) as usize;
-    let ctg_end = (rg.end() - chr_start + 1) as usize;
-
-    let ctg_seq = get_seq(conn, &ctg_id);
-
-    // from <= x < to, zero-based
-    let seq = ctg_seq.get((ctg_start - 1)..(ctg_end)).unwrap();
-
-    String::from(seq)
-}
-
-/// This is an expensive operation
-pub fn get_gc_content(conn: &mut redis::Connection, rg: &intspan::Range) -> f32 {
-    let bucket = format!("cache:{}:{}", rg.chr(), rg.start() / 1000);
-    let field = rg.to_string();
-    let expire = 180;
-    let res = conn.hget(&bucket, &field).unwrap();
-
-    return match res {
-        Some(res) => {
-            let _: () = conn.expire(&bucket, expire).unwrap();
-
-            res
-        }
-        None => {
-            let seq = get_rg_seq(conn, rg);
-
-            let gc_content = if seq.is_empty() {
-                0.
-            } else {
-                bio::seq_analysis::gc::gc_content(seq.bytes())
-            };
-            let _: () = conn.hset(&bucket, &field, gc_content).unwrap();
-            let _: () = conn.expire(&bucket, expire).unwrap();
-
-            gc_content
-        }
-    };
-}
-
-/// drop the database
-pub fn db_drop() {
-    let mut conn = connect();
-    let output: String = redis::cmd("FLUSHDB")
-        .query(&mut conn)
-        .expect("Failed to execute FLUSHDB");
-    println!("{}", output);
 }
