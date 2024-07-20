@@ -81,7 +81,7 @@ pub fn execute(args: &ArgMatches) -> anyhow::Result<()> {
             let json = serde_json::to_string(&rg).unwrap();
             conn.pipe_add(&rg_id, &json);
         }
-        conn.pipe_exec(); // Possible remaining records in the pipe
+        conn.pipe_submit(); // Possible remaining records in the pipe
     }
 
     let n_rg = conn.get_scan_count("rg:*");

@@ -168,7 +168,7 @@ pub fn execute(args: &ArgMatches) -> anyhow::Result<()> {
             conn.pipe_add(&*peak.id, &json);
         }
     }
-    conn.pipe_exec(); // Possible remaining records in the pipe
+    conn.pipe_submit(); // Possible remaining records in the pipe
 
     let n_peak = conn.get_scan_count("peak:*");
     eprintln!("There are {} peaks in the database", n_peak);

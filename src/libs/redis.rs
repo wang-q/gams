@@ -360,11 +360,11 @@ impl Conn {
         self.inputs.push((key.into(), val.into()));
 
         if self.inputs.len() > self.size {
-            self.pipe_exec();
+            self.pipe_submit();
         }
     }
 
-    pub fn pipe_exec(&mut self) {
+    pub fn pipe_submit(&mut self) {
         if self.inputs.is_empty() {
             return;
         }

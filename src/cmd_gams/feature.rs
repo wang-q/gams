@@ -95,7 +95,7 @@ pub fn execute(args: &ArgMatches) -> anyhow::Result<()> {
         let json = serde_json::to_string(&feature).unwrap();
         conn.pipe_add(&feature_id, &json);
     }
-    conn.pipe_exec(); // Possible remaining records in the pipe
+    conn.pipe_submit(); // Possible remaining records in the pipe
 
     let n_feature = conn.get_scan_count("feature:*");
     eprintln!("There are {} features in the database", n_feature);
