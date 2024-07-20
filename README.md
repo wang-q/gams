@@ -20,7 +20,8 @@ cargo test -- --test-threads=1
 cargo install --force --path . --features stat --offline
 
 # build under WSL 2
-export CARGO_TARGET_DIR=/tmp
+mkdir -p /tmp/cargo
+export CARGO_TARGET_DIR=/tmp/cargo
 cargo build
 
 ```
