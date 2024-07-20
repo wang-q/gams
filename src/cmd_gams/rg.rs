@@ -31,7 +31,7 @@ pub fn execute(args: &ArgMatches) -> anyhow::Result<()> {
     let opt_size = *args.get_one::<usize>("size").unwrap();
 
     // redis connection
-    let mut conn = gams::Conn::new();
+    let mut conn = gams::Conn::with_size(opt_size);
 
     // index of ctgs
     let lapper_of = conn.get_idx_ctg();
@@ -43,29 +43,19 @@ pub fn execute(args: &ArgMatches) -> anyhow::Result<()> {
         let ranges_of = gams::read_range(infile, &lapper_of);
 
         // (ctg_id, Range)
-        let mut ctg_ranges: Vec<(String, intspan::Range)> = vec![];
-        for k in ranges_of.keys() {
-            for r in ranges_of.get(k).unwrap() {
-                ctg_ranges.push((k.to_string(), r.clone()));
-            }
-        }
+        let ctg_ranges = gams::ctg_range_tuple(&ranges_of);
 
         // total number of ranges
         eprintln!("There are {} rgs in this file", ctg_ranges.len());
 
         // start serial of each ctg
         // To minimize expensive Redis operations, locally increment the serial number
-        // For each ctg, we increase the counter only once
+        // For each ctg, we increase the counter in Redis only once
         let mut serial_of: BTreeMap<String, i32> = BTreeMap::new();
 
-        let mut batch = &mut redis::pipe();
 
         for (i, (ctg_id, range)) in ctg_ranges.iter().enumerate() {
             // prompts
-            if i > 1 && i % opt_size == 0 {
-                let _: () = batch.query(conn.conn()).unwrap();
-                batch.clear();
-            }
             if i > 1 && i % (opt_size * 10) == 0 {
                 eprintln!("Insert {} records", i);
             }
@@ -75,7 +65,7 @@ pub fn execute(args: &ArgMatches) -> anyhow::Result<()> {
                 let cnt = ranges_of.get(ctg_id).unwrap().len() as i32;
                 // Redis counter
                 // increase serial by cnt
-                let serial = conn.incr_sn_n(&format!("cnt:rg:{ctg_id}"), cnt) as i32;
+                let serial = conn.incr_sn_n(&format!("cnt:rg:{ctg_id}"), cnt);
 
                 // here we start
                 serial_of.insert(ctg_id.to_string(), serial - cnt);
@@ -90,15 +80,10 @@ pub fn execute(args: &ArgMatches) -> anyhow::Result<()> {
                 range: range.to_string(),
             };
             let json = serde_json::to_string(&rg).unwrap();
-            batch = batch.set(&rg_id, json.clone()).ignore();
+            conn.pipe_add(&rg_id, &json);
         }
-        // Possible remaining records in the batch
-        {
-            let _: () = batch.query(conn.conn()).unwrap();
-            batch.clear();
-        }
+        conn.pipe_exec(); // Possible remaining records in the pipe
     }
-
     // number of rgs
     let n_rg = conn.get_scan_count("rg:*");
     eprintln!("There are {} rgs in the database", n_rg);
