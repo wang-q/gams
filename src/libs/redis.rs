@@ -3,7 +3,7 @@ use std::collections::BTreeMap;
 use std::io::Read;
 
 use redis::Commands;
-use serde::{Deserialize, Serialize};
+use serde::Deserialize;
 
 use rust_lapper::{Interval, Lapper};
 
@@ -26,52 +26,11 @@ fn default_redis_port() -> u32 {
     6379
 }
 
-/// chr_* fields were retained to facilitate Serde serializing to tsv
-#[derive(Default, Clone, Debug, PartialEq, Serialize, Deserialize)]
-pub struct Ctg {
-    pub id: String,
-    pub range: String,
-    pub chr_id: String,
-    pub chr_start: i32,
-    pub chr_end: i32,
-    pub chr_strand: String,
-    pub length: i32,
-}
-
-#[derive(Default, Clone, Debug, PartialEq, Serialize, Deserialize)]
-pub struct Feature {
-    pub id: String,
-    pub range: String,
-    pub length: i32,
-    pub tag: String,
-}
-
-#[derive(Default, Clone, Debug, PartialEq, Serialize, Deserialize)]
-pub struct Rg {
-    pub id: String,
-    pub range: String,
-}
-
-#[derive(Default, Clone, Debug, PartialEq, Serialize, Deserialize)]
-pub struct Peak {
-    pub id: String,
-    pub range: String,
-    pub length: i32,
-    pub gc: f32,
-    pub signal: String,
-    pub left_wave_length: Option<i32>,
-    pub left_amplitude: Option<f32>,
-    pub left_signal: Option<String>,
-    pub right_wave_length: Option<i32>,
-    pub right_amplitude: Option<f32>,
-    pub right_signal: Option<String>,
-}
-
 pub fn connect() -> redis::Connection {
-    dotenv::from_filename("gams.env").expect("Failed to read gams.env file");
+    dotenvy::from_filename("gams.env").expect("Failed to read gams.env file");
 
-    let redis_host = dotenv::var("REDIS_HOST").unwrap();
-    let redis_port = dotenv::var("REDIS_PORT").unwrap();
+    let redis_host = dotenvy::var("REDIS_HOST").unwrap();
+    let redis_port = dotenvy::var("REDIS_PORT").unwrap();
 
     // if Redis server needs secure connection
     // let uri_scheme = match redis_tls.as_ref() {
@@ -140,12 +99,12 @@ pub fn get_seq(conn: &mut redis::Connection, ctg_id: &str) -> String {
     String::from_utf8(s).unwrap()
 }
 
-pub fn insert_ctg(conn: &mut redis::Connection, ctg_id: &str, ctg: &Ctg) {
+pub fn insert_ctg(conn: &mut redis::Connection, ctg_id: &str, ctg: &crate::Ctg) {
     let json = serde_json::to_string(ctg).unwrap();
     insert_str(conn, ctg_id, &json);
 }
 
-pub fn get_ctg(conn: &mut redis::Connection, ctg_id: &str) -> Ctg {
+pub fn get_ctg(conn: &mut redis::Connection, ctg_id: &str) -> crate::Ctg {
     let json = get_str(conn, ctg_id);
     serde_json::from_str(&json).unwrap()
 }
@@ -245,18 +204,21 @@ pub fn get_idx_ctg(conn: &mut redis::Connection) -> BTreeMap<String, Lapper<u32,
 }
 
 /// BTreeMap<ctg_id, Ctg>
-pub fn get_bundle_ctg(conn: &mut redis::Connection, chr_id: Option<&str>) -> BTreeMap<String, Ctg> {
+pub fn get_bundle_ctg(
+    conn: &mut redis::Connection,
+    chr_id: Option<&str>,
+) -> BTreeMap<String, crate::Ctg> {
     let chrs: Vec<String> = if chr_id.is_some() {
         vec![chr_id.unwrap().to_string()]
     } else {
         get_vec_chr(conn)
     };
 
-    let mut ctg_of: BTreeMap<String, Ctg> = BTreeMap::new();
+    let mut ctg_of: BTreeMap<String, crate::Ctg> = BTreeMap::new();
 
     for chr_id in &chrs {
         let ctgs_bytes: Vec<u8> = conn.get(format!("bundle:ctg:{}", chr_id)).unwrap();
-        let ctgs: BTreeMap<String, Ctg> = bincode::deserialize(&ctgs_bytes).unwrap();
+        let ctgs: BTreeMap<String, crate::Ctg> = bincode::deserialize(&ctgs_bytes).unwrap();
 
         ctg_of.extend(ctgs);
     }

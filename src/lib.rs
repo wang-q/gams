@@ -1,5 +1,6 @@
 mod libs;
 
+pub use crate::libs::data::*;
 pub use crate::libs::delta_g::*;
 pub use crate::libs::redis::*;
 pub use crate::libs::stat::*;

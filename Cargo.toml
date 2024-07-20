@@ -24,7 +24,7 @@ itertools = "0.12.1"
 redis = { version = "0.25.4", default-features = false, features = ["script"] }
 rand = "0.8.5"
 envy = "0.4.2"
-dotenv = "0.15.0"
+dotenvy = "0.15.7"
 crossbeam = "0.8.4"
 csv = "1.2.2"
 
