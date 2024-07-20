@@ -43,7 +43,7 @@ pub fn execute(args: &ArgMatches) -> anyhow::Result<()> {
     let opt_size = *args.get_one::<usize>("size").unwrap();
 
     // redis connection
-    let mut conn = gams::Conn::new();
+    let mut conn = gams::Conn::with_size(opt_size);
 
     // ctg_id => [Range]
     // act as a sorter
@@ -54,12 +54,7 @@ pub fn execute(args: &ArgMatches) -> anyhow::Result<()> {
     };
 
     // (ctg_id, Range)
-    let mut ctg_ranges: Vec<(String, intspan::Range)> = vec![];
-    for k in ranges_of.keys() {
-        for r in ranges_of.get(k).unwrap() {
-            ctg_ranges.push((k.to_string(), r.clone()));
-        }
-    }
+    let ctg_ranges = gams::ctg_range_tuple(&ranges_of);
 
     // total number of ranges
     eprintln!("There are {} features in this file", ctg_ranges.len());
@@ -69,13 +64,8 @@ pub fn execute(args: &ArgMatches) -> anyhow::Result<()> {
     // For each ctg, we increase the counter in Redis only once
     let mut serial_of: BTreeMap<String, i32> = BTreeMap::new();
 
-    let mut batch = &mut redis::pipe();
     for (i, (ctg_id, rg)) in ctg_ranges.iter().enumerate() {
         // prompts
-        if i > 1 && i % opt_size == 0 {
-            let _: () = batch.query(conn.conn()).unwrap();
-            batch.clear();
-        }
         if i > 1 && i % (opt_size * 10) == 0 {
             eprintln!("Insert {} records", i);
         }
@@ -103,13 +93,9 @@ pub fn execute(args: &ArgMatches) -> anyhow::Result<()> {
         };
 
         let json = serde_json::to_string(&feature).unwrap();
-        batch = batch.set(&feature_id, json).ignore();
+        conn.pipe_add(&feature_id, &json);
     }
-    // Possible remaining records in the batch
-    {
-        let _: () = batch.query(conn.conn()).unwrap();
-        batch.clear();
-    }
+    conn.pipe_exec(); // Possible remaining records in the pipe
 
     // number of features
     let n_feature = conn.get_scan_count("feature:*");

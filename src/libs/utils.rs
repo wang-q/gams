@@ -52,6 +52,18 @@ pub fn read_range(
     ranges_of
 }
 
+pub fn ctg_range_tuple(
+    ranges_of: &BTreeMap<String, Vec<intspan::Range>>,
+) -> Vec<(String, intspan::Range)> {
+    let mut ctg_ranges: Vec<(String, intspan::Range)> = vec![];
+    for k in ranges_of.keys() {
+        for r in ranges_of.get(k).unwrap() {
+            ctg_ranges.push((k.to_string(), r.clone()));
+        }
+    }
+    ctg_ranges
+}
+
 /// Read peaks in the file
 /// gc_content in this file aren't correct
 pub fn read_peak(

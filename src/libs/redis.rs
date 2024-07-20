@@ -61,10 +61,11 @@ pub fn db_drop() {
 
 pub struct Conn {
     conn: redis::Connection,
-    inputs: Vec<String>,
+    inputs: Vec<(String, String)>, // pipe keys-values
+    size: usize,                   // pipe size
 }
 
-/// INTERFACE: Redis connection.
+/// INTERFACE: Redis connection
 /// Three basic data types: str, bin and sn
 ///
 /// ----
@@ -74,6 +75,15 @@ impl Conn {
         Self {
             conn: connect(),
             inputs: vec![],
+            size: 0,
+        }
+    }
+
+    pub fn with_size(size: usize) -> Self {
+        Self {
+            conn: connect(),
+            inputs: vec![],
+            size,
         }
     }
 
@@ -338,5 +348,35 @@ return list;
 "###,
         );
         script.arg(pattern).arg(1000).invoke(self.conn()).unwrap()
+    }
+}
+
+/// INTERFACE: pipeline
+///
+/// ----
+/// ----
+impl Conn {
+    pub fn pipe_add(&mut self, key: &str, val: &str) {
+        self.inputs.push((key.into(), val.into()));
+
+        if self.inputs.len() > self.size {
+            self.pipe_exec();
+        }
+    }
+
+    pub fn pipe_exec(&mut self) {
+        if self.inputs.is_empty() {
+            return;
+        }
+
+        let mut pipe = &mut redis::pipe();
+
+        for (key, val) in self.inputs.iter() {
+            pipe = pipe.set(key, val).ignore();
+        }
+        self.inputs = vec![];
+
+        let _: () = pipe.query(self.conn()).unwrap();
+        pipe.clear();
     }
 }
