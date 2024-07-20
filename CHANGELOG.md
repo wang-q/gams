@@ -2,17 +2,16 @@
 
 ## Unreleased - ReleaseDate
 
-* Add structs `Ctg`, `Feature`, and `Rg`
-    * Store serialized json to Redis
 * Rewrite some functions in `libs/redis.rs`
+    * Make it OOP
     * Minimize the use of redis commands in each subcommand
-* Use server-side lua scripting for `SCAN MATCH`
+    * Implement pipelines. Up to 10x times faster
+    * Use server-side lua scripting for `SCAN MATCH`
+* Add structs `Ctg`, `Feature`, `Rg`, and `Peak` in `libs/data.rs`
+    * Store serialized json to Redis
 * Serializing to .tsv via serde
 
-* Make `gams rg` and `gams feature` up to 10x times faster by packaging hundreds of redis
-  operations into batches
 * Rename `gams range` to `gams rg`
-
 * Add --seq to `gams locate`
 * Add --parallel to `gams sliding` and `gams fsw`
 * Using lua scripts in `gams clear`
