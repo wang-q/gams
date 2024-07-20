@@ -1,7 +1,7 @@
 # gams
 
 [![Build](https://github.com/wang-q/gams/actions/workflows/build.yml/badge.svg)](https://github.com/wang-q/gams/actions)
-[![codecov](https://codecov.io/gh/wang-q/gams/branch/main/graph/badge.svg?token=LtxYK5Fff0)](https://codecov.io/gh/wang-q/gams)
+[![codecov](https://codecov.io/gh/wang-q/gams/graph/badge.svg?token=LtxYK5Fff0)](https://codecov.io/gh/wang-q/gams)
 [![license](https://img.shields.io/github/license/wang-q/intspan)](https://github.com//wang-q/intspan)
 
 `gams` - **G**enome **A**nalyst with in-**M**emory **S**torage
