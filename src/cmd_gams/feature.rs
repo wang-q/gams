@@ -97,7 +97,6 @@ pub fn execute(args: &ArgMatches) -> anyhow::Result<()> {
     }
     conn.pipe_exec(); // Possible remaining records in the pipe
 
-    // number of features
     let n_feature = conn.get_scan_count("feature:*");
     eprintln!("There are {} features in the database", n_feature);
 

@@ -53,7 +53,6 @@ pub fn execute(args: &ArgMatches) -> anyhow::Result<()> {
         // For each ctg, we increase the counter in Redis only once
         let mut serial_of: BTreeMap<String, i32> = BTreeMap::new();
 
-
         for (i, (ctg_id, range)) in ctg_ranges.iter().enumerate() {
             // prompts
             if i > 1 && i % (opt_size * 10) == 0 {
@@ -84,7 +83,7 @@ pub fn execute(args: &ArgMatches) -> anyhow::Result<()> {
         }
         conn.pipe_exec(); // Possible remaining records in the pipe
     }
-    // number of rgs
+
     let n_rg = conn.get_scan_count("rg:*");
     eprintln!("There are {} rgs in the database", n_rg);
 

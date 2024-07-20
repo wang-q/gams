@@ -2,7 +2,7 @@
 
 ## Unreleased - ReleaseDate
 
-* Rewrite some functions in `libs/redis.rs`
+* Rewrite some parts in `libs/redis.rs`
     * Make it OOP
     * Minimize the use of redis commands in each subcommand
     * Implement pipelines. Up to 10x times faster

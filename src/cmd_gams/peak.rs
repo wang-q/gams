@@ -7,7 +7,8 @@ pub fn make_subcommand() -> Command {
         .about("Add peaks of GC-waves")
         .after_help(
             r###"
-Left-/right- wave lengths may be negative
+* There should be only one peak file per chr/ctg
+* Left-/right- wave lengths may be negative
 
 "###,
         )
@@ -159,17 +160,18 @@ pub fn execute(args: &ArgMatches) -> anyhow::Result<()> {
         }
     }
 
-    let writer = intspan::writer("stdout");
-    let mut tsv_wtr = csv::WriterBuilder::new()
-        .delimiter(b'\t')
-        .has_headers(true)
-        .from_writer(writer);
+    eprintln!("Inserting records...");
     for ctg_id in s_peaks_of.keys() {
         let peaks = s_peaks_of.get(ctg_id).unwrap();
         for peak in peaks {
-            tsv_wtr.serialize(peak).unwrap();
+            let json = serde_json::to_string(peak).unwrap();
+            conn.pipe_add(&*peak.id, &json);
         }
     }
+    conn.pipe_exec(); // Possible remaining records in the pipe
+
+    let n_peak = conn.get_scan_count("peak:*");
+    eprintln!("There are {} peaks in the database", n_peak);
 
     Ok(())
 }
