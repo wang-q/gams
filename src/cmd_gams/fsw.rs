@@ -6,11 +6,41 @@ use std::collections::HashMap;
 // Create clap subcommand arguments
 pub fn make_subcommand() -> Command {
     Command::new("fsw")
-        .about("Sliding windows around features")
+        .about("Sliding windows statistics around features/peaks")
+        .arg(
+            Arg::new("target")
+                .required(false)
+                .num_args(1)
+                .index(1)
+                .action(ArgAction::Set)
+                .value_parser([
+                    builder::PossibleValue::new("feature"),
+                    builder::PossibleValue::new("peak"),
+                ])
+                .default_value("feature")
+                .help("Which target"),
+        )
+        .arg(
+            Arg::new("action")
+                .required(false)
+                .num_args(1)
+                .index(2)
+                .action(ArgAction::Set)
+                .value_parser([
+                    builder::PossibleValue::new("gc"),
+                    builder::PossibleValue::new("count"),
+                ])
+                .default_value("gc")
+                .help("Which statistics"),
+        )
         .arg(
             Arg::new("style")
                 .long("style")
                 .num_args(1)
+                .value_parser([
+                    builder::PossibleValue::new("intact"),
+                    builder::PossibleValue::new("center"),
+                ])
                 .default_value("intact")
                 .help("Style of sliding windows, intact or center"),
         )
