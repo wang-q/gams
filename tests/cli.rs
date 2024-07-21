@@ -110,42 +110,6 @@ fn command_status() -> anyhow::Result<()> {
 }
 
 #[test]
-fn command_libs_redis() -> anyhow::Result<()> {
-    // env
-    let mut cmd = Command::cargo_bin("gams")?;
-    cmd.arg("env").unwrap();
-
-    // drop
-    let mut cmd = Command::cargo_bin("gams")?;
-    cmd.arg("status").arg("drop").unwrap();
-
-    // gen
-    let mut cmd = Command::cargo_bin("gams")?;
-    cmd.arg("gen")
-        .arg("tests/S288c/genome.fa.gz")
-        .arg("--piece")
-        .arg("100000")
-        .unwrap();
-
-    // get_vec_chr
-    let mut conn = gams::Conn::new();
-    let exp = vec!["I", "Mito"];
-    let res = conn.get_vec_chr().into_iter().sorted().collect::<Vec<_>>();
-    assert_eq!(res, exp, "get_vec_chr");
-
-    // let exp = vec![
-    //     "ctg:I:1",
-    //     "ctg:I:2",
-    //     "ctg:Mito:1",
-    // ];
-    // let res = gams::get_scan_vec(&mut conn, "ctg:*").into_iter().sorted().collect::<Vec<_>>();
-    // assert_eq!(res.len(), exp.len());
-    // assert_eq!(res, exp);
-
-    Ok(())
-}
-
-#[test]
 fn command_gen() -> anyhow::Result<()> {
     // env
     let mut cmd = Command::cargo_bin("gams")?;
@@ -221,6 +185,28 @@ fn env_drop_gen() -> anyhow::Result<()> {
         .arg("--piece")
         .arg("100000")
         .unwrap();
+
+    Ok(())
+}
+
+#[test]
+fn libs_redis() -> anyhow::Result<()> {
+    env_drop_gen()?;
+
+    // get_vec_chr
+    let mut conn = gams::Conn::new();
+    let exp = vec!["I", "Mito"];
+    let res = conn.get_vec_chr().into_iter().sorted().collect::<Vec<_>>();
+    assert_eq!(res, exp, "get_vec_chr");
+
+    // let exp = vec![
+    //     "ctg:I:1",
+    //     "ctg:I:2",
+    //     "ctg:Mito:1",
+    // ];
+    // let res = gams::get_scan_vec(&mut conn, "ctg:*").into_iter().sorted().collect::<Vec<_>>();
+    // assert_eq!(res.len(), exp.len());
+    // assert_eq!(res, exp);
 
     Ok(())
 }
