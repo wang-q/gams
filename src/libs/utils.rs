@@ -21,12 +21,13 @@ pub fn find_one_idx(
     }
 }
 
-pub fn count_rg (
+pub fn count_rg(
     lapper_of: &BTreeMap<String, Lapper<u32, String>>,
     ctg_id: &str,
     rg: &intspan::Range,
 ) -> i32 {
     if !lapper_of.contains_key(ctg_id) {
+        eprintln!("{} not found in idx", ctg_id);
         return 0;
     }
 

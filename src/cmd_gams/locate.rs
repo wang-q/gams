@@ -1,7 +1,7 @@
-use std::collections::BTreeMap;
 use clap::*;
-use std::io::BufRead;
 use rust_lapper::Lapper;
+use std::collections::BTreeMap;
+use std::io::BufRead;
 
 // Create clap subcommand arguments
 pub fn make_subcommand() -> Command {
@@ -100,7 +100,7 @@ pub fn execute(args: &ArgMatches) -> anyhow::Result<()> {
 
     // index of ctgs
     let lapper_ctg_of = conn.get_idx_ctg();
-    let lapper_rg_of : BTreeMap<String, Lapper<u32, String>> = if is_count {
+    let lapper_rg_of: BTreeMap<String, Lapper<u32, String>> = if is_count {
         conn.get_idx_rg()
     } else {
         BTreeMap::new()
@@ -131,8 +131,8 @@ pub fn execute(args: &ArgMatches) -> anyhow::Result<()> {
             // from <= x < to, zero-based
             let seq = ctg_seq.get((ctg_start - 1)..(ctg_end)).unwrap();
             writer.write_fmt(format_args!(">{}\n{}\n", rg, seq))?;
-        } else if is_count{
-            let cnt = gams::count_rg( &lapper_rg_of, &ctg_id, &range);
+        } else if is_count {
+            let cnt = gams::count_rg(&lapper_rg_of, &ctg_id, &range);
             writer.write_fmt(format_args!("{}\t{}\n", rg, cnt))?;
         } else {
             writer.write_fmt(format_args!("{}\t{}\n", rg, ctg_id))?;

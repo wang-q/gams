@@ -111,9 +111,6 @@ gams tsv -s 'ctg:I:*'
 
 gams-stat tests/S288c/ctg.tsv ctg
 
-# annotate
-gams anno -H tests/S288c/intergenic.json tests/S288c/ctg.tsv
-
 # locate an range
 gams locate "I:1000-1050"
 gams locate --seq "I:1000-1050"
@@ -127,9 +124,14 @@ gams tsv -s 'feature:*'
 cargo run --bin gams fsw
 
 # add rgs
-gams rg tests/S288c/spo11_hot.rg tests/S288c/spo11_hot.rg
+gams rg tests/S288c/SK1.snp.rg
 
-gams tsv -s 'rg:*'
+cargo run --bin gams locate --count "I:1000-2000" "II:1000-2000" "Mito:1000-2000"
+#I:1000-2000     12
+#Mito:1000-2000  0
+
+# annotate
+gams anno -H tests/S288c/intergenic.json tests/S288c/ctg.tsv
 
 # clear
 gams clear rg

@@ -583,6 +583,48 @@ fn command_locate() -> anyhow::Result<()> {
 }
 
 #[test]
+fn command_locate_count() -> anyhow::Result<()> {
+    // env
+    Command::cargo_bin("gams")?.arg("env").unwrap();
+    // drop
+    Command::cargo_bin("gams")?
+        .arg("status")
+        .arg("drop")
+        .unwrap();
+    // gen
+    Command::cargo_bin("gams")?
+        .arg("gen")
+        .arg("tests/S288c/genome.fa.gz")
+        .arg("--piece")
+        .arg("500000")
+        .unwrap();
+    // range
+    Command::cargo_bin("gams")?
+        .arg("rg")
+        .arg("tests/S288c/SK1.snp.rg")
+        .unwrap();
+
+    // locate
+    let mut cmd = Command::cargo_bin("gams")?;
+    let output = cmd
+        .arg("locate")
+        .arg("--count")
+        .arg("I:1000-2000")
+        .arg("II:1001-2000")
+        .arg("Mito:1000-2000")
+        .output()
+        .unwrap();
+    let stdout = String::from_utf8(output.stdout).unwrap();
+
+    assert_eq!(stdout.lines().count(), 2);
+    assert!(stdout.contains("I:1000-2000\t12"));
+    assert!(!stdout.contains("II:1001-2000"), "chr not in database");
+    assert!(stdout.contains("Mito:1000-2000\t0"), "No overlaps");
+
+    Ok(())
+}
+
+#[test]
 fn command_anno() -> anyhow::Result<()> {
     // env
     let mut cmd = Command::cargo_bin("gams")?;

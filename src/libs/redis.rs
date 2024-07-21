@@ -316,7 +316,7 @@ impl Conn {
                 let bytes: Vec<u8> = self.get_bin(&format!("idx:rg:{}", ctg_id));
                 let lapper: Lapper<u32, String> = bincode::deserialize(&bytes).unwrap();
 
-                lapper_of.insert(chr_id.clone(), lapper);
+                lapper_of.insert(ctg_id.clone(), lapper);
             }
         }
 
