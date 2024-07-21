@@ -264,7 +264,7 @@ Similarly, for genome sequences, `gams` gz-compresses them locally before passin
 |                           |         | chr_end                 |                                                        |
 |                           |         | chr_strand              |                                                        |
 |                           |         | length                  |                                                        |
-| idx:ctg:{chr_id}          | BINARY  | Lapper<u32, String>     | A serialized structure for indexing ctgs on chr        |
+| idx:ctg:{chr_id}          | BINARY  | Lapper<u32, String>     | Indexing ctgs to find one                              |
 | bundle:ctg:{chr_id}       | BINARY  | BTreeMap<ctg_id, Ctg>   | Retrieves all ctgs of a chr                            |
 | seq:{ctg_id}              | BINARY  | Gzipped &[u8]           | Compressed genomic sequence of ctg                     |
 |                           |         |                         |                                                        |
@@ -279,7 +279,7 @@ Similarly, for genome sequences, `gams` gz-compresses them locally before passin
 | cnt:rg:{ctg_id}           | INTEGER |                         | Counter                                                |
 | rg:{ctg_id}:{serial}      |  JSON   | Rg                      | range_id => Rg                                         |
 |                           |         | range                   |                                                        |
-| idx:rg:{ctg_id}           | BINARY  |                         | A serialized structure for indexing rgs                |
+| idx:rg:{ctg_id}           | BINARY  |                         | Indexing rgs to count overlaps                         |
 |                           |         |                         |                                                        |
 | **peak**                  |         |                         | *Peaks of GC-wave*                                     |
 | cnt:peak:{ctg_id}         | INTEGER |                         | Counter                                                |
