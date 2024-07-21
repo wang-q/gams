@@ -7,8 +7,9 @@ pub fn make_subcommand() -> Command {
         .about("Locate the given ranges to the corresponding ctgs")
         .after_help(
             r###"
-* `--seq` extracts sequences defined by the range(s)
-    * Not very useful, just in case that you can't access the fasta files
+* `--seq` might not be useful, just in case that you can't access the fasta files
+* To use `--count`, `gams rg` should have inserted .rg files
+* `--seq` will untick `--count`
 
 "###,
         )
@@ -30,14 +31,21 @@ pub fn make_subcommand() -> Command {
                 .long("rebuild")
                 .short('r')
                 .action(ArgAction::SetTrue)
-                .help("Rebuild the index of ctgs"),
+                .help("Rebuild the index of ctgs and rgs"),
         )
         .arg(
             Arg::new("seq")
                 .long("seq")
                 .short('s')
                 .action(ArgAction::SetTrue)
-                .help("Rebuild the index of ctgs"),
+                .help("Extracts sequences defined by the range(s)"),
+        )
+        .arg(
+            Arg::new("count")
+                .long("count")
+                .short('c')
+                .action(ArgAction::SetTrue)
+                .help("Count overlaps with the ranges stored in gams"),
         )
         .arg(
             Arg::new("outfile")
@@ -56,6 +64,11 @@ pub fn execute(args: &ArgMatches) -> anyhow::Result<()> {
     let is_rebuild = args.get_flag("rebuild");
     let is_file = args.get_flag("file");
     let is_seq = args.get_flag("seq");
+    let is_count = if is_seq {
+        false
+    } else {
+        args.get_flag("count")
+    };
 
     // redis connection
     let mut conn = gams::Conn::new();
@@ -66,17 +79,17 @@ pub fn execute(args: &ArgMatches) -> anyhow::Result<()> {
     }
 
     // all ranges
-    let mut ranges: Vec<String> = vec![];
+    let mut rgs: Vec<String> = vec![];
     if is_file {
         for infile in args.get_many::<String>("ranges").unwrap() {
             let reader = intspan::reader(infile);
             for line in reader.lines().map_while(Result::ok) {
                 let parts: Vec<&str> = line.split('\t').collect();
-                ranges.push(parts.first().unwrap().to_string());
+                rgs.push(parts.first().unwrap().to_string());
             }
         }
     } else {
-        ranges = args
+        rgs = args
             .get_many::<String>("ranges")
             .unwrap()
             .map(|e| e.to_string())
@@ -84,17 +97,22 @@ pub fn execute(args: &ArgMatches) -> anyhow::Result<()> {
     }
 
     // index of ctgs
-    let lapper_of = conn.get_idx_ctg();
+    let lapper_ctg_of = conn.get_idx_ctg();
+    let lapper_rg_of = if is_count {
+        Some(conn.get_idx_rg())
+    } else {
+        None
+    };
 
     // processing each range
-    for range in ranges {
-        let mut rg = intspan::Range::from_str(range.as_str());
-        if !rg.is_valid() {
+    for rg in &rgs {
+        let mut range = intspan::Range::from_str(rg);
+        if !range.is_valid() {
             continue;
         }
-        *rg.strand_mut() = "".to_string();
+        *range.strand_mut() = "".to_string();
 
-        let ctg_id = gams::find_one_idx(&lapper_of, &rg);
+        let ctg_id = gams::find_one_idx(&lapper_ctg_of, &range);
 
         if ctg_id.is_empty() {
             continue;
@@ -104,15 +122,18 @@ pub fn execute(args: &ArgMatches) -> anyhow::Result<()> {
             let ctg = conn.get_ctg(&ctg_id);
             let chr_start = ctg.chr_start;
 
-            let ctg_start = (rg.start() - chr_start + 1) as usize;
-            let ctg_end = (rg.end() - chr_start + 1) as usize;
+            let ctg_start = (range.start() - chr_start + 1) as usize;
+            let ctg_end = (range.end() - chr_start + 1) as usize;
 
             let ctg_seq = conn.get_seq(&ctg_id);
             // from <= x < to, zero-based
             let seq = ctg_seq.get((ctg_start - 1)..(ctg_end)).unwrap();
-            writer.write_fmt(format_args!(">{}\n{}\n", range, seq))?;
+            writer.write_fmt(format_args!(">{}\n{}\n", rg, seq))?;
+        } else if is_count{
+            let cnt = gams::count_rg( &lapper_rg_of.unwrap(), &ctg_id, &range);
+            writer.write_fmt(format_args!("{}\t{}\n", rg, cnt))?;
         } else {
-            writer.write_fmt(format_args!("{}\t{}\t{}\n", range, rg, ctg_id))?;
+            writer.write_fmt(format_args!("{}\t{}\n", rg, ctg_id))?;
         }
     }
 

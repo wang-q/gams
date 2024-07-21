@@ -21,6 +21,19 @@ pub fn find_one_idx(
     }
 }
 
+pub fn count_rg (
+    lapper_of: &BTreeMap<String, Lapper<u32, String>>,
+    ctg_id: &str,
+    rg: &intspan::Range,
+) -> i32 {
+    if !lapper_of.contains_key(ctg_id) {
+        return 0;
+    }
+
+    let lapper = lapper_of.get(ctg_id).unwrap();
+    lapper.count(*rg.start() as u32, *rg.end() as u32) as i32
+}
+
 /// Read ranges in the file
 pub fn read_range(
     infile: &str,
