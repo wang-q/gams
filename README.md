@@ -34,10 +34,9 @@ ll $CARGO_TARGET_DIR/x86_64-unknown-linux-gnu/release/gams
 
 ## Synopsis
 
-### `gams`
+### `gams help`
 
 ```text
-$ gams help
 Genome Analyst with in-Memory Storage
 
 Usage: gams [COMMAND]
@@ -47,7 +46,7 @@ Commands:
   status   Test Redis config and connection
   gen      Generate the database from (gzipped) fasta files
   locate   Locate the given ranges to the corresponding ctgs
-  rg       Add range files for counting
+  range    Add range files for counting
   clear    Clear some parts from Redis
   feature  Add genomic features from a range file
   fsw      Sliding windows around features
@@ -63,22 +62,24 @@ Options:
 
 ```
 
-### `gams-stat`
+### `gams-stat --help`
 
 ```text
-$ gams-stat --help
+gams-stat 0.3.1
+wang-q <wang-q@outlook.com>
 Build-in stats for gams
 
-Usage: gams-stat [OPTIONS] [infile] [query]
+USAGE:
+    gams-stat [OPTIONS] <infile> <query>
 
-Arguments:
-  [infile]  Sets the input file to use
-  [query]   Query name [default: ctg]
+ARGS:
+    <infile>    Sets the input file to use
+    <query>     Query name [default: ctg]
 
-Options:
-  -o, --outfile <outfile>  Output filename. [stdout] for screen [default: stdout]
-  -h, --help               Print help
-  -V, --version            Print version
+OPTIONS:
+    -h, --help                 Print help information
+    -o, --outfile <outfile>    Output filename. [stdout] for screen [default: stdout]
+    -V, --version              Print version information
 
 ```
 
