@@ -18,7 +18,7 @@ fn main() -> anyhow::Result<()> {
         .subcommand(cmd_gams::rg::make_subcommand())
         .subcommand(cmd_gams::clear::make_subcommand())
         .subcommand(cmd_gams::feature::make_subcommand())
-        .subcommand(cmd_gams::fsw::make_subcommand())
+        .subcommand(cmd_gams::swstat::make_subcommand())
         .subcommand(cmd_gams::anno::make_subcommand())
         .subcommand(cmd_gams::sliding::make_subcommand())
         .subcommand(cmd_gams::peak::make_subcommand())
@@ -37,7 +37,7 @@ fn main() -> anyhow::Result<()> {
         Some(("rg", sub_matches)) => cmd_gams::rg::execute(sub_matches),
         Some(("clear", sub_matches)) => cmd_gams::clear::execute(sub_matches),
         Some(("feature", sub_matches)) => cmd_gams::feature::execute(sub_matches),
-        Some(("fsw", sub_matches)) => cmd_gams::fsw::execute(sub_matches),
+        Some(("swstat", sub_matches)) => cmd_gams::swstat::execute(sub_matches),
         Some(("anno", sub_matches)) => cmd_gams::anno::execute(sub_matches),
         Some(("sliding", sub_matches)) => cmd_gams::sliding::execute(sub_matches),
         Some(("peak", sub_matches)) => cmd_gams::peak::execute(sub_matches),
@@ -52,4 +52,4 @@ fn main() -> anyhow::Result<()> {
 // TODO: sliding windows of waves
 // TODO: `gams count`
 // TODO: ctgs should be slightly overlapped with each other, 500 bp?
-// TODO: `gams fsw` action
+// TODO: `gams swstat` action

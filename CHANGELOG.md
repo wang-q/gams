@@ -12,6 +12,7 @@
 * Serializing to .tsv via serde
 
 * Rename `gams range` to `gams rg`
+* Rename `gams fsw` to `gams swstat`
 * Add --seq to `gams locate`
 * Add --count to `gams locate`
 * Add --parallel to `gams sliding` and `gams fsw`

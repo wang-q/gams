@@ -5,7 +5,7 @@ use std::collections::HashMap;
 
 // Create clap subcommand arguments
 pub fn make_subcommand() -> Command {
-    Command::new("fsw")
+    Command::new("swstat")
         .about("Sliding windows statistics around features/peaks")
         .arg(
             Arg::new("target")

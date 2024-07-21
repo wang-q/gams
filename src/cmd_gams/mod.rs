@@ -4,7 +4,7 @@ pub mod anno;
 pub mod clear;
 pub mod env;
 pub mod feature;
-pub mod fsw;
+pub mod swstat;
 pub mod gen;
 pub mod locate;
 pub mod peak;

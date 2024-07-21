@@ -358,35 +358,29 @@ fn command_feature() -> anyhow::Result<()> {
 }
 
 #[test]
-fn command_fsw() -> anyhow::Result<()> {
-    // env
-    let mut cmd = Command::cargo_bin("gams")?;
-    cmd.arg("env").unwrap();
-
-    // drop
-    let mut cmd = Command::cargo_bin("gams")?;
-    cmd.arg("status").arg("drop").unwrap();
-
-    // gen
-    let mut cmd = Command::cargo_bin("gams")?;
-    cmd.arg("gen")
+fn command_swstat() -> anyhow::Result<()> {
+    Command::cargo_bin("gams")?.arg("env").unwrap();
+    Command::cargo_bin("gams")?
+        .arg("status")
+        .arg("drop")
+        .unwrap();
+    Command::cargo_bin("gams")?
+        .arg("gen")
         .arg("tests/S288c/genome.fa.gz")
         .arg("--piece")
         .arg("100000")
         .unwrap();
-
     // feature
-    let mut cmd = Command::cargo_bin("gams")?;
-    cmd.arg("feature")
+    Command::cargo_bin("gams")?
+        .arg("feature")
         .arg("tests/S288c/spo11_hot.rg")
         .arg("--tag")
         .arg("spo11")
-        .output()
         .unwrap();
 
     // fsw
     let mut cmd = Command::cargo_bin("gams")?;
-    let output = cmd.arg("fsw").output().unwrap();
+    let output = cmd.arg("swstat").output().unwrap();
     let stdout = String::from_utf8(output.stdout).unwrap();
     assert!(stdout.lines().count() > 2000);
     assert!(stdout.contains("fsw:feature:ctg:I:2:32:1"));
@@ -584,14 +578,11 @@ fn command_locate() -> anyhow::Result<()> {
 
 #[test]
 fn command_locate_count() -> anyhow::Result<()> {
-    // env
     Command::cargo_bin("gams")?.arg("env").unwrap();
-    // drop
     Command::cargo_bin("gams")?
         .arg("status")
         .arg("drop")
         .unwrap();
-    // gen
     Command::cargo_bin("gams")?
         .arg("gen")
         .arg("tests/S288c/genome.fa.gz")

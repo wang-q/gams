@@ -121,7 +121,7 @@ gams feature tests/S288c/spo11_hot.rg
 gams tsv -s 'feature:*'
 
 # sliding windows around features
-cargo run --bin gams fsw
+cargo run --bin gams swstat
 
 # add rgs
 gams rg tests/S288c/SK1.snp.rg
