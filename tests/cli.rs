@@ -209,23 +209,25 @@ fn command_gen() -> anyhow::Result<()> {
     Ok(())
 }
 
-#[test]
-fn command_tsv() -> anyhow::Result<()> {
-    // env
-    let mut cmd = Command::cargo_bin("gams")?;
-    cmd.arg("env").unwrap();
-
-    // drop
-    let mut cmd = Command::cargo_bin("gams")?;
-    cmd.arg("status").arg("drop").unwrap();
-
-    // gen
-    let mut cmd = Command::cargo_bin("gams")?;
-    cmd.arg("gen")
+fn env_drop_gen() -> anyhow::Result<()> {
+    Command::cargo_bin("gams")?.arg("env").unwrap();
+    Command::cargo_bin("gams")?
+        .arg("status")
+        .arg("drop")
+        .unwrap();
+    Command::cargo_bin("gams")?
+        .arg("gen")
         .arg("tests/S288c/genome.fa.gz")
         .arg("--piece")
         .arg("100000")
         .unwrap();
+
+    Ok(())
+}
+
+#[test]
+fn command_tsv() -> anyhow::Result<()> {
+    env_drop_gen()?;
 
     // tsv
     let mut cmd = Command::cargo_bin("gams")?;
@@ -246,21 +248,7 @@ fn command_tsv() -> anyhow::Result<()> {
 
 #[test]
 fn command_rg() -> anyhow::Result<()> {
-    // env
-    let mut cmd = Command::cargo_bin("gams")?;
-    cmd.arg("env").unwrap();
-
-    // drop
-    let mut cmd = Command::cargo_bin("gams")?;
-    cmd.arg("status").arg("drop").unwrap();
-
-    // gen
-    let mut cmd = Command::cargo_bin("gams")?;
-    cmd.arg("gen")
-        .arg("tests/S288c/genome.fa.gz")
-        .arg("--piece")
-        .arg("100000")
-        .unwrap();
+    env_drop_gen()?;
 
     // range
     let mut cmd = Command::cargo_bin("gams")?;
@@ -286,21 +274,7 @@ fn command_clear() -> anyhow::Result<()> {
     // gams range tests/S288c/spo11_hot.rg tests/S288c/spo11_hot.rg
     // gams clear range
 
-    // env
-    let mut cmd = Command::cargo_bin("gams")?;
-    cmd.arg("env").unwrap();
-
-    // drop
-    let mut cmd = Command::cargo_bin("gams")?;
-    cmd.arg("status").arg("drop").unwrap();
-
-    // gen
-    let mut cmd = Command::cargo_bin("gams")?;
-    cmd.arg("gen")
-        .arg("tests/S288c/genome.fa.gz")
-        .arg("--piece")
-        .arg("100000")
-        .unwrap();
+    env_drop_gen()?;
 
     // range
     let mut cmd = Command::cargo_bin("gams")?;
@@ -324,21 +298,7 @@ fn command_clear() -> anyhow::Result<()> {
 
 #[test]
 fn command_feature() -> anyhow::Result<()> {
-    // env
-    let mut cmd = Command::cargo_bin("gams")?;
-    cmd.arg("env").unwrap();
-
-    // drop
-    let mut cmd = Command::cargo_bin("gams")?;
-    cmd.arg("status").arg("drop").unwrap();
-
-    // gen
-    let mut cmd = Command::cargo_bin("gams")?;
-    cmd.arg("gen")
-        .arg("tests/S288c/genome.fa.gz")
-        .arg("--piece")
-        .arg("100000")
-        .unwrap();
+    env_drop_gen()?;
 
     // feature
     let mut cmd = Command::cargo_bin("gams")?;
@@ -359,17 +319,8 @@ fn command_feature() -> anyhow::Result<()> {
 
 #[test]
 fn command_swstat() -> anyhow::Result<()> {
-    Command::cargo_bin("gams")?.arg("env").unwrap();
-    Command::cargo_bin("gams")?
-        .arg("status")
-        .arg("drop")
-        .unwrap();
-    Command::cargo_bin("gams")?
-        .arg("gen")
-        .arg("tests/S288c/genome.fa.gz")
-        .arg("--piece")
-        .arg("100000")
-        .unwrap();
+    env_drop_gen()?;
+
     // feature
     Command::cargo_bin("gams")?
         .arg("feature")
@@ -394,21 +345,7 @@ fn command_swstat() -> anyhow::Result<()> {
 
 #[test]
 fn command_sliding() -> anyhow::Result<()> {
-    // env
-    let mut cmd = Command::cargo_bin("gams")?;
-    cmd.arg("env").unwrap();
-
-    // drop
-    let mut cmd = Command::cargo_bin("gams")?;
-    cmd.arg("status").arg("drop").unwrap();
-
-    // gen
-    let mut cmd = Command::cargo_bin("gams")?;
-    cmd.arg("gen")
-        .arg("tests/S288c/genome.fa.gz")
-        .arg("--piece")
-        .arg("100000")
-        .unwrap();
+    env_drop_gen()?;
 
     // sliding
     let mut cmd = Command::cargo_bin("gams")?;
@@ -441,21 +378,7 @@ fn command_sliding() -> anyhow::Result<()> {
 
 #[test]
 fn command_sliding_p() -> anyhow::Result<()> {
-    // env
-    let mut cmd = Command::cargo_bin("gams")?;
-    cmd.arg("env").unwrap();
-
-    // drop
-    let mut cmd = Command::cargo_bin("gams")?;
-    cmd.arg("status").arg("drop").unwrap();
-
-    // gen
-    let mut cmd = Command::cargo_bin("gams")?;
-    cmd.arg("gen")
-        .arg("tests/S288c/genome.fa.gz")
-        .arg("--piece")
-        .arg("100000")
-        .unwrap();
+    env_drop_gen()?;
 
     // sliding
     let mut cmd = Command::cargo_bin("gams")?;
@@ -490,21 +413,7 @@ fn command_sliding_p() -> anyhow::Result<()> {
 
 #[test]
 fn command_peak() -> anyhow::Result<()> {
-    // env
-    let mut cmd = Command::cargo_bin("gams")?;
-    cmd.arg("env").unwrap();
-
-    // drop
-    let mut cmd = Command::cargo_bin("gams")?;
-    cmd.arg("status").arg("drop").unwrap();
-
-    // gen
-    let mut cmd = Command::cargo_bin("gams")?;
-    cmd.arg("gen")
-        .arg("tests/S288c/genome.fa.gz")
-        .arg("--piece")
-        .arg("500000")
-        .unwrap();
+    env_drop_gen()?;
 
     // peak
     let mut cmd = Command::cargo_bin("gams")?;
@@ -528,21 +437,7 @@ fn command_locate() -> anyhow::Result<()> {
     // gams locate "I:1000-1100" "II:1000-1100" "Mito:1000-1100"
     // gams locate -f tests/S288c/spo11_hot.rg
 
-    // env
-    let mut cmd = Command::cargo_bin("gams")?;
-    cmd.arg("env").unwrap();
-
-    // drop
-    let mut cmd = Command::cargo_bin("gams")?;
-    cmd.arg("status").arg("drop").unwrap();
-
-    // gen
-    let mut cmd = Command::cargo_bin("gams")?;
-    cmd.arg("gen")
-        .arg("tests/S288c/genome.fa.gz")
-        .arg("--piece")
-        .arg("500000")
-        .unwrap();
+    env_drop_gen()?;
 
     // locate
     let mut cmd = Command::cargo_bin("gams")?;
@@ -578,17 +473,8 @@ fn command_locate() -> anyhow::Result<()> {
 
 #[test]
 fn command_locate_count() -> anyhow::Result<()> {
-    Command::cargo_bin("gams")?.arg("env").unwrap();
-    Command::cargo_bin("gams")?
-        .arg("status")
-        .arg("drop")
-        .unwrap();
-    Command::cargo_bin("gams")?
-        .arg("gen")
-        .arg("tests/S288c/genome.fa.gz")
-        .arg("--piece")
-        .arg("500000")
-        .unwrap();
+    env_drop_gen()?;
+
     // range
     Command::cargo_bin("gams")?
         .arg("rg")
@@ -617,21 +503,7 @@ fn command_locate_count() -> anyhow::Result<()> {
 
 #[test]
 fn command_anno() -> anyhow::Result<()> {
-    // env
-    let mut cmd = Command::cargo_bin("gams")?;
-    cmd.arg("env").unwrap();
-
-    // drop
-    let mut cmd = Command::cargo_bin("gams")?;
-    cmd.arg("status").arg("drop").unwrap();
-
-    // gen
-    let mut cmd = Command::cargo_bin("gams")?;
-    cmd.arg("gen")
-        .arg("tests/S288c/genome.fa.gz")
-        .arg("--piece")
-        .arg("100000")
-        .unwrap();
+    env_drop_gen()?;
 
     // anno
     let mut cmd = Command::cargo_bin("gams")?;
