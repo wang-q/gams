@@ -11,7 +11,8 @@ pub fn make_subcommand() -> Command {
             r###"
 * `--seq` might not be useful, just in case that you can't access the fasta files
 * To use `--count`, `gams rg` should have inserted .rg files
-* `--seq` will untick `--count`
+* `--seq` will unset `--count`
+* This subcommand is mainly used as a test program
 
 "###,
         )
