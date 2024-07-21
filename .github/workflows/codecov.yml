@@ -10,27 +10,34 @@ jobs:
   check:
     name: codecov gams
     runs-on: ubuntu-latest
-    # Service containers to run with `runner-job`
-    services:
-      # Label used to access the service container
-      redis:
-        # Docker Hub image
-        image: redis
-        # Set health checks to wait until redis has started
-        options: >-
-          --health-cmd "redis-cli ping"
-          --health-interval 10s
-          --health-timeout 5s
-          --health-retries 5
-        ports:
-          # Maps port 6379 on service container to the host
-          - 6379:6379
     container:
       image: xd009642/tarpaulin:develop-nightly
       options: --security-opt seccomp=unconfined
     steps:
+      - name: Cache redis
+        id: cache-redis
+        uses: actions/cache@v2
+        with:
+          path: |
+            /usr/bin/redis-cli
+            /usr/bin/redis-server
+          key: ${{ runner.os }}-redis
+
+      - name: Install redis
+        if: steps.cache-redis.outputs.cache-hit != 'true'
+        run: |
+          sudo apt-get update
+          sudo apt-get install stunnel -y
+          wget https://github.com/redis/redis/archive/${{ env.REDIS_VERSION }}.tar.gz;
+          tar -xzvf ${{ env.REDIS_VERSION }}.tar.gz;
+          pushd redis-${{ env.REDIS_VERSION }} && BUILD_TLS=yes make && sudo mv src/redis-server src/redis-cli /usr/bin/ && popd;
+          echo $PATH
+
       - name: Checkout repository
         uses: actions/checkout@v2
+
+      - name: redis
+        run: redis-server --appendonly no --dir tests/S288c/ &
 
       - name: Generate code coverage
         run: |
