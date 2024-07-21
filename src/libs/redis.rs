@@ -61,12 +61,15 @@ pub fn db_drop() {
 
 pub struct Conn {
     conn: redis::Connection,
-    inputs: Vec<(String, String)>, // pipe keys-values
-    size: usize,                   // pipe size
+    // pipe keys-values
+    inputs: Vec<(String, String)>,
+    // pipe size
+    size: usize,
 }
 
 /// INTERFACE: Redis connection
 /// Three basic data types: str, bin and sn
+/// Wrapped data: ctg and seq
 ///
 /// ----
 /// ----
@@ -120,13 +123,7 @@ impl Conn {
     pub fn get_sn(&mut self, key: &str) -> i32 {
         self.conn().get(key).unwrap_or(0)
     }
-}
 
-/// INTERFACE: wrapped data: ctg and seq
-///
-/// ----
-/// ----
-impl Conn {
     pub fn insert_ctg(&mut self, ctg_id: &str, ctg: &crate::Ctg) {
         let json = serde_json::to_string(ctg).unwrap();
         self.insert_str(ctg_id, &json);
@@ -163,16 +160,11 @@ fn decode_gz(bytes: &[u8]) -> anyhow::Result<Vec<u8>> {
     Ok(buf)
 }
 
-/// INTERFACE: easy access
+/// INTERFACE: easy access and index
 ///
 /// ----
 /// ----
 impl Conn {
-    pub fn get_ctg_pos(&mut self, ctg_id: &str) -> (String, i32, i32) {
-        let ctg = self.get_ctg(ctg_id);
-        (ctg.chr_id, ctg.chr_start, ctg.chr_end)
-    }
-
     /// get all chr_ids
     pub fn get_vec_chr(&mut self) -> Vec<String> {
         let json = self.get_str("top:chrs");
@@ -193,36 +185,31 @@ impl Conn {
         list
     }
 
-    /// generated from cnt:feature:
-    pub fn get_vec_feature(&mut self, ctg_id: &str) -> Vec<String> {
-        let key = format!("cnt:feature:{}", ctg_id);
-        let cnt = self.get_sn(&key);
+    /// generated from cnt:
+    pub fn get_vec_cnt(&mut self, group: &str, parent_id: &str) -> Vec<String> {
+        match group {
+            "ctg" => {}
+            "feature" => {}
+            "rg" => {}
+            "peak" => {}
+            _ => unreachable!(),
+        }
 
-        let list: Vec<String> = if cnt == 0 {
+        let cnt_key = format!("cnt:{group}:{parent_id}");
+        let cnt = self.get_sn(&cnt_key);
+
+        if cnt == 0 {
             vec![]
         } else {
             (1..=cnt)
-                .map(|i| format!("feature:{}:{}", ctg_id, i))
+                .map(|i| format!("{group}:{parent_id}:{i}"))
                 .collect()
-        };
-
-        list
+        }
     }
 
-    /// generated from cnt:peak:
-    pub fn get_vec_peak(&mut self, ctg_id: &str) -> Vec<String> {
-        let key = format!("cnt:peak:{}", ctg_id);
-        let cnt = self.get_sn(&key);
-
-        let list: Vec<String> = if cnt == 0 {
-            vec![]
-        } else {
-            (1..=cnt)
-                .map(|i| format!("peak:{}:{}", ctg_id, i))
-                .collect()
-        };
-
-        list
+    pub fn get_ctg_pos(&mut self, ctg_id: &str) -> (String, i32, i32) {
+        let ctg = self.get_ctg(ctg_id);
+        (ctg.chr_id, ctg.chr_start, ctg.chr_end)
     }
 
     /// BTreeMap<ctg_id, Ctg>
@@ -244,13 +231,8 @@ impl Conn {
 
         ctg_of
     }
-}
 
-/// INTERFACE: index
-///
-/// ----
-/// ----
-impl Conn {
+    /// This index helps locating to a ctg
     pub fn build_idx_ctg(&mut self) {
         let chrs: Vec<String> = self.get_vec_chr();
 
@@ -271,28 +253,78 @@ impl Conn {
             let lapper = Lapper::new(ivs);
             let serialized = bincode::serialize(&lapper).unwrap();
 
-            self.insert_bin(&format!("idx:ctg:{}", chr_id), &serialized);
+            self.insert_bin(&format!("idx:ctg:{chr_id}"), &serialized);
         }
     }
 
     /// chr_id => Lapper => ctg_id
     pub fn get_idx_ctg(&mut self) -> BTreeMap<String, Lapper<u32, String>> {
-        let chrs: Vec<String> = self.get_vec_chr();
-
         let mut lapper_of: BTreeMap<String, Lapper<u32, String>> = BTreeMap::new();
 
+        let chrs: Vec<String> = self.get_vec_chr();
         for chr_id in &chrs {
-            let lapper_bytes: Vec<u8> = self.get_bin(&format!("idx:ctg:{}", chr_id));
-            let lapper: Lapper<u32, String> = bincode::deserialize(&lapper_bytes).unwrap();
+            let bytes: Vec<u8> = self.get_bin(&format!("idx:ctg:{}", chr_id));
+            let lapper: Lapper<u32, String> = bincode::deserialize(&bytes).unwrap();
 
             lapper_of.insert(chr_id.clone(), lapper);
         }
 
         lapper_of
     }
+
+    /// This index helps counting overlaps
+    pub fn build_idx_rg(&mut self) {
+        let chrs: Vec<String> = self.get_vec_chr();
+        for chr_id in chrs.iter() {
+            let ctgs: Vec<String> = self.get_vec_cnt("ctg", chr_id);
+
+            for ctg_id in &ctgs {
+                let jsons: Vec<String> = self.get_scan_values(&format!("rg:{}:*", ctg_id));
+                let rgs: Vec<crate::Rg> = jsons
+                    .iter()
+                    .map(|el| serde_json::from_str(el).unwrap())
+                    .collect();
+
+                let mut ivs: Vec<Iv> = vec![];
+                for rg in &rgs {
+                    let range = intspan::Range::from_str(&rg.range);
+                    let iv = Iv {
+                        start: range.start as u32,
+                        stop: range.end as u32 + 1,
+                        val: "".to_string(), // we don't need find rg
+                    };
+                    ivs.push(iv);
+                }
+
+                let lapper = Lapper::new(ivs);
+                let serialized = bincode::serialize(&lapper).unwrap();
+
+                self.insert_bin(&format!("idx:rg:{ctg_id}"), &serialized);
+            }
+        }
+    }
+
+    /// ctg_id => Lapper
+    pub fn get_idx_rg(&mut self) -> BTreeMap<String, Lapper<u32, String>> {
+        let mut lapper_of: BTreeMap<String, Lapper<u32, String>> = BTreeMap::new();
+
+        let chrs: Vec<String> = self.get_vec_chr();
+        for chr_id in &chrs {
+            let ctgs: Vec<String> = self.get_vec_cnt("ctg", chr_id);
+
+            for ctg_id in &ctgs {
+                let bytes: Vec<u8> = self.get_bin(&format!("idx:rg:{}", ctg_id));
+                let lapper: Lapper<u32, String> = bincode::deserialize(&bytes).unwrap();
+
+                lapper_of.insert(chr_id.clone(), lapper);
+            }
+        }
+
+        lapper_of
+    }
 }
 
-/// INTERFACE: lua scripting
+/// INTERFACE: lua scripting and pipeline
 ///
 /// ----
 /// ----
@@ -349,13 +381,7 @@ return list;
         );
         script.arg(pattern).arg(1000).invoke(self.conn()).unwrap()
     }
-}
 
-/// INTERFACE: pipeline
-///
-/// ----
-/// ----
-impl Conn {
     pub fn pipe_add(&mut self, key: &str, val: &str) {
         self.inputs.push((key.into(), val.into()));
 
