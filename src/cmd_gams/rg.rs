@@ -84,6 +84,9 @@ pub fn execute(args: &ArgMatches) -> anyhow::Result<()> {
         conn.pipe_submit(); // Possible remaining records in the pipe
     }
 
+    eprintln!("Building the index of rgs...\n");
+    conn.build_idx_rg();
+
     let n_rg = conn.get_scan_count("rg:*");
     eprintln!("There are {} rgs in the database", n_rg);
 

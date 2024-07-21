@@ -57,9 +57,11 @@ pub fn execute(args: &ArgMatches) -> anyhow::Result<()> {
                 if is_iter {
                     clear_iter("rg:*");
                     clear_iter("cnt:rg:*");
+                    clear_iter("idx:rg:*");
                 } else {
                     clear_lua("rg:*");
                     clear_lua("cnt:rg:*");
+                    clear_iter("idx:rg:*");
                 }
             }
             "peak" => {
