@@ -51,3 +51,4 @@ fn main() -> anyhow::Result<()> {
 
 // TODO: sliding windows of waves
 // TODO: `gams count`
+// TODO: ctgs should be slightly overlapped with each other, 500 bp?
