@@ -173,7 +173,7 @@ pub fn execute(args: &ArgMatches) -> anyhow::Result<()> {
         let json_chrs = serde_json::to_string(&len_of.keys().cloned().collect::<Vec<_>>()).unwrap();
         conn.insert_str("top:chrs", &json_chrs);
 
-        eprintln!("Building the lapper index of ctgs...\n");
+        eprintln!("Building the index of ctgs...\n");
         conn.build_idx_ctg();
     }
 
@@ -187,7 +187,7 @@ pub fn execute(args: &ArgMatches) -> anyhow::Result<()> {
 
         // number of ctg
         let n_ctg: i32 = conn.get_scan_count("ctg:*");
-        eprintln!("There are {} contigs", n_ctg);
+        eprintln!("There are {} ctgs", n_ctg);
     }
 
     Ok(())
