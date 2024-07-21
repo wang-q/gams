@@ -33,11 +33,11 @@ jobs:
           pushd redis-${{ env.REDIS_VERSION }} && BUILD_TLS=yes make && sudo mv src/redis-server src/redis-cli /usr/bin/ && popd;
           echo $PATH
 
-      - name: redis
-        run: redis-server --appendonly no --dir tests/S288c/ &
-
       - name: Checkout repository
         uses: actions/checkout@v2
+
+      - name: redis
+        run: redis-server --appendonly no --dir tests/S288c/ &
 
       - name: Generate code coverage
         run: |
