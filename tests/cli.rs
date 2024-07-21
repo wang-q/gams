@@ -167,7 +167,7 @@ fn command_gen() -> anyhow::Result<()> {
     let stderr = String::from_utf8(output.stderr).unwrap();
 
     assert_eq!(stderr.lines().count(), 17);
-    assert!(stderr.contains("There are 3 contigs"));
+    assert!(stderr.contains("There are 3 ctgs"));
 
     // get_scan_str
     let mut conn = gams::Conn::new();
@@ -272,7 +272,7 @@ fn command_rg() -> anyhow::Result<()> {
         .unwrap();
     let stderr = String::from_utf8(output.stderr).unwrap();
 
-    assert_eq!(stderr.lines().count(), 3);
+    assert_eq!(stderr.lines().count(), 5);
     assert!(stderr.contains("There are 69 rgs in this file"));
 
     Ok(())
@@ -315,7 +315,7 @@ fn command_clear() -> anyhow::Result<()> {
     let output = cmd.arg("clear").arg("rg").output().unwrap();
     let stderr = String::from_utf8(output.stderr).unwrap();
 
-    assert_eq!(stderr.lines().count(), 4);
+    assert_eq!(stderr.lines().count(), 6);
     assert!(stderr.contains("Clearing pattern \"rg:*\""));
     assert!(stderr.contains("Clear 2 keys"));
 
