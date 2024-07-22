@@ -238,8 +238,8 @@ Similarly, for genome sequences, `gams` gz-compresses them locally before passin
     * `ctg:` - a contiguous range on chromosome, used to divide the genome into easily manipulated
       pieces
     * `feature:` - a generic genomic feature of interest
-    * `rg:` - Anything you want to count as overlaps around features
     * `peak:` - Peaks of GC-wave
+    * `rg:` - Anything you want to count around features, e.g., SNP, CpG
 
 * The following prefixes may serve different collections:
     * Serial numbers - `cnt:`

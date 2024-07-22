@@ -30,7 +30,7 @@ pub fn make_subcommand() -> Command {
                 .num_args(1)
                 .default_value("500000")
                 .value_parser(value_parser!(i32))
-                .help("Break genome into pieces"),
+                .help("Divide genome into pieces"),
         )
         .arg(
             Arg::new("fill")
