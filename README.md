@@ -233,13 +233,19 @@ Similarly, for genome sequences, `gams` gz-compresses them locally before passin
 
 ### Contents stored in Redis
 
-* `gams` stores key-value pairs in Redis. Keys can be grouped as follows:
-    * Basic information about the genome - `top:`
-    * Serials - `cnt:`
-    * Contigs, a contiguous genomic region - `ctg:`
-    * Sequences - `seq:`
-    * Bincode, serialized data structure - `bundle:`
+* `gams` data collections, separated by colons as per Redis convention
+    * `top:` - basic information about the genome
+    * `ctg:` - a contiguous range on chromosome, used to divide the genome into easily manipulated
+      pieces
+    * `feature:` - a generic genomic feature of interest
+    * `rg:` - Anything you want to count as overlaps around features
+    * `peak:` - Peaks of GC-wave
+
+* The following prefixes may serve different collections:
+    * Serial numbers - `cnt:`
     * Indexes - `idx:`
+    * Bundles, serialized data structure - `bundle:`
+    * Sequences - `seq:`
 
 * `gams` uses only one Redis data types, STRING
     * serial - the INCR command parses string values into integers
@@ -253,11 +259,12 @@ Similarly, for genome sequences, `gams` gz-compresses them locally before passin
 
 | Namespace                 |  Type   | Contents                | Description                                            |
 |:--------------------------|:-------:|:------------------------|:-------------------------------------------------------|
-| top:common_name           | STRING  |                         | The common name, e.g. S288c, Human                     |
+| **top**                   |         |                         |                                                        |
+| top:common_name           | STRING  |                         | The common name, e.g. Human, S288c                     |
 | top:chrs                  |  JSON   | Vec<String>             | Names of each chromosome                               |
 | top:chr_len               |  JSON   | BTreeMap<chr_id, usize> | Lengths of each chromosome                             |
 |                           |         |                         |                                                        |
-| **ctg**                   |         |                         | *A contiguous range on chromosome*                     |
+| **ctg**                   |         |                         |                                                        |
 | cnt:ctg:{chr_id}          | INTEGER |                         | Serial number. An internal counter of ctgs on this chr |
 | ctg:{chr_id}:{serial}     |  JSON   | Ctg                     | ctg_id => Ctg                                          |
 |                           |         | range                   | 1:4000001-4500000                                      |
@@ -270,20 +277,20 @@ Similarly, for genome sequences, `gams` gz-compresses them locally before passin
 | bundle:ctg:{chr_id}       | BINARY  | BTreeMap<ctg_id, Ctg>   | Retrieves all ctgs of a chr                            |
 | seq:{ctg_id}              | BINARY  | Gzipped &[u8]           | Compressed genomic sequence of ctg                     |
 |                           |         |                         |                                                        |
-| **feature**               |         |                         | *A generic genomic feature of interest*                |
+| **feature**               |         |                         |                                                        |
 | cnt:feature:{ctg_id}      | INTEGER |                         | Counter of features locating on this ctg               |
 | feature:{ctg_id}:{serial} |  JSON   | Feature                 | feature_id => Feature                                  |
 |                           |         | range                   |                                                        |
 |                           |         | length                  |                                                        |
 |                           |         | tag                     |                                                        |
 |                           |         |                         |                                                        |
-| **rg**                    |         |                         | *For counting overlaps to sliding windows*             |
+| **rg**                    |         |                         |                                                        |
 | cnt:rg:{ctg_id}           | INTEGER |                         | Counter                                                |
 | rg:{ctg_id}:{serial}      |  JSON   | Rg                      | range_id => Rg                                         |
 |                           |         | range                   |                                                        |
 | idx:rg:{ctg_id}           | BINARY  |                         | Indexing rgs to count overlaps                         |
 |                           |         |                         |                                                        |
-| **peak**                  |         |                         | *Peaks of GC-wave*                                     |
+| **peak**                  |         |                         |                                                        |
 | cnt:peak:{ctg_id}         | INTEGER |                         | Counter                                                |
 | peak:{ctg_id}:{serial}    |  JSON   | Peak                    | peak_id => Peak                                        |
 |                           |         | length                  |                                                        |
@@ -295,6 +302,8 @@ Similarly, for genome sequences, `gams` gz-compresses them locally before passin
 |                           |         | right_wave_length       | distance to next peak                                  |
 |                           |         | right_amplitude         | Difference of GC-content to next peak                  |
 |                           |         | right_signal            | Signal of next peak                                    |
+
+Table: key-value pairs stored in Redis
 
 ## Runtime dependencies
 
