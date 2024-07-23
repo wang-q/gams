@@ -304,7 +304,7 @@ fn command_feature() -> anyhow::Result<()> {
 }
 
 #[test]
-fn command_swstat() -> anyhow::Result<()> {
+fn command_sw() -> anyhow::Result<()> {
     env_drop_gen()?;
 
     // feature
@@ -315,12 +315,12 @@ fn command_swstat() -> anyhow::Result<()> {
         .arg("spo11")
         .unwrap();
 
-    // fsw
+    // sw
     let mut cmd = Command::cargo_bin("gams")?;
-    let output = cmd.arg("swstat").output().unwrap();
+    let output = cmd.arg("sw").output().unwrap();
     let stdout = String::from_utf8(output.stdout).unwrap();
     assert!(stdout.lines().count() > 2000);
-    assert!(stdout.contains("fsw:feature:ctg:I:2:32:1"));
+    assert!(stdout.contains("sw:feature:ctg:I:2:32:1"));
 
     let stderr = String::from_utf8(output.stderr).unwrap();
     assert_eq!(stderr.lines().count(), 7);
@@ -330,13 +330,13 @@ fn command_swstat() -> anyhow::Result<()> {
 }
 
 #[test]
-fn command_sliding() -> anyhow::Result<()> {
+fn command_wave() -> anyhow::Result<()> {
     env_drop_gen()?;
 
     // sliding
     let mut cmd = Command::cargo_bin("gams")?;
     let output = cmd
-        .arg("sliding")
+        .arg("wave")
         .arg("--ctg")
         .arg("ctg:I:*")
         .arg("--size")
@@ -363,13 +363,13 @@ fn command_sliding() -> anyhow::Result<()> {
 }
 
 #[test]
-fn command_sliding_p() -> anyhow::Result<()> {
+fn command_wave_p() -> anyhow::Result<()> {
     env_drop_gen()?;
 
     // sliding
     let mut cmd = Command::cargo_bin("gams")?;
     let output = cmd
-        .arg("sliding")
+        .arg("wave")
         .arg("--ctg")
         .arg("ctg:I:*")
         .arg("--size")

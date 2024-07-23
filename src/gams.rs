@@ -18,9 +18,9 @@ fn main() -> anyhow::Result<()> {
         .subcommand(cmd_gams::rg::make_subcommand())
         .subcommand(cmd_gams::clear::make_subcommand())
         .subcommand(cmd_gams::feature::make_subcommand())
-        .subcommand(cmd_gams::swstat::make_subcommand())
+        .subcommand(cmd_gams::sw::make_subcommand())
         .subcommand(cmd_gams::anno::make_subcommand())
-        .subcommand(cmd_gams::sliding::make_subcommand())
+        .subcommand(cmd_gams::wave::make_subcommand())
         .subcommand(cmd_gams::peak::make_subcommand())
         .subcommand(cmd_gams::tsv::make_subcommand())
         .after_help(
@@ -37,9 +37,9 @@ fn main() -> anyhow::Result<()> {
         Some(("rg", sub_matches)) => cmd_gams::rg::execute(sub_matches),
         Some(("clear", sub_matches)) => cmd_gams::clear::execute(sub_matches),
         Some(("feature", sub_matches)) => cmd_gams::feature::execute(sub_matches),
-        Some(("swstat", sub_matches)) => cmd_gams::swstat::execute(sub_matches),
+        Some(("sw", sub_matches)) => cmd_gams::sw::execute(sub_matches),
         Some(("anno", sub_matches)) => cmd_gams::anno::execute(sub_matches),
-        Some(("sliding", sub_matches)) => cmd_gams::sliding::execute(sub_matches),
+        Some(("wave", sub_matches)) => cmd_gams::wave::execute(sub_matches),
         Some(("peak", sub_matches)) => cmd_gams::peak::execute(sub_matches),
         Some(("tsv", sub_matches)) => cmd_gams::tsv::execute(sub_matches),
         _ => unreachable!(),

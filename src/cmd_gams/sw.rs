@@ -5,8 +5,8 @@ use std::collections::HashMap;
 
 // Create clap subcommand arguments
 pub fn make_subcommand() -> Command {
-    Command::new("swstat")
-        .about("Sliding windows statistics around features/peaks")
+    Command::new("sw")
+        .about("Sliding windows around features/peaks")
         .arg(
             Arg::new("target")
                 .required(false)
@@ -176,7 +176,7 @@ fn proc_ctg(ctg: &gams::Ctg, args: &ArgMatches) -> anyhow::Result<String> {
         let windows = gams::center_sw(&parent, range_start, range_end, size, max);
 
         for (sw_ints, sw_type, sw_distance) in windows {
-            let fsw_id = format!("fsw:{}:{}", feature_id, serial);
+            let sw_id = format!("sw:{}:{}", feature_id, serial);
 
             let gc_content = gams::cache_gc_content(
                 &intspan::Range::from(&ctg.chr_id, sw_ints.min(), sw_ints.max()),
@@ -206,7 +206,7 @@ fn proc_ctg(ctg: &gams::Ctg, args: &ArgMatches) -> anyhow::Result<String> {
             serial += 1;
 
             // outputs
-            out_string += &format!("{}\t{}\n", fsw_id, values.join("\t"));
+            out_string += &format!("{}\t{}\n", sw_id, values.join("\t"));
         }
     }
 

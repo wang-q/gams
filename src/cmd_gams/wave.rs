@@ -5,14 +5,14 @@ use std::io::Write;
 
 // Create clap subcommand arguments
 pub fn make_subcommand() -> Command {
-    Command::new("sliding")
-        .about("Sliding windows along a chromosome")
+    Command::new("wave")
+        .about("GC-wave along a chromosome")
         .after_help(
             r###"
 * --step and --lag should be adjust simultaneously
 
 * Running in parallel mode with 1 reader, 1 writer and the corresponding number of workers
-    * The order of output may be different from the original
+    * The order of output may be different from the serial mode
 
 "###,
         )
