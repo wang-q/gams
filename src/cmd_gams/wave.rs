@@ -1,5 +1,4 @@
 use clap::*;
-use crossbeam::channel::bounded;
 use intspan::*;
 use std::io::Write;
 
@@ -85,7 +84,7 @@ pub fn execute(args: &ArgMatches) -> anyhow::Result<()> {
     //----------------------------
     // Args
     //----------------------------
-    let opt_parallel = *args.get_one::<usize>("parallel").unwrap();
+    let mut writer = writer(args.get_one::<String>("outfile").unwrap());
 
     //----------------------------
     // Operating
@@ -94,28 +93,23 @@ pub fn execute(args: &ArgMatches) -> anyhow::Result<()> {
     let mut conn = gams::Conn::new();
     let ctgs: Vec<String> = conn.get_scan_keys(args.get_one::<String>("ctg").unwrap());
 
-    if opt_parallel == 1 {
-        let mut writer = writer(args.get_one::<String>("outfile").unwrap());
+    // headers
+    writer.write_fmt(format_args!(
+        "{}\t{}\t{}\n",
+        "#range", "gc_content", "signal"
+    ))?;
 
-        // headers
-        writer.write_fmt(format_args!(
-            "{}\t{}\t{}\n",
-            "#range", "gc_content", "signal"
-        ))?;
+    eprintln!("{} contigs to be processed", ctgs.len());
 
-        eprintln!("{} contigs to be processed", ctgs.len());
-        for ctg_id in ctgs {
-            let out_string = proc_ctg(&ctg_id, args)?;
-            writer.write_all(out_string.as_ref())?;
-        }
-    } else {
-        proc_ctg_p(&ctgs, args)?;
+    let rcv = gams::proc_ctg_p(&ctgs, args, proc_ctg);
+    for out_string in rcv.iter() {
+        writer.write_all(out_string.as_ref())?;
     }
 
     Ok(())
 }
 
-fn proc_ctg(ctg_id: &String, args: &ArgMatches) -> anyhow::Result<String> {
+fn proc_ctg(ctg_id: &str, args: &ArgMatches) -> String {
     //----------------------------
     // Args
     //----------------------------
@@ -153,6 +147,9 @@ fn proc_ctg(ctg_id: &String, args: &ArgMatches) -> anyhow::Result<String> {
     // outputs
     let mut out_string = "".to_string();
     for i in 0..windows.len() {
+        if signals[i] == 0 {
+            continue;
+        }
         out_string += format!(
             "{}:{}\t{}\t{}\n",
             chr_id,
@@ -163,67 +160,5 @@ fn proc_ctg(ctg_id: &String, args: &ArgMatches) -> anyhow::Result<String> {
         .as_str();
     }
 
-    Ok(out_string)
-}
-
-// Adopt from https://rust-lang-nursery.github.io/rust-cookbook/concurrency/threads.html#create-a-parallel-pipeline
-fn proc_ctg_p(ctgs: &Vec<String>, args: &ArgMatches) -> anyhow::Result<()> {
-    let parallel = *args.get_one::<usize>("parallel").unwrap();
-    let mut writer = writer(args.get_one::<String>("outfile").unwrap());
-
-    // headers
-    writer
-        .write_fmt(format_args!(
-            "{}\t{}\t{}\n",
-            "#range", "gc_content", "signal"
-        ))
-        .unwrap();
-
-    eprintln!("{} contigs to be processed", ctgs.len());
-
-    // Channel 1 - Contigs
-    let (snd1, rcv1) = bounded::<String>(10);
-    // Channel 2 - Results
-    let (snd2, rcv2) = bounded(10);
-
-    crossbeam::scope(|s| {
-        //----------------------------
-        // Reader thread
-        //----------------------------
-        s.spawn(|_| {
-            for ctg in ctgs {
-                snd1.send(ctg.to_string()).unwrap();
-            }
-            // Close the channel - this is necessary to exit the for-loop in the worker
-            drop(snd1);
-        });
-
-        //----------------------------
-        // Worker threads
-        //----------------------------
-        for _ in 0..parallel {
-            // Send to sink, receive from source
-            let (sendr, recvr) = (snd2.clone(), rcv1.clone());
-            // Spawn workers in separate threads
-            s.spawn(move |_| {
-                // Receive until channel closes
-                for ctg in recvr.iter() {
-                    let out_string = proc_ctg(&ctg, args).unwrap();
-                    sendr.send(out_string).unwrap();
-                }
-            });
-        }
-        // Close the channel, otherwise sink will never exit the for-loop
-        drop(snd2);
-
-        //----------------------------
-        // Writer (main) thread
-        //----------------------------
-        for out_string in rcv2.iter() {
-            writer.write_all(out_string.as_ref()).unwrap();
-        }
-    })
-    .unwrap();
-
-    Ok(())
+    out_string
 }

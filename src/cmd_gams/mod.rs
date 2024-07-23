@@ -8,7 +8,7 @@ pub mod gen;
 pub mod locate;
 pub mod peak;
 pub mod rg;
-pub mod wave;
 pub mod status;
 pub mod sw;
 pub mod tsv;
+pub mod wave;

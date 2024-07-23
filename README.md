@@ -155,7 +155,7 @@ gams status drop
 gams gen tests/S288c/genome.fa.gz --piece 500000
 
 # GC-content of 100 bp sliding window in steps of 1 bp
-gams sliding \
+gams wave \
     --ctg 'ctg:I:*' \
     --size 100 --step 1 \
     --lag 1000 \

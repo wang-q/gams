@@ -178,6 +178,61 @@ pub fn cache_gc_stat(
     crate::gc_stat(&gcs)
 }
 
+// Adopt from https://rust-lang-nursery.github.io/rust-cookbook/concurrency/threads.html#create-a-parallel-pipeline
+pub fn proc_ctg_p(
+    ctgs: &Vec<String>,
+    args: &clap::ArgMatches,
+    proc_ctg: fn(&str, &clap::ArgMatches) -> String,
+) -> crossbeam::channel::Receiver<String> {
+    let parallel = *args.get_one::<usize>("parallel").unwrap();
+
+    // Channel 1 - Contigs
+    let (snd1, rcv1) = crossbeam::channel::bounded::<String>(10);
+    // Channel 2 - Results
+    let (snd2, rcv2) = crossbeam::channel::bounded::<String>(10);
+
+    crossbeam::scope(|s| {
+        //----------------------------
+        // Reader thread
+        //----------------------------
+        s.spawn(|_| {
+            for ctg in ctgs {
+                snd1.send(ctg.to_string()).unwrap();
+            }
+            // Close the channel - this is necessary to exit the for-loop in the worker
+            drop(snd1);
+        });
+
+        //----------------------------
+        // Worker threads
+        //----------------------------
+        for _ in 0..parallel {
+            // Send to sink, receive from source
+            let (sendr, recvr) = (snd2.clone(), rcv1.clone());
+            // Spawn workers in separate threads
+            s.spawn(move |_| {
+                // Receive until channel closes
+                for ctg in recvr.iter() {
+                    let out_string = proc_ctg(&ctg, args);
+                    sendr.send(out_string).unwrap();
+                }
+            });
+        }
+        // Close the channel, otherwise sink will never exit the for-loop
+        drop(snd2);
+
+        // //----------------------------
+        // // Writer (main) thread
+        // //----------------------------
+        // for out_string in rcv2.iter() {
+        //     writer.write_all(out_string.as_ref()).unwrap();
+        // }
+    })
+    .unwrap();
+
+    rcv2
+}
+
 // /// Don't use this
 // pub fn find_one_l(conn: &mut redis::Connection, rg: &intspan::Range) -> String {
 //     let lapper_bytes: Vec<u8> = conn.get(format!("idx:ctg:{}", rg.chr())).unwrap();
