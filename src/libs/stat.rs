@@ -13,31 +13,6 @@ pub fn stddev(data: &[f32]) -> f32 {
     (sq_sum / (len - 1.)).sqrt()
 }
 
-pub fn gc_stat(gcs: &[f32]) -> (f32, f32, f32) {
-    let mean = mean(gcs);
-    let stddev = stddev(gcs);
-
-    // coefficient of variation
-    let cv = if mean == 0. || mean == 1. {
-        0.
-    } else if mean <= 0.5 {
-        stddev / mean
-    } else {
-        stddev / (1. - mean)
-    };
-
-    // // Signal-to-noise ratio
-    // let snr = if stddev == 0. {
-    //     0.
-    // } else if mean <= 0.5 {
-    //     mean / stddev
-    // } else {
-    //     (1. - mean) / stddev
-    // };
-
-    (mean, stddev, cv)
-}
-
 pub fn thresholding_algo(data: &[f32], lag: usize, threshold: f32, influence: f32) -> Vec<i32> {
     //  the results (peaks, 1 or -1)
     let mut signals: Vec<i32> = vec![0; data.len()];

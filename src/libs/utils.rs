@@ -128,6 +128,15 @@ pub fn extract_ctg_id(input: &str) -> Option<&str> {
         .and_then(|cap| cap.name("ctg").map(|ctg| ctg.as_str()))
 }
 
+/// ```
+/// assert_eq!(gams::round(4.364, 2), 4.36);
+/// assert_eq!(gams::round(4.368, 2), 4.37);
+/// ```
+pub fn round(x: f32, decimals: u32) -> f32 {
+    let y = 10i32.pow(decimals) as f32;
+    (x * y).round() / y
+}
+
 /// GC-content within a ctg
 pub fn cache_gc_content(
     rg: &intspan::Range,
@@ -149,7 +158,32 @@ pub fn cache_gc_content(
         cache.insert(field.clone(), gc_content);
     };
 
-    *cache.get(&field).unwrap()
+    round(*cache.get(&field).unwrap(), 4)
+}
+
+pub fn gc_stat(gcs: &[f32]) -> (f32, f32, f32) {
+    let mean = crate::mean(gcs);
+    let stddev = crate::stddev(gcs);
+
+    // coefficient of variation
+    let cv = if mean == 0. || mean == 1. {
+        0.
+    } else if mean <= 0.5 {
+        stddev / mean
+    } else {
+        stddev / (1. - mean)
+    };
+
+    // // Signal-to-noise ratio
+    // let snr = if stddev == 0. {
+    //     0.
+    // } else if mean <= 0.5 {
+    //     mean / stddev
+    // } else {
+    //     (1. - mean) / stddev
+    // };
+
+    (round(mean, 4), round(stddev, 4), round(cv, 4))
 }
 
 pub fn cache_gc_stat(
@@ -175,7 +209,7 @@ pub fn cache_gc_stat(
         gcs.push(gc_content);
     }
 
-    crate::gc_stat(&gcs)
+    gc_stat(&gcs)
 }
 
 // Adopt from https://rust-lang-nursery.github.io/rust-cookbook/concurrency/threads.html#create-a-parallel-pipeline

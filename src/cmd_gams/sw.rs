@@ -1,6 +1,6 @@
 use clap::*;
 use itertools::Itertools;
-use std::collections::HashMap;
+use std::collections::{HashMap, HashSet};
 
 // Create clap subcommand arguments
 pub fn make_subcommand() -> Command {
@@ -21,10 +21,10 @@ pub fn make_subcommand() -> Command {
         )
         .arg(
             Arg::new("action")
-                .required(false)
+                .long("action")
+                .short('a')
                 .num_args(1)
-                .index(2)
-                .action(ArgAction::Set)
+                .action(ArgAction::Append)
                 .value_parser([
                     builder::PossibleValue::new("gc"),
                     builder::PossibleValue::new("count"),
@@ -37,8 +37,8 @@ pub fn make_subcommand() -> Command {
                 .long("style")
                 .num_args(1)
                 .value_parser([
-                    builder::PossibleValue::new("intact"),
                     builder::PossibleValue::new("center"),
+                    builder::PossibleValue::new("intact"),
                 ])
                 .default_value("intact")
                 .help("Style of sliding windows, intact or center"),
@@ -62,7 +62,8 @@ pub fn make_subcommand() -> Command {
                 .long("resize")
                 .num_args(1)
                 .value_parser(value_parser!(i32))
-                .default_value("500"),
+                .default_value("500")
+                .help("GC-stat flanking region size"),
         )
         .arg(
             Arg::new("parallel")
@@ -103,16 +104,18 @@ pub fn execute(args: &ArgMatches) -> anyhow::Result<()> {
 
     // headers
     let headers = [
+        "id",
         "range",
         "type",
         "distance",
-        "tag",
         "gc_content",
         "gc_mean",
         "gc_stddev",
         "gc_cv",
+        "rg_count",
+        "feature_tag",
     ];
-    writer.write_all(format!("{}\t{}\n", "id", headers.join("\t")).as_ref())?;
+    writer.write_all(format!("{}\n", headers.join("\t")).as_ref())?;
 
     eprintln!("{} contigs to be processed", ctgs.len());
 
@@ -131,6 +134,11 @@ fn proc_ctg(ctg: &gams::Ctg, args: &ArgMatches) -> String {
     let opt_size = *args.get_one::<i32>("size").unwrap();
     let opt_max = *args.get_one::<i32>("max").unwrap();
     let opt_resize = *args.get_one::<i32>("resize").unwrap();
+
+    let mut actions: HashSet<String> = HashSet::new();
+    for action in args.get_many::<String>("action").unwrap() {
+        actions.insert(action.to_string());
+    }
 
     // redis connection
     let mut conn = gams::Conn::new();
@@ -157,45 +165,50 @@ fn proc_ctg(ctg: &gams::Ctg, args: &ArgMatches) -> String {
         let feature_range = intspan::Range::from_str(&feature.range);
         let range_start = feature_range.start;
         let range_end = feature_range.end;
-        let tag = &feature.tag;
 
         // No need to use Redis counters
-        let mut serial: isize = 1;
+        let mut sn: isize = 1;
 
         let windows = gams::center_sw(&parent, range_start, range_end, opt_size, opt_max);
 
         for (sw_ints, sw_type, sw_distance) in windows {
-            let sw_id = format!("sw:{}:{}", feature_id, serial);
+            let sw_id = format!("sw:{}:{}", feature_id, sn);
 
-            let gc_content = gams::cache_gc_content(
-                &intspan::Range::from(&ctg.chr_id, sw_ints.min(), sw_ints.max()),
-                &parent,
-                &seq,
-                &mut cache,
-            );
+            let mut sw = gams::Sw {
+                id: sw_id,
+                range: intspan::Range::from(&ctg.chr_id, sw_ints.min(), sw_ints.max()).to_string(),
+                sw_type,
+                distance: sw_distance,
+                gc_content: None,
+                gc_mean: None,
+                gc_stddev: None,
+                gc_cv: None,
+                rg_count: None,
+            };
 
-            let resized = gams::center_resize(&parent, &sw_ints, opt_resize);
-            let re_rg = intspan::Range::from(&ctg.chr_id, resized.min(), resized.max());
-            let (gc_mean, gc_stddev, gc_cv) =
-                gams::cache_gc_stat(&re_rg, &parent, &seq, &mut cache, opt_size, opt_size);
+            if actions.contains("gc") {
+                let gc_content = gams::cache_gc_content(
+                    &intspan::Range::from(&ctg.chr_id, sw_ints.min(), sw_ints.max()),
+                    &parent,
+                    &seq,
+                    &mut cache,
+                );
 
-            // prepare to output
-            let mut values: Vec<String> = vec![];
+                let resized = gams::center_resize(&parent, &sw_ints, opt_resize);
+                let re_rg = intspan::Range::from(&ctg.chr_id, resized.min(), resized.max());
+                let (gc_mean, gc_stddev, gc_cv) =
+                    gams::cache_gc_stat(&re_rg, &parent, &seq, &mut cache, opt_size, opt_size);
 
-            values
-                .push(intspan::Range::from(&ctg.chr_id, sw_ints.min(), sw_ints.max()).to_string());
-            values.push(sw_type.to_string());
-            values.push(format!("{}", sw_distance));
-            values.push(tag.to_string());
-            values.push(format!("{:.4}", gc_content));
-            values.push(format!("{:.4}", gc_mean));
-            values.push(format!("{:.4}", gc_stddev));
-            values.push(format!("{:.4}", gc_cv));
+                sw.gc_content = Some(gc_content);
+                sw.gc_mean = Some(gc_mean);
+                sw.gc_stddev = Some(gc_stddev);
+                sw.gc_cv = Some(gc_cv);
+            }
 
-            serial += 1;
+            sn += 1;
 
             // outputs
-            out_string += &format!("{}\t{}\n", sw_id, values.join("\t"));
+            out_string += &format!("{}\t{}\n", sw, feature.tag);
         }
     }
 

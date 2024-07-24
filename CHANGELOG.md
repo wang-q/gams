@@ -14,6 +14,7 @@
 * Rename `gams range` to `gams rg`
 * Rename `gams sliding` to `gams wave`
 * Rename `gams fsw` to `gams sw`
+* Add --action to `gams sw`
 * Add --parallel to `gams wave` and `gams sw`
 * Add --seq to `gams locate`
 * Add --count to `gams locate`
