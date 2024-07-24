@@ -9,8 +9,9 @@ pub fn make_subcommand() -> Command {
             r###"
 * --step and --lag should be adjust simultaneously
 
-* Running in parallel mode with 1 reader, 1 writer and the corresponding number of workers
-    * The order of output may be different from the serial mode
+* Running in parallel mode will active 1 reader, 1 writer (the main thread)
+  and the corresponding number of workers
+    * The order of output may differ from serial mode
 
 "###,
         )
@@ -127,10 +128,7 @@ fn proc_ctg(ctg: &gams::Ctg, args: &ArgMatches) -> String {
     // redis connection
     let mut conn = gams::Conn::new();
 
-    eprintln!(
-        "Process {} {}:{}-{}",
-        ctg.id, ctg.chr_id, ctg.chr_start, ctg.chr_end
-    );
+    eprintln!("Process {} {}", ctg.id, ctg.range);
 
     let parent = intspan::IntSpan::from_pair(ctg.chr_start, ctg.chr_end);
     let windows = gams::sliding(&parent, opt_size, opt_step);

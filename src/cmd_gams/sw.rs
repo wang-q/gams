@@ -128,17 +128,14 @@ fn proc_ctg(ctg: &gams::Ctg, args: &ArgMatches) -> String {
     //----------------------------
     // Args
     //----------------------------
-    let size = *args.get_one::<i32>("size").unwrap();
-    let max = *args.get_one::<i32>("max").unwrap();
-    let resize = *args.get_one::<i32>("resize").unwrap();
+    let opt_size = *args.get_one::<i32>("size").unwrap();
+    let opt_max = *args.get_one::<i32>("max").unwrap();
+    let opt_resize = *args.get_one::<i32>("resize").unwrap();
 
     // redis connection
     let mut conn = gams::Conn::new();
 
-    eprintln!(
-        "Process {} {}:{}-{}",
-        ctg.id, ctg.chr_id, ctg.chr_start, ctg.chr_end
-    );
+    eprintln!("Process {} {}", ctg.id, ctg.range);
 
     // local caches of GC-content for each ctg
     let mut cache: HashMap<String, f32> = HashMap::new();
@@ -165,7 +162,7 @@ fn proc_ctg(ctg: &gams::Ctg, args: &ArgMatches) -> String {
         // No need to use Redis counters
         let mut serial: isize = 1;
 
-        let windows = gams::center_sw(&parent, range_start, range_end, size, max);
+        let windows = gams::center_sw(&parent, range_start, range_end, opt_size, opt_max);
 
         for (sw_ints, sw_type, sw_distance) in windows {
             let sw_id = format!("sw:{}:{}", feature_id, serial);
@@ -177,10 +174,10 @@ fn proc_ctg(ctg: &gams::Ctg, args: &ArgMatches) -> String {
                 &mut cache,
             );
 
-            let resized = gams::center_resize(&parent, &sw_ints, resize);
+            let resized = gams::center_resize(&parent, &sw_ints, opt_resize);
             let re_rg = intspan::Range::from(&ctg.chr_id, resized.min(), resized.max());
             let (gc_mean, gc_stddev, gc_cv) =
-                gams::cache_gc_stat(&re_rg, &parent, &seq, &mut cache, size, size);
+                gams::cache_gc_stat(&re_rg, &parent, &seq, &mut cache, opt_size, opt_size);
 
             // prepare to output
             let mut values: Vec<String> = vec![];
