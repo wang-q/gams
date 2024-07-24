@@ -88,7 +88,7 @@ pub fn execute(args: &ArgMatches) -> anyhow::Result<()> {
     //----------------------------
     // Args
     //----------------------------
-    let opt_parallel = *args.get_one::<usize>("parallel").unwrap();
+    let mut writer = intspan::writer(args.get_one::<String>("outfile").unwrap());
 
     //----------------------------
     // Operating
@@ -100,8 +100,6 @@ pub fn execute(args: &ArgMatches) -> anyhow::Result<()> {
     for ctg_id in ctg_of.keys().sorted() {
         ctgs.push(ctg_of.get(ctg_id).unwrap().clone())
     }
-
-    let mut writer = intspan::writer(args.get_one::<String>("outfile").unwrap());
 
     // headers
     let headers = [

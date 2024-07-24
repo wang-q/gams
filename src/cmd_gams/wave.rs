@@ -1,5 +1,4 @@
 use clap::*;
-use intspan::*;
 use std::io::Write;
 
 // Create clap subcommand arguments
@@ -84,7 +83,7 @@ pub fn execute(args: &ArgMatches) -> anyhow::Result<()> {
     //----------------------------
     // Args
     //----------------------------
-    let mut writer = writer(args.get_one::<String>("outfile").unwrap());
+    let mut writer = intspan::writer(args.get_one::<String>("outfile").unwrap());
 
     //----------------------------
     // Operating
@@ -133,7 +132,7 @@ fn proc_ctg(ctg: &gams::Ctg, args: &ArgMatches) -> String {
         ctg.id, ctg.chr_id, ctg.chr_start, ctg.chr_end
     );
 
-    let parent = IntSpan::from_pair(ctg.chr_start, ctg.chr_end);
+    let parent = intspan::IntSpan::from_pair(ctg.chr_start, ctg.chr_end);
     let windows = gams::sliding(&parent, opt_size, opt_step);
 
     let ctg_seq: String = conn.get_seq(&ctg.id);
