@@ -113,7 +113,6 @@ pub fn execute(args: &ArgMatches) -> anyhow::Result<()> {
         "gc_stddev",
         "gc_cv",
         "rg_count",
-        "feature_tag",
     ];
     writer.write_all(format!("{}\n", headers.join("\t")).as_ref())?;
 
@@ -208,7 +207,7 @@ fn proc_ctg(ctg: &gams::Ctg, args: &ArgMatches) -> String {
             sn += 1;
 
             // outputs
-            out_string += &format!("{}\t{}\n", sw, feature.tag);
+            out_string += &format!("{}\n", sw);
         }
     }
 
