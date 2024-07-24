@@ -90,8 +90,14 @@ pub fn execute(args: &ArgMatches) -> anyhow::Result<()> {
     // Operating
     //----------------------------
     // redis connection
-    let mut conn = gams::Conn::new();
-    let ctgs: Vec<String> = conn.get_scan_keys(args.get_one::<String>("ctg").unwrap());
+    let ctgs: Vec<gams::Ctg> = {
+        let mut conn = gams::Conn::new();
+        let jsons: Vec<String> = conn.get_scan_values(args.get_one::<String>("ctg").unwrap());
+        jsons
+            .iter()
+            .map(|el| serde_json::from_str(el).unwrap())
+            .collect()
+    };
 
     // headers
     writer.write_fmt(format_args!(
@@ -109,7 +115,7 @@ pub fn execute(args: &ArgMatches) -> anyhow::Result<()> {
     Ok(())
 }
 
-fn proc_ctg(ctg_id: &str, args: &ArgMatches) -> String {
+fn proc_ctg(ctg: &gams::Ctg, args: &ArgMatches) -> String {
     //----------------------------
     // Args
     //----------------------------
@@ -122,13 +128,15 @@ fn proc_ctg(ctg_id: &str, args: &ArgMatches) -> String {
     // redis connection
     let mut conn = gams::Conn::new();
 
-    let (chr_id, chr_start, chr_end) = conn.get_ctg_pos(ctg_id);
-    eprintln!("Process {} {}:{}-{}", ctg_id, chr_id, chr_start, chr_end);
+    eprintln!(
+        "Process {} {}:{}-{}",
+        ctg.id, ctg.chr_id, ctg.chr_start, ctg.chr_end
+    );
 
-    let parent = IntSpan::from_pair(chr_start, chr_end);
+    let parent = IntSpan::from_pair(ctg.chr_start, ctg.chr_end);
     let windows = gams::sliding(&parent, opt_size, opt_step);
 
-    let ctg_seq: String = conn.get_seq(ctg_id);
+    let ctg_seq: String = conn.get_seq(&ctg.id);
 
     let mut gcs: Vec<f32> = Vec::with_capacity(windows.len());
     for window in &windows {
@@ -152,7 +160,7 @@ fn proc_ctg(ctg_id: &str, args: &ArgMatches) -> String {
         }
         out_string += format!(
             "{}:{}\t{}\t{}\n",
-            chr_id,
+            ctg.chr_id,
             windows[i].runlist(),
             gcs[i],
             signals[i],

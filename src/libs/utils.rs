@@ -180,14 +180,14 @@ pub fn cache_gc_stat(
 
 // Adopt from https://rust-lang-nursery.github.io/rust-cookbook/concurrency/threads.html#create-a-parallel-pipeline
 pub fn proc_ctg_p(
-    ctgs: &Vec<String>,
+    ctgs: &Vec<crate::Ctg>,
     args: &clap::ArgMatches,
-    proc_ctg: fn(&str, &clap::ArgMatches) -> String,
+    proc_ctg: fn(&crate::Ctg, &clap::ArgMatches) -> String,
 ) -> crossbeam::channel::Receiver<String> {
     let parallel = *args.get_one::<usize>("parallel").unwrap();
 
     // Channel 1 - Contigs
-    let (snd1, rcv1) = crossbeam::channel::bounded::<String>(10);
+    let (snd1, rcv1) = crossbeam::channel::bounded::<crate::Ctg>(10);
     // Channel 2 - Results
     let (snd2, rcv2) = crossbeam::channel::bounded::<String>(10);
 
@@ -197,7 +197,7 @@ pub fn proc_ctg_p(
         //----------------------------
         s.spawn(|_| {
             for ctg in ctgs {
-                snd1.send(ctg.to_string()).unwrap();
+                snd1.send(ctg.clone()).unwrap();
             }
             // Close the channel - this is necessary to exit the for-loop in the worker
             drop(snd1);

@@ -157,27 +157,22 @@ gams gen tests/S288c/genome.fa.gz --piece 500000
 # GC-content of 100 bp sliding window in steps of 1 bp
 gams wave \
     --ctg 'ctg:I:*' \
-    --size 100 --step 1 \
-    --lag 1000 \
-    --threshold 3.0 \
-    --influence 1.0 \
+    --size 100 --step 10 --lag 100 \
+    --threshold 3.0 --influence 1.0 \
     -o tests/S288c/I.gc.tsv
 
 # count of peaks
 tsv-summarize tests/S288c/I.gc.tsv \
     -H --group-by signal --count
 #signal  count
-#0       227242
-#-1      2124
-#1       753
+#-1      278
+#1       104
 
 # merge adjacent windows
-tsv-filter tests/S288c/I.gc.tsv -H --ne signal:0 |
-    cut -f 1 |
+tsv-select tests/S288c/I.gc.tsv -H -f 1 |
     rgr merge -c 0.8 stdin -o tests/S288c/I.replace.tsv
 
-tsv-filter tests/S288c/I.gc.tsv -H --ne signal:0 |
-    rgr replace stdin tests/S288c/I.replace.tsv |
+rgr replace tests/S288c/I.gc.tsv tests/S288c/I.replace.tsv |
     tsv-uniq -H -f 1 \
     > tests/S288c/I.peaks.tsv
 
@@ -185,8 +180,8 @@ tsv-filter tests/S288c/I.gc.tsv -H --ne signal:0 |
 tsv-summarize tests/S288c/I.peaks.tsv \
     -H --group-by signal --count
 #signal  count
-#-1      94
-#1       61
+#-1      77
+#1       45
 
 gams peak tests/S288c/I.peaks.tsv
 
