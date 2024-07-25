@@ -53,3 +53,8 @@ fn main() -> anyhow::Result<()> {
 // TODO: `gams count`
 // TODO: ctgs should be slightly overlapped with each other, 500 bp?
 // TODO: `gams swstat` action
+// TODO:
+//  gams-stat executes sql to generate .tsv
+//  rust_xlsxwriter read .tsv, creates charts and writes .xlsx
+//  umya-spreadsheet combines them
+
