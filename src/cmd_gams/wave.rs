@@ -61,6 +61,15 @@ pub fn make_subcommand() -> Command {
                 .help("The influence (between 0 and 1) of new signals on the mean and standard deviation"),
         )
         .arg(
+            Arg::new("coverage")
+                .long("coverage")
+                .short('c')
+                .num_args(1)
+                .default_value("0.0")
+                .value_parser(value_parser!(f32))
+                .help("When larger than this ratio, the peaks are merged. Default is no merge"),
+        )
+        .arg(
             Arg::new("parallel")
                 .long("parallel")
                 .short('p')
