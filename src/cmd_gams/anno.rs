@@ -81,8 +81,10 @@ pub fn execute(args: &ArgMatches) -> anyhow::Result<()> {
     // redis connection
     let mut conn = gams::Conn::new();
 
-    let json = intspan::read_json(args.get_one::<String>("runlist").unwrap());
-    let set = intspan::json2set(&json);
+    let set = {
+        let json = intspan::read_json(args.get_one::<String>("runlist").unwrap());
+        intspan::json2set(&json)
+    };
 
     // local caches of the feature IntSpan for each ctg
     let mut cache: HashMap<String, IntSpan> = HashMap::new();
