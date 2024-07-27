@@ -154,47 +154,22 @@ gams status drop
 
 gams gen tests/S288c/genome.fa.gz --piece 500000
 
-# GC-content of 100 bp sliding window in steps of 1 bp
-gams wave \
+# GC-content of 100 bp sliding window in steps of 10 bp
+cargo run --bin gams wave \
     --ctg 'ctg:I:*' \
     --size 100 --step 10 --lag 100 \
     --threshold 3.0 --influence 1.0 \
-    -o tests/S288c/I.gc.tsv
+    --coverage 0.2 \
+    -o tests/S288c/I.peaks.tsv
 
-# count of peaks
-tsv-summarize tests/S288c/I.gc.tsv \
-    -H --group-by signal --count
-#signal  count
-#-1      278
-#1       104
-
-# merge adjacent windows
-tsv-select tests/S288c/I.gc.tsv -H -f 1 |
-    rgr merge -c 0.8 stdin -o tests/S288c/I.replace.tsv
-
-rgr replace tests/S288c/I.gc.tsv tests/S288c/I.replace.tsv |
-    tsv-uniq -H -f 1 \
-    > tests/S288c/I.peaks.tsv
-
-# count of real peaks
+# count of crests and troughs
 tsv-summarize tests/S288c/I.peaks.tsv \
     -H --group-by signal --count
 #signal  count
-#-1      77
-#1       45
+#-1      73
+#1       43
 
 gams peak tests/S288c/I.peaks.tsv
-
-# --parallel
-gams sliding \
-    --ctg 'ctg:I:*' \
-    --size 100 --step 10 \
-    --lag 100 \
-    --threshold 3.0 \
-    --influence 1.0 \
-    --parallel 1 \
-    -o tests/S288c/I.gc.tsv
-
 
 ```
 

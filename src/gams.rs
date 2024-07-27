@@ -57,4 +57,3 @@ fn main() -> anyhow::Result<()> {
 //  gams-stat executes sql to generate .tsv
 //  rust_xlsxwriter read .tsv, creates charts and writes .xlsx
 //  umya-spreadsheet combines them
-

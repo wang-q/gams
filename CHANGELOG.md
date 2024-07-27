@@ -10,6 +10,8 @@
 * Add structs `Ctg`, `Feature`, `Rg`, and `Peak` in `libs/data.rs`
     * Store serialized json to Redis
 * Serializing to .tsv via serde
+* By default, `gams wave` will write merged peaks instead of the sliding windows with signals
+    * --signal turn off this behavior
 
 * Rename `gams range` to `gams rg`
 * Rename `gams sliding` to `gams wave`

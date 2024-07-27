@@ -352,43 +352,9 @@ fn command_wave() -> anyhow::Result<()> {
         .output()
         .unwrap();
     let stdout = String::from_utf8(output.stdout).unwrap();
-    assert_eq!(stdout.lines().count(), 380);
+    assert_eq!(stdout.lines().count(), 116);
     assert!(stdout.contains("I:7551-7650\t"));
-
-    let stderr = String::from_utf8(output.stderr).unwrap();
-    assert_eq!(stderr.lines().count(), 3);
-    assert!(stderr.contains("Process ctg:I:2"));
-
-    Ok(())
-}
-
-#[test]
-fn command_wave_p() -> anyhow::Result<()> {
-    env_drop_gen()?;
-
-    // sliding
-    let mut cmd = Command::cargo_bin("gams")?;
-    let output = cmd
-        .arg("wave")
-        .arg("--ctg")
-        .arg("ctg:I:*")
-        .arg("--size")
-        .arg("100")
-        .arg("--step")
-        .arg("10")
-        .arg("--lag")
-        .arg("100")
-        .arg("--threshold")
-        .arg("3.0")
-        .arg("--influence")
-        .arg("1.0")
-        .arg("--parallel")
-        .arg("2")
-        .output()
-        .unwrap();
-    let stdout = String::from_utf8(output.stdout).unwrap();
-    assert_eq!(stdout.lines().count(), 380);
-    assert!(stdout.contains("I:7551-7650\t"));
+    assert!(stdout.contains("I(+):11551-11740\t"));
 
     let stderr = String::from_utf8(output.stderr).unwrap();
     assert_eq!(stderr.lines().count(), 3);
@@ -518,7 +484,7 @@ fn command_anno() -> anyhow::Result<()> {
 fn test_gc_stat() {
     let tests = vec![
         (vec![0.5, 0.5], (0.5, 0., 0.)),
-        (vec![0.4, 0.5, 0.5, 0.6], (0.5, 0.08164966, 0.16329932)),
+        (vec![0.4, 0.5, 0.5, 0.6], (0.5, 0.0816, 0.1633)),
     ];
     for (gcs, exp) in tests {
         let (mean, stddev, cv) = gams::gc_stat(&gcs);

@@ -1,4 +1,5 @@
 use clap::*;
+use std::collections::{HashMap, HashSet};
 use std::io::Write;
 
 // Create clap subcommand arguments
@@ -8,6 +9,10 @@ pub fn make_subcommand() -> Command {
         .after_help(
             r###"
 * --step and --lag should be adjust simultaneously
+    * step * lag = 1000 for 1000 bp regions
+
+* Crests and troughs are merge separatedly
+* Merged peaks would be like "I(+):11551-11740"
 
 * Running in parallel mode will active 1 reader, 1 writer (the main thread)
   and the corresponding number of workers
@@ -33,14 +38,14 @@ pub fn make_subcommand() -> Command {
             Arg::new("step")
                 .long("step")
                 .num_args(1)
-                .default_value("50")
+                .default_value("10")
                 .value_parser(value_parser!(i32))
         )
         .arg(
             Arg::new("lag")
                 .long("lag")
                 .num_args(1)
-                .default_value("1000")
+                .default_value("100")
                 .value_parser(value_parser!(usize))
                 .help("The lag of the moving window"),
         )
@@ -61,13 +66,19 @@ pub fn make_subcommand() -> Command {
                 .help("The influence (between 0 and 1) of new signals on the mean and standard deviation"),
         )
         .arg(
+            Arg::new("signal")
+                .long("signal")
+                .action(ArgAction::SetTrue)
+                .help("Write sliding windows with signals, not just peaks"),
+        )
+        .arg(
             Arg::new("coverage")
                 .long("coverage")
                 .short('c')
                 .num_args(1)
-                .default_value("0.0")
+                .default_value("0.2")
                 .value_parser(value_parser!(f32))
-                .help("When larger than this ratio, the peaks are merged. Default is no merge"),
+                .help("The peaks are merged when the intersection is greater than this value"),
         )
         .arg(
             Arg::new("parallel")
@@ -133,6 +144,8 @@ fn proc_ctg(ctg: &gams::Ctg, args: &ArgMatches) -> String {
     let opt_lag = *args.get_one::<usize>("lag").unwrap();
     let opt_threshold = *args.get_one::<f32>("threshold").unwrap();
     let opt_influence = *args.get_one::<f32>("influence").unwrap();
+    let opt_coverage = *args.get_one::<f32>("coverage").unwrap();
+    let is_signal = args.get_flag("signal");
 
     // redis connection
     let mut conn = gams::Conn::new();
@@ -158,21 +171,99 @@ fn proc_ctg(ctg: &gams::Ctg, args: &ArgMatches) -> String {
 
     let signals = gams::thresholding_algo(&gcs, opt_lag, opt_threshold, opt_influence);
 
-    // outputs
     let mut out_string = "".to_string();
-    for i in 0..windows.len() {
-        if signals[i] == 0 {
-            continue;
+    if is_signal {
+        for i in 0..windows.len() {
+            out_string += format!(
+                "{}:{}\t{}\t{}\n",
+                ctg.chr_id,
+                windows[i].runlist(),
+                gcs[i],
+                signals[i],
+            )
+            .as_str();
         }
-        out_string += format!(
-            "{}:{}\t{}\t{}\n",
-            ctg.chr_id,
-            windows[i].runlist(),
-            gcs[i],
-            signals[i],
-        )
-        .as_str();
+    } else {
+        let mut merge_of = HashMap::new();
+        {
+            let crests: Vec<intspan::IntSpan> = windows
+                .iter()
+                .enumerate()
+                .filter(|(i, _)| signals[*i] == 1)
+                .map(|(_, el)| el.clone())
+                .collect();
+            merge_of.extend(merge_ints(crests, opt_coverage));
+
+            let troughs: Vec<intspan::IntSpan> = windows
+                .iter()
+                .enumerate()
+                .filter(|(i, _)| signals[*i] == -1)
+                .map(|(_, el)| el.clone())
+                .collect();
+            merge_of.extend(merge_ints(troughs, opt_coverage));
+        }
+
+        // outputs
+        let mut seen = HashSet::new();
+        for i in 0..windows.len() {
+            if signals[i] == 0 {
+                continue;
+            }
+
+            let runlist = windows[i].runlist();
+            if merge_of.contains_key(&runlist) {
+                // merged window
+                // gc and signal of the first member
+                let merge = merge_of.get(&runlist).unwrap();
+                if !seen.contains(merge) {
+                    out_string +=
+                        format!("{}(+):{}\t{}\t{}\n", ctg.chr_id, merge, gcs[i], signals[i],)
+                            .as_str();
+                    seen.insert(merge.clone());
+                }
+            } else {
+                out_string +=
+                    format!("{}:{}\t{}\t{}\n", ctg.chr_id, runlist, gcs[i], signals[i],).as_str();
+            }
+        }
     }
 
     out_string
+}
+
+fn merge_ints(peaks: Vec<intspan::IntSpan>, opt_coverage: f32) -> HashMap<String, String> {
+    // Node weight - &str - node names
+    // Edge weight - i32 - append length, back index of strings
+    let mut graph = petgraph::prelude::UnGraphMap::new();
+    // graph will borrow these runlists
+    let runlists: Vec<_> = peaks.iter().map(|el| el.to_string()).collect();
+    for i in 0..peaks.len() {
+        let ints_i = peaks.get(i).unwrap();
+        for j in i + 1..peaks.len() {
+            let ints_j = peaks.get(j).unwrap();
+            let intersect = ints_i.intersect(ints_j);
+            if !intersect.is_empty() {
+                let cov_i = ints_i.size() as f32 / intersect.size() as f32;
+                let cov_j = ints_j.size() as f32 / intersect.size() as f32;
+                if cov_i >= opt_coverage && cov_j >= opt_coverage {
+                    graph.add_edge(runlists[i].as_str(), runlists[j].as_str(), ());
+                }
+            }
+        }
+    }
+
+    let scc = petgraph::algo::tarjan_scc(&graph);
+    let mut merge_of = HashMap::new();
+    for cc in &scc {
+        let mut merge = intspan::IntSpan::new();
+        for member in cc {
+            merge.add_runlist(member);
+        }
+
+        for member in cc {
+            merge_of.insert(member.to_string(), merge.to_string());
+        }
+    }
+
+    merge_of
 }
