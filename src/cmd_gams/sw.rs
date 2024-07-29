@@ -27,6 +27,7 @@ pub fn make_subcommand() -> Command {
                 .action(ArgAction::Append)
                 .value_parser([
                     builder::PossibleValue::new("gc"),
+                    builder::PossibleValue::new("gibbs"),
                     builder::PossibleValue::new("count"),
                 ])
                 .default_value("gc")

@@ -160,14 +160,8 @@ gams status stop
 ```shell
 cd ~/data/gams/Atha/
 
-rm ./dump.rdb
-redis-server --appendonly no --dir ~/data/gams/Atha/
-
-gams env --all
-
-gams status drop
-
-gams gen genome/genome.fa.gz --piece 500000
+cp dumps/ctg.rdb ./dump.rdb
+redis-server &
 
 parallel -j 4 -k --line-buffer '
     echo {}
@@ -178,17 +172,16 @@ time gams tsv -s 'feature:*' |
     gams anno genome/cds.json stdin -H |
     gams anno genome/repeats.json stdin -H |
     rgr sort -H -f 2 stdin |
-    tsv-select -H -e range |
     pigz \
     > tsvs/feature.tsv.gz
-#real    0m8.440s
-#user    0m5.084s
-#sys     0m4.266s
+#real    0m8.533s
+#user    0m3.722s
+#sys     0m3.463s
 
-gams status dump && sync dump.rdb && cp dump.rdb dumps/feature.dump.rdb
+gams status dump dumps/feature.rdb
 
-# fsw
-time gams fsw --range |
+# sw
+time gams sw --range |
     rgr sort -H -f 2 stdin |
     pigz \
     > tsvs/fsw.tsv.gz
