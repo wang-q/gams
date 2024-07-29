@@ -181,7 +181,7 @@ time gams tsv -s 'feature:*' |
 gams status dump dumps/feature.rdb
 
 # sw
-time gams sw --range |
+time gams sw |
     rgr sort -H -f 2 stdin |
     pigz \
     > tsvs/fsw.tsv.gz
