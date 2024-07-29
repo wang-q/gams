@@ -101,10 +101,11 @@ done
 ```shell
 cd ~/data/gams/Atha/
 
+gams env --all
+gams status stop
+
 # start redis-server
 redis-server &
-gams env --all
-
 gams status drop
 
 gams gen genome/genome.fa.gz --piece 500000
@@ -116,39 +117,38 @@ time gams tsv -s 'ctg:*' |
     gams anno -H genome/cds.json stdin |
     gams anno -H genome/repeats.json stdin |
     rgr sort -H -f 2 stdin |
-    tsv-select -H -e range |
     pigz \
     > tsvs/ctg.tsv.gz
-#real    0m0.977s
-#user    0m1.001s
-#sys     0m0.049s
+#real    0m1.153s
+#user    0m1.224s
+#sys     0m0.107s
 
 gzip -dcf tsvs/ctg.tsv.gz |
     sed '1d' |
     cut -f 1 \
     > ctg.lst
 
-# ranges
-time parallel -j 4 -k --line-buffer '
-    echo {}
-    gams range features/T-DNA.{}.rg
-    ' ::: CSHL FLAG MX RATM
-#real    0m1.086s
-#user    0m0.423s
-#sys     0m0.225s
+# rg
+time gams rg \
+    features/T-DNA.CSHL.rg \
+    features/T-DNA.FLAG.rg \
+    features/T-DNA.MX.rg \
+    features/T-DNA.RATM.rg
+#real    0m7.715s
+#user    0m0.371s
+#sys     0m0.134s
 
-time gams tsv -s 'range:*' |
+time gams tsv -s 'rg:*' |
     gams anno genome/cds.json stdin -H |
     gams anno genome/repeats.json stdin -H |
     rgr sort -H -f 2 stdin |
-    tsv-select -H -e range |
     pigz \
     > tsvs/range.tsv.gz
-#real    0m7.933s
-#user    0m4.481s
-#sys     0m4.459s
+#real    0m9.582s
+#user    0m4.132s
+#sys     0m3.299s
 
-gams status dump dumps/range.rdb
+gams status dump dumps/rg.rdb
 
 # stop the server
 gams status stop
