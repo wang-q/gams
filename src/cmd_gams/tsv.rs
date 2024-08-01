@@ -60,6 +60,10 @@ pub fn execute(args: &ArgMatches) -> anyhow::Result<()> {
             let json = conn.get_str(&id);
             let value: gams::Rg = serde_json::from_str(&json).unwrap();
             tsv_wtr.serialize(value).unwrap();
+        } else if opt_pattern.starts_with("peak") {
+            let json = conn.get_str(&id);
+            let value: gams::Peak = serde_json::from_str(&json).unwrap();
+            tsv_wtr.serialize(value).unwrap();
         }
     }
 

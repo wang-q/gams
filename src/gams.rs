@@ -25,6 +25,16 @@ fn main() -> anyhow::Result<()> {
         .subcommand(cmd_gams::tsv::make_subcommand())
         .after_help(
             r###"
+Subcommand groups:
+
+*
+
+* Reading: feature / rg / peak
+
+* Writing: tsv / sw
+
+* Per Ctg: anno / wave / locate
+
 "###,
         );
 

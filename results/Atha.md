@@ -201,76 +201,42 @@ time gams sw feature -a gc -p 8 |
 
 ### GC-wave
 
-Restores from ctg.dump.rdb
-
 ```shell
 cd ~/data/gams/Atha/
 
-cp dumps/ctg.rdb ./dump.rdb
+gams env --all
+gams status stop
+
+# start redis-server
 redis-server &
+gams status drop
 
-gams env
+gams gen genome/genome.fa.gz --piece 500000
 
-# split a chr to 10
-cat ctg.lst |
-    perl -nl -e '
-        BEGIN {%seen}
-        s/(ctg:\w+:\d)\d*$/$1/;
-        $seen{"$1*"}++;
-        END { print for sort keys %seen}
-    ' \
-    > ctg.group.lst
-
-# can't use chr.sizes, which greatly reduces the speed of `rgr merge`
-time cat ctg.group.lst |
-    parallel -j 4 -k --line-buffer '
-        prefix=$(echo {} | sed "s/[^[:alnum:]-]/_/g")
-        export prefix
-
-        gams sliding \
-            --ctg {} \
-            --size 100 --step 1 \
-            --lag 1000 --threshold 3.0 --influence 1.0 \
-            --parallel 4 \
-            -o stdout |
-            tsv-filter -H --ne signal:0 |
-            rgr sort -H stdin |
-            rgr pl-2rmp -c 0.8 stdin |
-            tsv-uniq -H -f 1 \
-            > tsvs/${prefix}.peak.tsv
-
-        tsv-summarize tsvs/${prefix}.peak.tsv \
-            -H --group-by signal --count
-    '
-#real    1m23.736s
-#user    10m3.180s
-#sys     0m16.014s
-
-# Don't need to be sorted
-tsv-append -H $(
-    cat ctg.group.lst |
-        sed "s/[^[:alnum:]-]/_/g" `# Remove : *` |
-        sed 's/$/.peak.tsv/' `# suffix` |
-        sed 's/^/tsvs\//' `# dir`
-    ) \
+time gams wave \
+    --size 100 --step 10 --lag 100 \
+    --threshold 3.0 --influence 1.0 \
+    --coverage 0.2 -p 8 |
+    rgr sort -H stdin \
     > tsvs/peak.tsv
-
-rm tsvs/ctg*.peak.tsv
+#real    0m3.169s
+#user    0m23.031s
+#sys     0m0.367s
 
 tsv-summarize tsvs/peak.tsv \
     -H --group-by signal --count
 #signal  count
-#1       32924
-#-1      27371
+#1       26752
+#-1      22651
 
 # Loading peaks
 time gams peak tsvs/peak.tsv
-#real    0m23.482s
-#user    0m5.295s
-#sys     0m13.237s
+#real    0m4.809s
+#user    0m1.183s
+#sys     0m1.429s
 
 gams tsv -s "peak:*" |
-    keep-header -- tsv-sort -k2,2 -k3,3n -k4,4n \
+    rgr sort -f 2 -H stdin \
     > tsvs/wave.tsv
 
 cat tsvs/wave.tsv |

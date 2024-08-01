@@ -101,14 +101,6 @@ pub fn make_subcommand() -> Command {
 
 // command implementation
 pub fn execute(args: &ArgMatches) -> anyhow::Result<()> {
-    //----------------------------
-    // Args
-    //----------------------------
-    let mut writer = intspan::writer(args.get_one::<String>("outfile").unwrap());
-
-    //----------------------------
-    // Operating
-    //----------------------------
     // redis connection
     let ctgs: Vec<gams::Ctg> = {
         let mut conn = gams::Conn::new();
@@ -119,18 +111,9 @@ pub fn execute(args: &ArgMatches) -> anyhow::Result<()> {
             .collect()
     };
 
-    // headers
-    writer.write_fmt(format_args!(
-        "{}\t{}\t{}\n",
-        "#range", "gc_content", "signal"
-    ))?;
-
     eprintln!("{} contigs to be processed", ctgs.len());
 
-    let rcv = gams::proc_ctg_p(&ctgs, args, proc_ctg);
-    for out_string in rcv.iter() {
-        writer.write_all(out_string.as_ref())?;
-    }
+    proc_ctg_p(&ctgs, args)?;
 
     Ok(())
 }
@@ -266,4 +249,65 @@ fn merge_ints(peaks: Vec<intspan::IntSpan>, opt_coverage: f32) -> HashMap<String
     }
 
     merge_of
+}
+
+// Adopt from https://rust-lang-nursery.github.io/rust-cookbook/concurrency/threads.html#create-a-parallel-pipeline
+fn proc_ctg_p(ctgs: &Vec<gams::Ctg>, args: &ArgMatches) -> anyhow::Result<()> {
+    //----------------------------
+    // Args
+    //----------------------------
+    let mut writer = intspan::writer(args.get_one::<String>("outfile").unwrap());
+    let opt_parallel = *args.get_one::<usize>("parallel").unwrap();
+
+    // headers
+    writer.write_fmt(format_args!(
+        "{}\t{}\t{}\n",
+        "#range", "gc_content", "signal"
+    ))?;
+
+    // Channel 1 - Contigs
+    let (snd1, rcv1) = crossbeam::channel::bounded::<gams::Ctg>(10);
+    // Channel 2 - Results
+    let (snd2, rcv2) = crossbeam::channel::bounded::<String>(10);
+
+    crossbeam::scope(|s| {
+        //----------------------------
+        // Reader thread
+        //----------------------------
+        s.spawn(|_| {
+            for ctg in ctgs {
+                snd1.send(ctg.clone()).unwrap();
+            }
+            // Close the channel - this is necessary to exit the for-loop in the worker
+            drop(snd1);
+        });
+
+        //----------------------------
+        // Worker threads
+        //----------------------------
+        for _ in 0..opt_parallel {
+            // Send to sink, receive from source
+            let (sendr, recvr) = (snd2.clone(), rcv1.clone());
+            // Spawn workers in separate threads
+            s.spawn(move |_| {
+                // Receive until channel closes
+                for ctg in recvr.iter() {
+                    let out_string = proc_ctg(&ctg, args);
+                    sendr.send(out_string).unwrap();
+                }
+            });
+        }
+        // Close the channel, otherwise sink will never exit the for-loop
+        drop(snd2);
+
+        //----------------------------
+        // Writer (main) thread
+        //----------------------------
+        for out_string in rcv2.iter() {
+            writer.write_all(out_string.as_ref()).unwrap();
+        }
+    })
+    .unwrap();
+
+    Ok(())
 }
