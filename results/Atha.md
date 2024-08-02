@@ -106,6 +106,7 @@ gams status stop
 
 # start redis-server
 redis-server &
+
 gams status drop
 
 gams gen genome/genome.fa.gz --piece 500000
@@ -160,11 +161,6 @@ gams status stop
 ```shell
 cd ~/data/gams/Atha/
 
-gams env --all
-gams status stop
-
-# start redis-server
-redis-server &
 gams status drop
 
 gams gen genome/genome.fa.gz --piece 500000
@@ -204,11 +200,6 @@ time gams sw feature -a gc -p 8 |
 ```shell
 cd ~/data/gams/Atha/
 
-gams env --all
-gams status stop
-
-# start redis-server
-redis-server &
 gams status drop
 
 gams gen genome/genome.fa.gz --piece 500000
@@ -241,22 +232,22 @@ gams tsv -s "peak:*" |
 
 cat tsvs/wave.tsv |
     tsv-summarize -H --count
-# 59305
+# 49148
 
 cat tsvs/wave.tsv |
     tsv-filter -H --gt left_wave_length:0 |
     tsv-summarize -H --mean left_wave_length
+#2296.94839883
 
 cat tsvs/wave.tsv |
     tsv-filter -H --gt right_wave_length:0 |
     tsv-summarize -H --mean right_wave_length
+#2279.6830973
 
 tsv-filter tsvs/wave.tsv -H --or \
     --le left_wave_length:0 --le right_wave_length:0 |
     tsv-summarize -H --count
-# 13003
-
-gams status stop
+# 427
 
 ```
 
